@@ -1,58 +1,68 @@
 #! /usr/bin/env python3
 
-"""
+"""Implement Reed-Solomon codes as used in QR codes."""
 
-GF(8) polynomial is x^8 + x^4 + x^3 + x^2 + 1
+def make_gf8_multiplication_tables():
 
+    exptable = 255 * [0]
+    logtable = 255 * [0]
 
+    element = 1
+    exponent = 0
 
-"""
+    while exponent < 255:
+        exptable[exponent] = element
+        logtable[element - 1] = exponent
+        element <<= 1
+        if element & 0b100000000:
+            element ^= 0b100011101
+        exponent += 1
 
-exptable = 255 * [None]
-logtable = 255 * [None]
+    return exptable, logtable
 
-element = 1
-exponent = 0
+class GF8:
+    """
+    GF(8) generator polynomial is x^8 + x^4 + x^3 + x^2 + 1.
 
-while exponent < 255:
-    #print(element, exponent)
-    exptable[exponent] = element
-    logtable[element - 1] = exponent
-    element <<= 1
-    if element & 0b100000000:
-        element ^= 0b100011101
-    exponent += 1
+    Elements are represented as integers between 0 and 255 (inclusive).
 
-def add_elements(a, b):
-    return a ^ b
+    Addition and subtraction of elements corresponds to a bitwise XOR.
 
-def multiply_elements(a, b):
-    if (a == 0) or (b == 0):
-        return 0
-    log_a = logtable[a - 1]
-    log_b = logtable[b - 1]
-    log_ab = (log_a + log_b) % 255
-
-    return exptable[log_ab]
+    Multiplication is implemented by the 'multiply_elements' method.
+    """
 
 
+    exptable, logtable = make_gf8_multiplication_tables()
+
+    @staticmethod
+    def multiply_elements(a, b):
+        if (a == 0) or (b == 0):
+            return 0
+        log_a = GF8.logtable[a - 1]
+        log_b = GF8.logtable[b - 1]
+        log_ab = (log_a + log_b) % 255
+
+        return GF8.exptable[log_ab]
 
 def reed_solomon_code_remainder(data: list[int]):
 
-    residual = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-    genpoly  = [exptable[45], exptable[32], exptable[94], exptable[64], exptable[70], exptable[118], exptable[61], exptable[46], exptable[67], exptable[251]]
+    genpoly  = [GF8.exptable[251], GF8.exptable[67], GF8.exptable[46], GF8.exptable[61], GF8.exptable[118], GF8.exptable[70], GF8.exptable[64], GF8.exptable[94], GF8.exptable[32], GF8.exptable[45]]
+
+    residual = [0 for g in genpoly]
 
     for d in data:
 
-        m = residual.pop() ^ d
-        residual.insert(0, 0)
+        m = residual.pop(0) ^ d
+        residual.append(0)
 
-        for k in range(10):
-            residual[k] ^= multiply_elements(m, genpoly[k])
+        for k, g in enumerate(genpoly):
+            residual[k] ^= GF8.multiply_elements(m, g)
 
     return residual
 
-def main():
+
+
+def test_reed_solomon_example():
 
     data = [
         0b00010000,  # data
@@ -87,10 +97,17 @@ def main():
     ]
 
     calc_erc = reed_solomon_code_remainder(data)
+    calc_erc_cat = reed_solomon_code_remainder(data + erc)
 
-    print("erc ........ :", " ".join(f"{x:02x}" for x in erc))
-    print("calc_erc ... :", " ".join(f"{x:02x}" for x in calc_erc))
+    print("erc ............ :", " ".join(f"{x:02x}" for x in erc))
+    print("calc_erc ....... :", " ".join(f"{x:02x}" for x in calc_erc))
+    print("calc_erc_cat ... :", " ".join(f"{x:02x}" for x in calc_erc_cat))
 
+def calculate_generator_polynomial(n: int):
+    pass
+
+def main():
+    test_reed_solomon_example()
 
 if __name__ == "__main__":
     main()
