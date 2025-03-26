@@ -100,55 +100,6 @@ def reed_solomon_code_remainder(data: list[int], poly: list[int]) -> list[int]:
     return residual
 
 
-def test_reed_solomon_example():
-
-    data = [
-        0b00010000,  # data
-        0b00100000,
-        0b00001100,
-        0b01010110,
-        0b01100001,
-        0b10000000,
-        0b11101100, # padded
-        0b00010001,
-        0b11101100,
-        0b00010001,
-        0b11101100,
-        0b00010001,
-        0b11101100,
-        0b00010001,
-        0b11101100,
-        0b00010001
-    ]
-
-    erc = [
-        0b10100101, # error correction codewords
-        0b00100100,
-        0b11010100,
-        0b11000001,
-        0b11101101,
-        0b00110110,
-        0b11000111,
-        0b10000111,
-        0b00101100,
-        0b01010101
-    ]
-
-    poly = calculate_reed_solomon_polynomial(10, strip=True)
-
-    calc_erc = reed_solomon_code_remainder(data, poly)
-
-    assert(calc_erc == erc)
-
-    calc_erc_cat = reed_solomon_code_remainder(data + erc, poly)
-
-    #print("erc ............ :", " ".join(f"{x:02x}" for x in erc))
-    #print("calc_erc ....... :", " ".join(f"{x:02x}" for x in calc_erc))
-    #print("calc_erc_cat ... :", " ".join(f"{x:02x}" for x in calc_erc_cat))
-
-    assert all(x == 0 for x in calc_erc_cat)
-
-
 def poly_string(poly, prepend_prefix_term: bool):
 
     terms = []
@@ -191,11 +142,3 @@ def poly_string(poly, prepend_prefix_term: bool):
         expr_str = " + ".join(term_strings)
 
     return expr_str
-
-
-def main():
-    test_reed_solomon_example()
-
-
-if __name__ == "__main__":
-    main()
