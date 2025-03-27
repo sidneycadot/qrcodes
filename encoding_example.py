@@ -80,6 +80,8 @@ class QRCodeCanvas:
                 color = render_colormap[value]
                 draw.rectangle((j * magnification, i * magnification, (j + 1) * magnification - 1, (i + 1) * magnification - 1), color)
 
+        im = im.convert('L')
+
         return im
 
 def get_alignment_positions(version: int) -> list[int]:
@@ -231,7 +233,7 @@ class QRCodeDrawer:
             version_bits = version_information_code_remainder(self.version) | (self.version << 12)
 
             for k in range(18):
-                vbit = (version_bits >> k) & 1 == 0
+                vbit = (version_bits >> k) & 1 != 0
                 self.set_module_value(self.height - 11 + k % 3, k // 3, ModuleValue.VERSION_INFORMATION_1 if vbit else ModuleValue.VERSION_INFORMATION_0)
                 self.set_module_value(k // 3, self.width - 11 + k % 3, ModuleValue.VERSION_INFORMATION_1 if vbit else ModuleValue.VERSION_INFORMATION_0)
 
@@ -445,101 +447,115 @@ def main():
 
     magnification = 1
 
-    version = 5
-    level = ErrorCorrectionLevel.L
+    for version in (40, ):
+        for level in (ErrorCorrectionLevel.L, ):
 
-    version_specification = version_specifications[(version, level)]
+            version_specification = version_specifications[(version, level)]
+            block_specification = version_specification.block_specification
 
-    block_specification = version_specification.block_specification
+            for pattern in DataMaskingPattern:
 
-    for pattern in DataMaskingPattern:
+                qr = QRCodeDrawer(version, True)
+                qr.place_quiet_zone()
+                qr.place_finder_patterns()
+                qr.place_separators()
+                qr.place_timing_patterns()
+                qr.place_alignment_patterns()
+                qr.place_format_information_regions(level, pattern)
+                qr.place_version_information_regions()
 
-        qr = QRCodeDrawer(version, True)
-        qr.place_quiet_zone()
-        qr.place_finder_patterns()
-        qr.place_separators()
-        qr.place_timing_patterns()
-        qr.place_alignment_patterns()
-        qr.place_format_information_regions(level, pattern)
-        qr.place_version_information_regions()
+                de = DataEncoder(version)
 
-        de = DataEncoder(version)
+                de.append_byte_mode_block('Hallo Petra!\n'.encode())
+                de.append_byte_mode_block('Hallo Sidney!\n'.encode())
+                de.append_byte_mode_block('Hello ⛄ Snowman\n'.encode())
+                #de.append_numeric_mode_block("01234567")
+                #de.append_byte_mode_block(b"http://www.jigsaw.nl")
+                #de.append_byte_mode_block(b"https://www.jigsaw.nl/")
+                de.append_terminator()
+                de.append_padding_bits()
 
-        #de.append_numeric_mode_block("01234567")
-        #de.append_byte_mode_block('⛄ Snowman'.encode())
-        #de.append_byte_mode_block('Hallo Petra!'.encode())
-        #de.append_byte_mode_block(b"http://www.jigsaw.nl")
-        de.append_byte_mode_block(b"https://www.jigsaw.nl/")
-        de.append_terminator()
-        de.append_padding_bits()
+                data = de.get_words()
 
-        data = de.get_words()
+                print("unpadded data length:", len(data))
 
-        print("unpadded data length:", len(data))
+                # Pad data to data length.
 
-        assert len(data) <= version_specification.total_number_of_codewords - version_specification.number_of_error_correcting_codewords
+                assert len(data) <= version_specification.total_number_of_codewords - version_specification.number_of_error_correcting_codewords
 
-        pad_word = 0b11101100
-        while len(data) != version_specification.total_number_of_codewords - version_specification.number_of_error_correcting_codewords:
-            data.append(pad_word)
-            pad_word ^= 0b11111101
+                pad_word = 0b11101100
+                while len(data) != version_specification.total_number_of_codewords - version_specification.number_of_error_correcting_codewords:
+                    data.append(pad_word)
+                    pad_word ^= 0b11111101
 
-        datablocks = []
+                # Split op data in datablocks.
 
-        idx = 0
-        for (count, (code_c, code_k, code_r)) in version_specification.block_specification:
-            poly = calculate_reed_solomon_polynomial(code_c - code_k, strip=True)
-            for rep in range(count):
-                # Encode 'code_k' words to 'code_c' words, by adding error correction.
+                dblocks = []
+                eblocks = []
 
-                datablock = data[idx:idx+code_k]
-                idx += code_k
-                erc = reed_solomon_code_remainder(datablock, poly)
-                datablock.extend(erc)
-                datablocks.append(datablock)
+                idx = 0
+                for (count, (code_c, code_k, code_r)) in version_specification.block_specification:
+                    poly = calculate_reed_solomon_polynomial(code_c - code_k, strip=True)
+                    for rep in range(count):
+                        # Encode 'code_k' words to 'code_c' words, by adding error correction.
+                        dblock = data[idx:idx+code_k]
+                        dblocks.append(dblock)
 
-        assert idx == version_specification.total_number_of_codewords - version_specification.number_of_error_correcting_codewords
+                        eblock = reed_solomon_code_remainder(dblock, poly)
+                        eblocks.append(eblock)
 
-        assert sum(len(db) for db in datablocks) == version_specification.total_number_of_codewords
+                        idx += code_k
 
-        data = []
-        k = 0
-        while len(data) != version_specification.total_number_of_codewords:
-            if len(datablocks[k]) != 0:
-                data.append(datablocks[k].pop(0))
-            k = (k + 1) % len(datablocks)
+                assert idx == version_specification.total_number_of_codewords - version_specification.number_of_error_correcting_codewords
 
-        positions = qr.get_indeterminate_positions()
+                assert sum(map(len, dblocks)) + sum(map(len, eblocks)) == version_specification.total_number_of_codewords
 
-        databits = []
-        for d in data:
-            mask = 0x80
-            while mask != 0:
-                bit = (d & mask) != 0
-                databits.append(bit)
-                mask >>= 1
+                data = []
 
-        assert len(databits) <= len(positions)
+                k = 0
+                while sum(map(len, dblocks)) != 0:
+                    if len(dblocks[k]) != 0:
+                        data.append(dblocks[k].pop(0))
+                    k = (k + 1) % len(dblocks)
 
-        # Add padding.
-        while len(databits) < len(positions):
-            databits.append(0)
+                k = 0
+                while sum(map(len, eblocks)) != 0:
+                    if len(eblocks[k]) != 0:
+                        data.append(eblocks[k].pop(0))
+                    k = (k + 1) % len(eblocks)
 
-        print("num positions:", len(positions))
-        print("num databits:", len(databits))
+                positions = qr.get_indeterminate_positions()
 
-        assert len(positions) == len(databits)
+                databits = []
+                for d in data:
+                    mask = 0x80
+                    while mask != 0:
+                        bit = (d & mask) != 0
+                        databits.append(bit)
+                        mask >>= 1
 
-        for (position, databit) in zip(positions, databits):
-            qr.set_module_value(*position, ModuleValue.DATA_ERC_1 if databit else ModuleValue.DATA_ERC_0)
+                assert len(databits) <= len(positions)
 
-        qr.apply_data_masking_pattern(pattern, positions)
+                num_padding_bits = len(positions) - len(databits)
+                if num_padding_bits != 0:
+                    print(f"Adding {num_padding_bits} padding bits...")
+                    databits.extend([0] * num_padding_bits)
 
-        im = qr.render_as_image(magnification)
+                print("num positions:", len(positions))
+                print("num databits:", len(databits))
 
-        filename = f"v{version}_{pattern}.png"
-        print(f"Saving {filename} ...")
-        im.save(filename)
+                assert len(positions) == len(databits)
+
+                for (position, databit) in zip(positions, databits):
+                    qr.set_module_value(*position, ModuleValue.DATA_ERC_1 if databit else ModuleValue.DATA_ERC_0)
+
+                qr.apply_data_masking_pattern(pattern, positions)
+
+                im = qr.render_as_image(magnification)
+
+                filename = f"v{version}{level.name}_p{pattern}.png"
+                print(f"Saving {filename} ...")
+                im.save(filename)
 
 
 if __name__ == "__main__":
