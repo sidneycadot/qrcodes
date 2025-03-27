@@ -7,9 +7,9 @@ This example uses numeric mode.
 from enum import IntEnum
 from PIL import Image, ImageDraw
 
+from enum_types import ErrorCorrectionLevel, DataMaskingPattern
 from binary_codes import format_information_code_remainder, version_information_code_remainder
 from reed_solomon_code import calculate_reed_solomon_polynomial, reed_solomon_code_remainder
-
 
 class ModuleValue(IntEnum):
     QUIET_ZONE_0          = 10
@@ -28,23 +28,6 @@ class ModuleValue(IntEnum):
     DATA_ERC_1            = 81
     INDETERMINATE         = 99
 
-
-class DataMaskingPattern(IntEnum):
-    Pattern0 = 0b000
-    Pattern1 = 0b001
-    Pattern2 = 0b010
-    Pattern3 = 0b011
-    Pattern4 = 0b100
-    Pattern5 = 0b101
-    Pattern6 = 0b110
-    Pattern7 = 0b111
-
-
-class ErrorCorrectionLevel(IntEnum):
-    L = 0b01  # Allows recovery of  7% of bad modules.
-    M = 0b00  # Allows recovery of 15% of bad modules.
-    Q = 0b11  # Allows recovery of 25% of bad modules.
-    H = 0b10  # Allows recovery of 30% of bad modules.
 
 
 render_colormap = {
@@ -440,7 +423,6 @@ def main():
 
 
         qr.render_as_image(f"v{version}.png", magnification=magnification)
-
 
 
 if __name__ == "__main__":
