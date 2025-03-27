@@ -56,27 +56,27 @@ class QRCodeCanvas:
         self.height = height
         self.modules = bytearray([ModuleValue.INDETERMINATE]) * (width * height)
 
-    def set_module_value(self, x: int, y: int, value: ModuleValue):
-        if not ((0 <= x < self.width) and (0 <= y < self.height)):
-            raise ValueError(f"Bad coordinate ({x}, {y}).")
-        index = x + y * self.width
+    def set_module_value(self, i: int, j: int, value: ModuleValue) -> None:
+        if not ((0 <= i < self.height) and (0 <= j < self.width)):
+            raise ValueError(f"Bad module coordinate (i={i}, j={j}).")
+        index = i * self.width + j
         self.modules[index] = value
 
-    def get_module_value(self, x: int, y: int) -> ModuleValue:
-        if not ((0 <= x < self.width) and (0 <= y < self.height)):
-            raise ValueError(f"Bad coordinate ({x}, {y}).")
-        index = x + y * self.width
+    def get_module_value(self, i: int, j: int) -> ModuleValue:
+        if not ((0 <= i < self.height) and (0 <= j < self.width)):
+            raise ValueError(f"Bad module coordinate (i={i}, j={j}).")
+        index = i * self.width + j
         return ModuleValue(self.modules[index])
 
     def render_as_image(self, filename: str, *, magnification: int = 1) -> None:
         im = Image.new('RGB', (self.width * magnification, self.height * magnification))
         draw = ImageDraw.Draw(im)
 
-        for y in range(self.height):
-            for x in range(self.width):
-                value = self.get_module_value(x, y)
+        for i in range(self.height):
+            for j in range(self.width):
+                value = self.get_module_value(i, j)
                 color = render_colormap[value]
-                draw.rectangle((x * magnification, y * magnification, (x + 1) * magnification - 1, (y + 1) * magnification - 1), color)
+                draw.rectangle((j * magnification, i * magnification, (j + 1) * magnification - 1, (i + 1) * magnification - 1), color)
 
         im.save(filename)
 
@@ -115,6 +115,7 @@ def get_alignment_positions(version: int) -> list[int]:
 class QRCodeDrawer:
 
     def __init__(self, version: int, include_quiet_zone: bool):
+
         if not (1 <= version <= 40):
             raise ValueError(f"Bad QR code version: {version}.")
 
@@ -128,54 +129,54 @@ class QRCodeDrawer:
 
         self.canvas = QRCodeCanvas(canvas_width, canvas_height)
 
-    def set_module_value(self, x: int, y: int, value: ModuleValue):
-        self.canvas.set_module_value(x + self.quiet_zone_margin, y + self.quiet_zone_margin, value)
+    def set_module_value(self, i: int, j: int, value: ModuleValue) -> None:
+        self.canvas.set_module_value(i + self.quiet_zone_margin, j + self.quiet_zone_margin, value)
 
-    def get_module_value(self, x: int, y: int) -> ModuleValue:
-        return self.canvas.get_module_value(x + self.quiet_zone_margin, y + self.quiet_zone_margin)
+    def get_module_value(self, i: int, j: int) -> ModuleValue:
+        return self.canvas.get_module_value(i + self.quiet_zone_margin, j + self.quiet_zone_margin)
 
     def place_quiet_zone(self) -> None:
-        for x in range(self.width + 2 * self.quiet_zone_margin):
-            for y in range(self.quiet_zone_margin):
-                self.set_module_value(x - self.quiet_zone_margin, y - self.quiet_zone_margin, ModuleValue.QUIET_ZONE_0)
-                self.set_module_value(x - self.quiet_zone_margin, y + self.height           , ModuleValue.QUIET_ZONE_0)
+        for i in range(self.quiet_zone_margin):
+            for j in range(self.width + 2 * self.quiet_zone_margin):
+                self.set_module_value(i - self.quiet_zone_margin, j - self.quiet_zone_margin, ModuleValue.QUIET_ZONE_0)
+                self.set_module_value(i + self.height           , j - self.quiet_zone_margin, ModuleValue.QUIET_ZONE_0)
 
-        for y in range(self.height + 2 * self.quiet_zone_margin):
-            for x in range(self.quiet_zone_margin):
-                self.set_module_value(x - self.quiet_zone_margin, y - self.quiet_zone_margin, ModuleValue.QUIET_ZONE_0)
-                self.set_module_value(x + self.width            , y - self.quiet_zone_margin, ModuleValue.QUIET_ZONE_0)
+        for i in range(self.height + 2 * self.quiet_zone_margin):
+            for j in range(self.quiet_zone_margin):
+                self.set_module_value(i - self.quiet_zone_margin, j - self.quiet_zone_margin, ModuleValue.QUIET_ZONE_0)
+                self.set_module_value(i - self.quiet_zone_margin, j + self.width            , ModuleValue.QUIET_ZONE_0)
 
-    def place_finder_pattern(self, x: int, y: int) -> None:
-        for dx in range(7):
-            for dy in range(7):
-                flag = dx in (0, 6) or dy in (0, 6) or (dx in (2, 3, 4) and dy in (2, 3, 4))
+    def place_finder_pattern(self, i: int, j: int) -> None:
+        for di in range(7):
+            for dj in range(7):
+                flag = di in (0, 6) or dj in (0, 6) or (di in (2, 3, 4) and dj in (2, 3, 4))
                 value = ModuleValue.FINDER_PATTERN_1 if flag else ModuleValue.FINDER_PATTERN_0
-                self.set_module_value(x + dx, y + dy, value)
+                self.set_module_value(i + di, j + dj, value)
 
     def place_finder_patterns(self) -> None:
         # Place the three finder patterns in the top-left, top-right, and bottom-left corners.
         self.place_finder_pattern(0, 0)
-        self.place_finder_pattern(self.width - 7, 0)
-        self.place_finder_pattern(0, self.height - 7)
+        self.place_finder_pattern(0, self.width - 7)
+        self.place_finder_pattern(self.height - 7, 0)
 
     def place_separators(self):
         for k in range(8):
             # Top-left
-            self.set_module_value(7, k, ModuleValue.SEPARATOR_0)
             self.set_module_value(k, 7, ModuleValue.SEPARATOR_0)
+            self.set_module_value(7, k, ModuleValue.SEPARATOR_0)
             # Top-right
-            self.set_module_value(self.width - 8, k, ModuleValue.SEPARATOR_0)
-            self.set_module_value(self.width - 8 + k, 7, ModuleValue.SEPARATOR_0)
+            self.set_module_value(k, self.width - 8, ModuleValue.SEPARATOR_0)
+            self.set_module_value(7, self.width - 8 + k, ModuleValue.SEPARATOR_0)
             # Bottom-right
-            self.set_module_value(7, self.height - 8 + k, ModuleValue.SEPARATOR_0)
-            self.set_module_value(k, self.height - 8, ModuleValue.SEPARATOR_0)
+            self.set_module_value(self.height - 8 + k, 7, ModuleValue.SEPARATOR_0)
+            self.set_module_value(self.height - 8, k, ModuleValue.SEPARATOR_0)
 
-    def place_alignment_pattern(self, x: int, y: int) -> None:
-        for dx in (-2, -1, 0, +1, +2):
-            for dy in (-2, -1, 0, +1, +2):
-                flag = dx in (-2, +2) or dy in (-2, +2) or (dx == 0 and dy == 0)
+    def place_alignment_pattern(self, i: int, j: int) -> None:
+        for di in (-2, -1, 0, +1, +2):
+            for dj in (-2, -1, 0, +1, +2):
+                flag = di in (-2, +2) or dj in (-2, +2) or (di == 0 and dj == 0)
                 value = ModuleValue.ALIGNMENT_PATTERN_1 if flag else ModuleValue.ALIGNMENT_PATTERN_0
-                self.set_module_value(x + dx, y + dy, value)
+                self.set_module_value(i + di, j + dj, value)
 
     def place_alignment_patterns(self) -> None:
 
@@ -186,14 +187,14 @@ class QRCodeDrawer:
             for h in range(num):
                 if (h == 0 and v == 0) or (h == 0 and v == num - 1) or (h == num - 1 and v == 0):
                     continue
-                self.place_alignment_pattern(positions[h], positions[v])
+                self.place_alignment_pattern(positions[v], positions[h])
 
     def place_timing_patterns(self):
         # Regular QR code has a horizontal and a vertical timing code.
-        for y in range(8, self.height - 8):
-            self.set_module_value(6, y, ModuleValue.TIMING_PATTERN_1 if y % 2 == 0 else ModuleValue.TIMING_PATTERN_0)
-        for x in range(8, self.width - 8):
-            self.set_module_value(x, 6, ModuleValue.TIMING_PATTERN_1 if x % 2 == 0 else ModuleValue.TIMING_PATTERN_0)
+        for i in range(8, self.height - 8):
+            self.set_module_value(i, 6, ModuleValue.TIMING_PATTERN_1 if i % 2 == 0 else ModuleValue.TIMING_PATTERN_0)
+        for j in range(8, self.width - 8):
+            self.set_module_value(6, j, ModuleValue.TIMING_PATTERN_1 if j % 2 == 0 else ModuleValue.TIMING_PATTERN_0)
 
     def place_format_information_regions(self):
 
@@ -201,7 +202,6 @@ class QRCodeDrawer:
         pattern = DataMaskingPattern.Pattern2
 
         format_data_bits = (level << 3) | pattern
-        print("@@@@", level, pattern, bin(format_data_bits))
         format_ecc_bits = format_information_code_remainder(format_data_bits)
 
         format_bits = (format_data_bits << 10) | format_ecc_bits
@@ -215,18 +215,18 @@ class QRCodeDrawer:
         H = self.height
 
         copies = [
-            [(8, 0), (8, 1), (8, 2), (8, 3), (8, 4), (8, 5), (8, 7), (8, 8), (7, 8), (5, 8), (4, 8), (3, 8), (2, 8), (1, 8), (0, 8)],
-            [(W-1, 8), (W-2, 8), (W-3, 8), (W-4, 8), (W-5, 8), (W-6, 8), (W-7, 8), (W-8, 8), (8, H-7), (8, H-6), (8, H-5), (8, H-4), (8, H-3), (8, H-2), (8, H-1)]
+            [(0, 8), (1, 8), (2, 8), (3, 8), (4, 8), (5, 8), (7, 8), (8, 8), (8, 7), (8, 5), (8, 4), (8, 3), (8, 2), (8, 1), (8, 0)],
+            [(8, W-1), (8, W-2), (8, W-3), (8, W-4), (8, W-5), (8, W-6), (8, W-7), (8, W-8), (H-7, 8), (H-6, 8), (H-5, 8), (H-4, 8), (H-3, 8), (H-2, 8), (H-1, 8)]
         ]
 
         # Set the single module.
-        self.set_module_value(8, H-8, ModuleValue.FORMAT_INFORMATION_1)
+        self.set_module_value(H-8, 8, ModuleValue.FORMAT_INFORMATION_1)
 
         for k in range(15):
             fbit = ((format_bits >> k) & 1) != 0
             for copy in copies:
-                (x, y) = copy[k]
-                self.set_module_value(x, y, ModuleValue.FORMAT_INFORMATION_1 if fbit else ModuleValue.FORMAT_INFORMATION_0)
+                (i, j) = copy[k]
+                self.set_module_value(i, j, ModuleValue.FORMAT_INFORMATION_1 if fbit else ModuleValue.FORMAT_INFORMATION_0)
 
     def place_version_information_regions(self):
         if self.version >= 7:
@@ -235,8 +235,8 @@ class QRCodeDrawer:
 
             for k in range(18):
                 vbit = (version_bits >> k) & 1 == 0
-                self.set_module_value(k // 3, self.height - 11 + k % 3, ModuleValue.VERSION_INFORMATION_1 if vbit else ModuleValue.VERSION_INFORMATION_0)
-                self.set_module_value(self.width - 11 + k % 3, k // 3, ModuleValue.VERSION_INFORMATION_1 if vbit else ModuleValue.VERSION_INFORMATION_0)
+                self.set_module_value(self.height - 11 + k % 3, k // 3, ModuleValue.VERSION_INFORMATION_1 if vbit else ModuleValue.VERSION_INFORMATION_0)
+                self.set_module_value(k // 3, self.width - 11 + k % 3, ModuleValue.VERSION_INFORMATION_1 if vbit else ModuleValue.VERSION_INFORMATION_0)
 
     def get_indeterminate_positions(self):
         positions = []
@@ -245,38 +245,37 @@ class QRCodeDrawer:
             # Note: the last three h_outer walks are to the left of the vertical timing pattern, the
             # other ones are to the right of the vertical timing pattern.
             for v in range(self.height):
-                y = (self.height - 1 - v) if h_outer % 2 == 0 else v
+                i = (self.height - 1 - v) if h_outer % 2 == 0 else v
                 for h_inner in range(2):
                     h = h_outer * 2 + h_inner
-                    x = (self.width - 1 - h)
-                    if x <= 6: # Skip vertical timing pattern.
-                        x -= 1
-                    #print("==>", h_outer, h_inner, "h", h, "v", v, "x", x, "y", y)
-                    value = self.get_module_value(x, y)
+                    j = (self.width - 1 - h)
+                    if j <= 6: # Skip vertical timing pattern.
+                        j -= 1
+                    value = self.get_module_value(i, j)
                     if value == ModuleValue.INDETERMINATE:
-                        position = (x, y)
+                        position = (i, j)
                         positions.append(position)
         return positions
 
     def apply_data_masking_pattern(self, pattern, positions):
         if pattern != DataMaskingPattern.Pattern2:
             raise RuntimeError()
-        for (x, y) in positions:
-            value = self.get_module_value(x, y)
+        for (i, j) in positions:
+            value = self.get_module_value(i, j)
             assert value in (ModuleValue.DATA_ERC_0, ModuleValue.DATA_ERC_1)
             # Invert if the pattern condition is True
-            if x % 3 == 0:
+            if j % 3 == 0:
                 value = ModuleValue.DATA_ERC_1 if value == ModuleValue.DATA_ERC_0 else ModuleValue.DATA_ERC_0
-                self.set_module_value(x, y, value)
+                self.set_module_value(i, j, value)
 
     def render_as_image(self, filename: str, *, magnification: int = 1) -> None:
         self.canvas.render_as_image(filename, magnification = magnification)
 
     def count_indeterminate(self):
         count = 0
-        for y in range(self.height):
-            for x in range(self.width):
-                value = self.get_module_value(x, y)
+        for i in range(self.height):
+            for j in range(self.width):
+                value = self.get_module_value2(i, j)
                 if value == ModuleValue.INDETERMINATE:
                     count += 1
         return count
@@ -378,51 +377,50 @@ def main():
 
     magnification = 20
 
-    for version in (1, ):
-    #for version in range(1, 41):
-        #print(f"Generating version {version} QR code...")
-        qr = QRCodeDrawer(version, True)
-        qr.place_quiet_zone()
-        qr.place_finder_patterns()
-        qr.place_separators()
-        qr.place_timing_patterns()
-        qr.place_alignment_patterns()
-        qr.place_format_information_regions()
-        qr.place_version_information_regions()
+    version = 1
+    level = ErrorCorrectionLevel.M
 
-        de = DataEncoder()
+    qr = QRCodeDrawer(version, True)
+    qr.place_quiet_zone()
+    qr.place_finder_patterns()
+    qr.place_separators()
+    qr.place_timing_patterns()
+    qr.place_alignment_patterns()
+    qr.place_format_information_regions()
+    qr.place_version_information_regions()
 
-        de.add_bits("0001")
-        de.add_bits("0000001000")
+    de = DataEncoder()
 
-        de.add_bits("0000001100")
-        de.add_bits("0101011001")
-        de.add_bits("1000011")
+    de.add_bits("0001")
+    de.add_bits("0000001000")
 
-        while len(de.bits) % 8 != 0:
-            de.add_bits("0")
+    de.add_bits("0000001100")
+    de.add_bits("0101011001")
+    de.add_bits("1000011")
 
-        padding = 0
-        while len(de.bits) // 8 != 16:
-            if padding == 0:
-                de.add_bits("11101100")
-            else:
-                de.add_bits("00010001")
-            padding = 1 - padding
+    while len(de.bits) % 8 != 0:
+        de.add_bits("0")
 
-        de.add_error_correction_words(10)
+    padding = 0
+    while len(de.bits) // 8 != 16:
+        if padding == 0:
+            de.add_bits("11101100")
+        else:
+            de.add_bits("00010001")
+        padding = 1 - padding
 
-        positions = qr.get_indeterminate_positions()
+    de.add_error_correction_words(10)
 
-        assert len(positions) == len(de.bits)
+    positions = qr.get_indeterminate_positions()
 
-        for (p, b) in zip(positions, de.bits):
-            qr.set_module_value(*p, ModuleValue.DATA_ERC_1 if b else ModuleValue.DATA_ERC_0)
+    assert len(positions) == len(de.bits)
 
-        qr.apply_data_masking_pattern(DataMaskingPattern.Pattern2, positions)
+    for (p, b) in zip(positions, de.bits):
+        qr.set_module_value(*p, ModuleValue.DATA_ERC_1 if b else ModuleValue.DATA_ERC_0)
 
+    qr.apply_data_masking_pattern(DataMaskingPattern.Pattern2, positions)
 
-        qr.render_as_image(f"v{version}.png", magnification=magnification)
+    qr.render_as_image(f"v{version}.png", magnification=magnification)
 
 
 if __name__ == "__main__":
