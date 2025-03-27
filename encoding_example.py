@@ -4,12 +4,14 @@
 This example uses numeric mode.
 """
 
+import re
 from enum import IntEnum
 from PIL import Image, ImageDraw
 
 from enum_types import ErrorCorrectionLevel, DataMaskingPattern
 from binary_codes import format_information_code_remainder, version_information_code_remainder
 from reed_solomon_code import calculate_reed_solomon_polynomial, reed_solomon_code_remainder
+from lookup_tables import data_mask_pattern_functions, version_specifications
 
 class ModuleValue(IntEnum):
     QUIET_ZONE_0          = 10
@@ -37,12 +39,12 @@ render_colormap = {
     ModuleValue.SEPARATOR_0           : '#ffffff',
     ModuleValue.TIMING_PATTERN_0      : '#ffffff',
     ModuleValue.TIMING_PATTERN_1      : '#000000',
-    ModuleValue.ALIGNMENT_PATTERN_0   : 'yellow',
-    ModuleValue.ALIGNMENT_PATTERN_1   : 'orange',
+    ModuleValue.ALIGNMENT_PATTERN_0   : '#ffffff',
+    ModuleValue.ALIGNMENT_PATTERN_1   : '#000000',
     ModuleValue.FORMAT_INFORMATION_0  : '#ffffff',
     ModuleValue.FORMAT_INFORMATION_1  : '#000000',
-    ModuleValue.VERSION_INFORMATION_0 : '#00cc00',
-    ModuleValue.VERSION_INFORMATION_1 : '#00ff00',
+    ModuleValue.VERSION_INFORMATION_0 : '#ffffff',
+    ModuleValue.VERSION_INFORMATION_1 : '#000000',
     ModuleValue.DATA_ERC_0            : '#ffffff',
     ModuleValue.DATA_ERC_1            : '#000000',
     ModuleValue.INDETERMINATE         : '#ff0000'
@@ -68,7 +70,7 @@ class QRCodeCanvas:
         index = i * self.width + j
         return ModuleValue(self.modules[index])
 
-    def render_as_image(self, filename: str, *, magnification: int = 1) -> None:
+    def render_as_image(self, magnification: int = 1) -> None:
         im = Image.new('RGB', (self.width * magnification, self.height * magnification))
         draw = ImageDraw.Draw(im)
 
@@ -78,7 +80,7 @@ class QRCodeCanvas:
                 color = render_colormap[value]
                 draw.rectangle((j * magnification, i * magnification, (j + 1) * magnification - 1, (i + 1) * magnification - 1), color)
 
-        im.save(filename)
+        return im
 
 def get_alignment_positions(version: int) -> list[int]:
 
@@ -196,20 +198,15 @@ class QRCodeDrawer:
         for j in range(8, self.width - 8):
             self.set_module_value(6, j, ModuleValue.TIMING_PATTERN_1 if j % 2 == 0 else ModuleValue.TIMING_PATTERN_0)
 
-    def place_format_information_regions(self):
-
-        level = ErrorCorrectionLevel.M
-        pattern = DataMaskingPattern.Pattern2
+    def place_format_information_regions(self, level: ErrorCorrectionLevel, pattern: DataMaskingPattern):
 
         format_data_bits = (level << 3) | pattern
         format_ecc_bits = format_information_code_remainder(format_data_bits)
 
         format_bits = (format_data_bits << 10) | format_ecc_bits
 
-        # Don't forget to XOR the info with a fixed pattern!
+        # XOR the result with a fixed pattern.
         format_bits ^= 0b101010000010010
-
-        #print("format bits: 0b{:015b}".format(format_bits))
 
         W = self.width
         H = self.height
@@ -219,7 +216,7 @@ class QRCodeDrawer:
             [(8, W-1), (8, W-2), (8, W-3), (8, W-4), (8, W-5), (8, W-6), (8, W-7), (8, W-8), (H-7, 8), (H-6, 8), (H-5, 8), (H-4, 8), (H-3, 8), (H-2, 8), (H-1, 8)]
         ]
 
-        # Set the single module.
+        # Set the single module that is always on.
         self.set_module_value(H-8, 8, ModuleValue.FORMAT_INFORMATION_1)
 
         for k in range(15):
@@ -258,18 +255,17 @@ class QRCodeDrawer:
         return positions
 
     def apply_data_masking_pattern(self, pattern, positions):
-        if pattern != DataMaskingPattern.Pattern2:
-            raise RuntimeError()
+        pattern_function = data_mask_pattern_functions[pattern]
         for (i, j) in positions:
             value = self.get_module_value(i, j)
             assert value in (ModuleValue.DATA_ERC_0, ModuleValue.DATA_ERC_1)
             # Invert if the pattern condition is True
-            if j % 3 == 0:
+            if pattern_function(i, j):
                 value = ModuleValue.DATA_ERC_1 if value == ModuleValue.DATA_ERC_0 else ModuleValue.DATA_ERC_0
                 self.set_module_value(i, j, value)
 
-    def render_as_image(self, filename: str, *, magnification: int = 1) -> None:
-        self.canvas.render_as_image(filename, magnification = magnification)
+    def render_as_image(self, magnification: int = 1) -> None:
+        return self.canvas.render_as_image(magnification)
 
     def count_indeterminate(self):
         count = 0
@@ -281,39 +277,120 @@ class QRCodeDrawer:
         return count
 
 
+def numeric_mode_character_count_bits(version: int) -> int:
+    if (1 <= version <= 9):
+        return 10
+    if (10 <= version <= 26):
+        return 12
+    if (27 <= version <= 40):
+        return 14
+    raise ValueError()
+
+def alphanumeric_mode_character_count_bits(version: int) -> int:
+    if (1 <= version <= 9):
+        return 9
+    if (10 <= version <= 26):
+        return 11
+    if (27 <= version <= 40):
+        return 13
+    raise ValueError()
+
+def byte_mode_character_count_bits(version: int) -> int:
+    if (1 <= version <= 9):
+        return 8
+    if (10 <= version <= 26):
+        return 16
+    if (27 <= version <= 40):
+        return 16
+    raise ValueError()
+
 class DataEncoder:
-    def __init__(self):
+
+    def __init__(self, version: int):
+
+        if not (1 <= version <= 40):
+            raise ValueError(f"Bad QR code version: {version}.")
+
+        self.version = version
         self.bits = []
-    def add_bits(self, s: str):
+
+    def append_bits(self, s: str) -> None:
         for c in s:
             if c == '0':
                 self.bits.append(0)
-            if c == '1':
+            elif c == '1':
                 self.bits.append(1)
+            else:
+                raise ValueError()
 
-    def add_error_correction_words(self, n: int):
-        # Convert data to 8-bit words.
-        assert len(self.bits) % 8 == 0
+    def append_integer_value(self, value: int, numbits: int) -> None:
+        mask = 1 << (numbits - 1)
+        while mask != 0:
+            bit = 1 if (value & mask) != 0 else 0
+            self.bits.append(bit)
+            mask >>= 1
+
+    def append_numeric_mode_block(self, s: str) -> None:
+        if re.fullmatch("[0-9]*", s) is None:
+            raise ValueError()
+
+        self.append_integer_value(1, 4)  # Numeric mode block follows.
+
+        count_bits = numeric_mode_character_count_bits(self.version)
+
+        self.append_integer_value(len(s), count_bits)
+
         idx = 0
-        data = []
+        while idx != len(s):
+            blocksize = min(3, len(s) - idx)
+            if blocksize == 1:
+                numbits = 4
+            elif blocksize == 2:
+                numbits = 7
+            elif blocksize == 3:
+                numbits = 10
+            else:
+                raise RuntimeError()
+            self.append_integer_value(int(s[idx:idx + blocksize]), numbits)
+            idx += blocksize
+
+    def append_alphanumeric_mode_block(self, s: str) -> None:
+        raise NotImplementedError()
+
+    def append_byte_mode_block(self, b: bytes) -> None:
+
+        self.append_integer_value(4, 4)  # Byte mode block follows.
+
+        count_bits = byte_mode_character_count_bits(self.version)
+
+        self.append_integer_value(len(b), count_bits)
+
+        for value in b:
+            self.append_integer_value(value, 8)
+
+    def append_kanji_mode_block(self, s: str) -> None:
+        raise NotImplementedError()
+
+    def append_terminator(self):
+        self.append_integer_value(0, 4)
+
+    def append_padding_bits(self):
+        while len(self.bits) % 8 != 0:
+            self.bits.append(0)
+
+    def get_words(self):
+
+        if len(self.bits) % 8 != 0:
+            raise RuntimeError("Number of bits is not a multiple of 8.")
+
+        idx = 0
+        words = []
         while idx != len(self.bits):
             word = int("".join(map(str, self.bits[idx:idx+8])), 2)
-            data.append(word)
+            words.append(word)
             idx += 8
 
-        poly = calculate_reed_solomon_polynomial(n, strip=True)
-
-        erc = reed_solomon_code_remainder(data, poly)
-
-        for w in erc:
-            self.add_bits("{:08b}".format(w))
-
-        idx = 0
-        data = []
-        while idx != len(self.bits):
-            word = "".join(map(str, self.bits[idx:idx+8]))
-            print(word)
-            idx += 8
+        return words
 
 
 def main():
@@ -366,61 +443,103 @@ def main():
     # Place separators.
     # Place timing patterns.
 
-    render_versions = (
-        (1, 32),
-        (2, 16),
-        (3, 16),
-        (7,  8),
-        (14, 8),
-        (40, 4)
-    )
+    magnification = 1
 
-    magnification = 20
+    version = 5
+    level = ErrorCorrectionLevel.L
 
-    version = 1
-    level = ErrorCorrectionLevel.M
+    version_specification = version_specifications[(version, level)]
 
-    qr = QRCodeDrawer(version, True)
-    qr.place_quiet_zone()
-    qr.place_finder_patterns()
-    qr.place_separators()
-    qr.place_timing_patterns()
-    qr.place_alignment_patterns()
-    qr.place_format_information_regions()
-    qr.place_version_information_regions()
+    block_specification = version_specification.block_specification
 
-    de = DataEncoder()
+    for pattern in DataMaskingPattern:
 
-    de.add_bits("0001")
-    de.add_bits("0000001000")
+        qr = QRCodeDrawer(version, True)
+        qr.place_quiet_zone()
+        qr.place_finder_patterns()
+        qr.place_separators()
+        qr.place_timing_patterns()
+        qr.place_alignment_patterns()
+        qr.place_format_information_regions(level, pattern)
+        qr.place_version_information_regions()
 
-    de.add_bits("0000001100")
-    de.add_bits("0101011001")
-    de.add_bits("1000011")
+        de = DataEncoder(version)
 
-    while len(de.bits) % 8 != 0:
-        de.add_bits("0")
+        #de.append_numeric_mode_block("01234567")
+        #de.append_byte_mode_block('⛄ Snowman'.encode())
+        #de.append_byte_mode_block('Hallo Petra!'.encode())
+        #de.append_byte_mode_block(b"http://www.jigsaw.nl")
+        de.append_byte_mode_block(b"https://www.jigsaw.nl/")
+        de.append_terminator()
+        de.append_padding_bits()
 
-    padding = 0
-    while len(de.bits) // 8 != 16:
-        if padding == 0:
-            de.add_bits("11101100")
-        else:
-            de.add_bits("00010001")
-        padding = 1 - padding
+        data = de.get_words()
 
-    de.add_error_correction_words(10)
+        print("unpadded data length:", len(data))
 
-    positions = qr.get_indeterminate_positions()
+        assert len(data) <= version_specification.total_number_of_codewords - version_specification.number_of_error_correcting_codewords
 
-    assert len(positions) == len(de.bits)
+        pad_word = 0b11101100
+        while len(data) != version_specification.total_number_of_codewords - version_specification.number_of_error_correcting_codewords:
+            data.append(pad_word)
+            pad_word ^= 0b11111101
 
-    for (p, b) in zip(positions, de.bits):
-        qr.set_module_value(*p, ModuleValue.DATA_ERC_1 if b else ModuleValue.DATA_ERC_0)
+        datablocks = []
 
-    qr.apply_data_masking_pattern(DataMaskingPattern.Pattern2, positions)
+        idx = 0
+        for (count, (code_c, code_k, code_r)) in version_specification.block_specification:
+            poly = calculate_reed_solomon_polynomial(code_c - code_k, strip=True)
+            for rep in range(count):
+                # Encode 'code_k' words to 'code_c' words, by adding error correction.
 
-    qr.render_as_image(f"v{version}.png", magnification=magnification)
+                datablock = data[idx:idx+code_k]
+                idx += code_k
+                erc = reed_solomon_code_remainder(datablock, poly)
+                datablock.extend(erc)
+                datablocks.append(datablock)
+
+        assert idx == version_specification.total_number_of_codewords - version_specification.number_of_error_correcting_codewords
+
+        assert sum(len(db) for db in datablocks) == version_specification.total_number_of_codewords
+
+        data = []
+        k = 0
+        while len(data) != version_specification.total_number_of_codewords:
+            if len(datablocks[k]) != 0:
+                data.append(datablocks[k].pop(0))
+            k = (k + 1) % len(datablocks)
+
+        positions = qr.get_indeterminate_positions()
+
+        databits = []
+        for d in data:
+            mask = 0x80
+            while mask != 0:
+                bit = (d & mask) != 0
+                databits.append(bit)
+                mask >>= 1
+
+        assert len(databits) <= len(positions)
+
+        # Add padding.
+        while len(databits) < len(positions):
+            databits.append(0)
+
+        print("num positions:", len(positions))
+        print("num databits:", len(databits))
+
+        assert len(positions) == len(databits)
+
+        for (position, databit) in zip(positions, databits):
+            qr.set_module_value(*position, ModuleValue.DATA_ERC_1 if databit else ModuleValue.DATA_ERC_0)
+
+        qr.apply_data_masking_pattern(pattern, positions)
+
+        im = qr.render_as_image(magnification)
+
+        filename = f"v{version}_{pattern}.png"
+        print(f"Saving {filename} ...")
+        im.save(filename)
 
 
 if __name__ == "__main__":

@@ -37,7 +37,7 @@ from the version number, we will use a lookup table instead.
 """
 
 from typing import NamedTuple
-from enum_types import ErrorCorrectionLevel
+from enum_types import ErrorCorrectionLevel, DataMaskingPattern
 
 alignment_pattern_positions: dict[int, list[int]] = {
     1: [],
@@ -82,6 +82,16 @@ alignment_pattern_positions: dict[int, list[int]] = {
     40: [6, 30, 58, 86, 114, 142, 170]
 }
 
+data_mask_pattern_functions = {
+    DataMaskingPattern.Pattern0: lambda i, j: (i + j) % 2 == 0,
+    DataMaskingPattern.Pattern1: lambda i, j: i % 2 == 0,
+    DataMaskingPattern.Pattern2: lambda i, j: j % 3 == 0,
+    DataMaskingPattern.Pattern3: lambda i, j: (i + j) % 3 == 0,
+    DataMaskingPattern.Pattern4: lambda i, j: ((i // 2) + (j // 3)) % 2 == 0,
+    DataMaskingPattern.Pattern5: lambda i, j: (i * j) % 2 + (i * j) % 3 == 0,
+    DataMaskingPattern.Pattern6: lambda i, j: ((i * j) % 2 + (i * j) % 3) % 2 == 0,
+    DataMaskingPattern.Pattern7: lambda i, j: ((i + j) % 2 + (i * j) % 3) % 2 == 0
+}
 
 class VersionSpecification(NamedTuple):
     version: int
