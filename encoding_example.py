@@ -1,54 +1,77 @@
 #! /usr/bin/env -S python3 -B
 
-"""An example encoder for a version 1-M QR Code symbol.
-This example uses numeric mode.
-"""
+"""Generate QR Code examples."""
 
-import re
 from enum import IntEnum
 from PIL import Image, ImageDraw
 
 from enum_types import ErrorCorrectionLevel, DataMaskingPattern
 from binary_codes import format_information_code_remainder, version_information_code_remainder
 from reed_solomon_code import calculate_reed_solomon_polynomial, reed_solomon_code_remainder
-from lookup_tables import data_mask_pattern_functions, version_specifications
+from lookup_tables import alignment_pattern_positions, data_mask_pattern_functions, version_specifications
+from data_encoder import DataEncoder
 
 class ModuleValue(IntEnum):
-    QUIET_ZONE_0          = 10
-    FINDER_PATTERN_0      = 20
-    FINDER_PATTERN_1      = 21
-    SEPARATOR_0           = 30
-    TIMING_PATTERN_0      = 40
-    TIMING_PATTERN_1      = 41
-    ALIGNMENT_PATTERN_0   = 50
-    ALIGNMENT_PATTERN_1   = 51
-    FORMAT_INFORMATION_0  = 60
-    FORMAT_INFORMATION_1  = 61
-    VERSION_INFORMATION_0 = 70
-    VERSION_INFORMATION_1 = 71
-    DATA_ERC_0            = 80
-    DATA_ERC_1            = 81
-    INDETERMINATE         = 99
+    QUIET_ZONE_0                      = 10
+    FINDER_PATTERN_0                  = 20
+    FINDER_PATTERN_1                  = 21
+    SEPARATOR_0                       = 30
+    TIMING_PATTERN_0                  = 40
+    TIMING_PATTERN_1                  = 41
+    ALIGNMENT_PATTERN_0               = 50
+    ALIGNMENT_PATTERN_1               = 51
+    FORMAT_INFORMATION_0              = 60
+    FORMAT_INFORMATION_1              = 61
+    FORMAT_INFORMATION_INDETERMINATE  = 69 # Placeholder
+    VERSION_INFORMATION_0             = 70
+    VERSION_INFORMATION_1             = 71
+    VERSION_INFORMATION_INDETERMINATE = 79 # Placeholder
+    DATA_ERC_0                        = 80
+    DATA_ERC_1                        = 81
+    INDETERMINATE                     = 99
 
 
-
-render_colormap = {
-    ModuleValue.QUIET_ZONE_0          : '#ffffff',
-    ModuleValue.FINDER_PATTERN_0      : '#ffffff',
-    ModuleValue.FINDER_PATTERN_1      : '#000000',
-    ModuleValue.SEPARATOR_0           : '#ffffff',
-    ModuleValue.TIMING_PATTERN_0      : '#ffffff',
-    ModuleValue.TIMING_PATTERN_1      : '#000000',
-    ModuleValue.ALIGNMENT_PATTERN_0   : '#ffffff',
-    ModuleValue.ALIGNMENT_PATTERN_1   : '#000000',
-    ModuleValue.FORMAT_INFORMATION_0  : '#ffffff',
-    ModuleValue.FORMAT_INFORMATION_1  : '#000000',
-    ModuleValue.VERSION_INFORMATION_0 : '#ffffff',
-    ModuleValue.VERSION_INFORMATION_1 : '#000000',
-    ModuleValue.DATA_ERC_0            : '#ffffff',
-    ModuleValue.DATA_ERC_1            : '#000000',
-    ModuleValue.INDETERMINATE         : '#ff0000'
+render_colormap1 = {
+    ModuleValue.QUIET_ZONE_0                      : '#ffffff',
+    ModuleValue.FINDER_PATTERN_0                  : '#ffcccc',
+    ModuleValue.FINDER_PATTERN_1                  : '#ff0000',
+    ModuleValue.SEPARATOR_0                       : '#ffffff',
+    ModuleValue.TIMING_PATTERN_0                  : '#ffcccc',
+    ModuleValue.TIMING_PATTERN_1                  : '#ff0000',
+    ModuleValue.ALIGNMENT_PATTERN_0               : '#ffcccc',
+    ModuleValue.ALIGNMENT_PATTERN_1               : '#ff0000',
+    ModuleValue.FORMAT_INFORMATION_0              : '#ccffcc',
+    ModuleValue.FORMAT_INFORMATION_1              : '#00bb00',
+    ModuleValue.FORMAT_INFORMATION_INDETERMINATE  : '#ccffcc',
+    ModuleValue.VERSION_INFORMATION_0             : '#ddddff',
+    ModuleValue.VERSION_INFORMATION_1             : '#0000ff',
+    ModuleValue.VERSION_INFORMATION_INDETERMINATE : '#ddddff',
+    ModuleValue.DATA_ERC_0                        : '#ffffff',
+    ModuleValue.DATA_ERC_1                        : '#000000',
+    ModuleValue.INDETERMINATE                     : '#ff0000'
 }
+
+render_colormap2 = {
+    ModuleValue.QUIET_ZONE_0                      : '#ffffff',
+    ModuleValue.FINDER_PATTERN_0                  : '#ffffff',
+    ModuleValue.FINDER_PATTERN_1                  : '#000000',
+    ModuleValue.SEPARATOR_0                       : '#ffffff',
+    ModuleValue.TIMING_PATTERN_0                  : '#ffffff',
+    ModuleValue.TIMING_PATTERN_1                  : '#000000',
+    ModuleValue.ALIGNMENT_PATTERN_0               : '#ffffff',
+    ModuleValue.ALIGNMENT_PATTERN_1               : '#000000',
+    ModuleValue.FORMAT_INFORMATION_0              : '#ffffff',
+    ModuleValue.FORMAT_INFORMATION_1              : '#000000',
+    ModuleValue.FORMAT_INFORMATION_INDETERMINATE : '#ffffff',
+    ModuleValue.VERSION_INFORMATION_0             : '#ffffff',
+    ModuleValue.VERSION_INFORMATION_1             : '#000000',
+    ModuleValue.VERSION_INFORMATION_INDETERMINATE : '#ffffff',
+    ModuleValue.DATA_ERC_0                        : '#ffffff',
+    ModuleValue.DATA_ERC_1                        : '#000000',
+    ModuleValue.INDETERMINATE                     : '#ffffff'
+}
+
+render_colormap = render_colormap1
 
 
 class QRCodeCanvas:
@@ -70,7 +93,7 @@ class QRCodeCanvas:
         index = i * self.width + j
         return ModuleValue(self.modules[index])
 
-    def render_as_image(self, magnification: int = 1) -> None:
+    def render_as_image(self, magnification: int = 1) -> Image.Image:
         im = Image.new('RGB', (self.width * magnification, self.height * magnification))
         draw = ImageDraw.Draw(im)
 
@@ -80,41 +103,16 @@ class QRCodeCanvas:
                 color = render_colormap[value]
                 draw.rectangle((j * magnification, i * magnification, (j + 1) * magnification - 1, (i + 1) * magnification - 1), color)
 
-        im = im.convert('L')
-
         return im
 
-def get_alignment_positions(version: int) -> list[int]:
+def enumerate_bits(value: int, num_bits: int):
+    """Enumerate the bits in value, starting from the MSB and going down to the LSB."""
+    assert 0 <= value < (1 << num_bits)
+    mask = 1 << (num_bits - 1)
+    while mask != 0:
+        yield (value & mask) != 0
+        mask >>= 1
 
-    positions = []
-
-    if version > 1:
-
-        num = (version+14) // 7
-
-        first = 6
-        last = 21 + 4 * (version - 1) - 7
-
-        delta = last - first
-        steps = num - 1
-
-        # Find the smallest even integer greater than or equal to delta / steps.
-        # This is the step size of all but the first step.
-        stepsize = 0
-        while not (stepsize * steps >= delta):
-            stepsize += 2
-
-        first_stepsize = delta - (steps - 1) * stepsize
-
-        assert first_stepsize > 0
-        assert first_stepsize % 2 == 0
-
-        positions.append(6)
-        positions.append(positions[-1] + first_stepsize)
-        while len(positions) != num:
-            positions.append(positions[-1] + stepsize)
-
-    return positions
 
 class QRCodeDrawer:
 
@@ -127,6 +125,48 @@ class QRCodeDrawer:
         self.quiet_zone_margin = 4 if include_quiet_zone else 0
         self.width = 21 + 4 * (version - 1)
         self.height = 21 + 4 * (version - 1)
+
+        W = self.width
+        H = self.height
+
+        self.format_bit_position_lists = [
+            [(8, 0), (H-1, 8)],
+            [(8, 1), (H-2, 8)],
+            [(8, 2), (H-3, 8)],
+            [(8, 3), (H-4, 8)],
+            [(8, 4), (H-5, 8)],
+            [(8, 5), (H-6, 8)],
+            [(8, 7), (H-7, 8)],
+            [(8, 8), (8, W-8)],
+            [(7, 8), (8, W-7)],
+            [(5, 8), (8, W-6)],
+            [(4, 8), (8, W-5)],
+            [(3, 8), (8, W-4)],
+            [(2, 8), (8, W-3)],
+            [(1, 8), (8, W-2)],
+            [(0, 8), (8, W-1)]
+        ]
+
+        self.version_bit_position_lists = [
+            [(H -  9, 5), (5, W -  9)],
+            [(H - 10, 5), (5, W - 10)],
+            [(H - 11, 5), (5, W - 11)],
+            [(H -  9, 4), (4, W -  9)],
+            [(H - 10, 4), (4, W - 10)],
+            [(H - 11, 4), (4, W - 11)],
+            [(H -  9, 3), (3, W -  9)],
+            [(H - 10, 3), (3, W - 10)],
+            [(H - 11, 3), (3, W - 11)],
+            [(H -  9, 2), (2, W -  9)],
+            [(H - 10, 2), (2, W - 10)],
+            [(H - 11, 2), (2, W - 11)],
+            [(H -  9, 1), (1, W -  9)],
+            [(H - 10, 1), (1, W - 10)],
+            [(H - 11, 1), (1, W - 11)],
+            [(H -  9, 0), (0, W -  9)],
+            [(H - 10, 0), (0, W - 10)],
+            [(H - 11, 0), (0, W - 11)]
+        ]
 
         canvas_width = self.width + 2 * self.quiet_zone_margin
         canvas_height = self.height + 2 * self.quiet_zone_margin
@@ -184,7 +224,7 @@ class QRCodeDrawer:
 
     def place_alignment_patterns(self) -> None:
 
-        positions = get_alignment_positions(self.version)
+        positions = alignment_pattern_positions[self.version]
         num = len(positions)
 
         for v in range(num):
@@ -200,42 +240,61 @@ class QRCodeDrawer:
         for j in range(8, self.width - 8):
             self.set_module_value(6, j, ModuleValue.TIMING_PATTERN_1 if j % 2 == 0 else ModuleValue.TIMING_PATTERN_0)
 
-    def place_format_information_regions(self, level: ErrorCorrectionLevel, pattern: DataMaskingPattern):
+    def place_format_information_placeholders(self):
+
+        # Place the two format information patterns.
+        for format_bit_position_list in self.format_bit_position_lists:
+            for (i, j) in format_bit_position_list:
+                self.set_module_value(i, j, ModuleValue.FORMAT_INFORMATION_INDETERMINATE)
+
+        # Place the single fixed "dark module" above and to the right of the bottom-left finder pattern (7.9.1).
+        self.set_module_value(self.height-8, 8, ModuleValue.FORMAT_INFORMATION_INDETERMINATE)
+
+    def place_format_information_patterns(self, level: ErrorCorrectionLevel, pattern: DataMaskingPattern):
 
         format_data_bits = (level << 3) | pattern
-        format_ecc_bits = format_information_code_remainder(format_data_bits)
 
-        format_bits = (format_data_bits << 10) | format_ecc_bits
+        # Extend the 5-bit formation information with 10 bits of error-correction data.
+        format_bits = (format_data_bits << 10) | format_information_code_remainder(format_data_bits)
 
         # XOR the result with a fixed pattern.
         format_bits ^= 0b101010000010010
 
-        W = self.width
-        H = self.height
+        # Place the two format information patterns.
+        for (format_bit_position_list, format_bit) in zip(self.format_bit_position_lists, enumerate_bits(format_bits, 15)):
+            module_value = ModuleValue.FORMAT_INFORMATION_1 if format_bit else ModuleValue.FORMAT_INFORMATION_0
+            for (i, j) in format_bit_position_list:
+                self.set_module_value(i, j, module_value)
 
-        copies = [
-            [(0, 8), (1, 8), (2, 8), (3, 8), (4, 8), (5, 8), (7, 8), (8, 8), (8, 7), (8, 5), (8, 4), (8, 3), (8, 2), (8, 1), (8, 0)],
-            [(8, W-1), (8, W-2), (8, W-3), (8, W-4), (8, W-5), (8, W-6), (8, W-7), (8, W-8), (H-7, 8), (H-6, 8), (H-5, 8), (H-4, 8), (H-3, 8), (H-2, 8), (H-1, 8)]
-        ]
+        # Place the single fixed "dark module" above and to the right of the bottom-left finder pattern (7.9.1).
+        self.set_module_value(self.height-8, 8, ModuleValue.FORMAT_INFORMATION_1)
 
-        # Set the single module that is always on.
-        self.set_module_value(H-8, 8, ModuleValue.FORMAT_INFORMATION_1)
 
-        for k in range(15):
-            fbit = ((format_bits >> k) & 1) != 0
-            for copy in copies:
-                (i, j) = copy[k]
-                self.set_module_value(i, j, ModuleValue.FORMAT_INFORMATION_1 if fbit else ModuleValue.FORMAT_INFORMATION_0)
+    def place_version_information_placeholders(self):
 
-    def place_version_information_regions(self):
-        if self.version >= 7:
+        # The version information is only present in versions 7..40.
+        if not (7 <= self.version <= 40):
+            return
 
-            version_bits = version_information_code_remainder(self.version) | (self.version << 12)
+        # Place the two version information patterns.
+        for version_bit_position_list in self.version_bit_position_lists:
+            for (i, j) in version_bit_position_list:
+                self.set_module_value(i, j, ModuleValue.VERSION_INFORMATION_INDETERMINATE)
 
-            for k in range(18):
-                vbit = (version_bits >> k) & 1 != 0
-                self.set_module_value(self.height - 11 + k % 3, k // 3, ModuleValue.VERSION_INFORMATION_1 if vbit else ModuleValue.VERSION_INFORMATION_0)
-                self.set_module_value(k // 3, self.width - 11 + k % 3, ModuleValue.VERSION_INFORMATION_1 if vbit else ModuleValue.VERSION_INFORMATION_0)
+    def place_version_information_patterns(self):
+
+        # The version information is only present in versions 7..40.
+        if not (7 <= self.version <= 40):
+            return
+
+        # Extend the 6-bit version number with 12 bits of error-correction data.
+        version_bits = (self.version << 12) | version_information_code_remainder(self.version)
+
+        # Place the two version information patterns.
+        for (version_bit_position_list, version_bit) in zip(self.version_bit_position_lists, enumerate_bits(version_bits, 18)):
+            module_value = ModuleValue.VERSION_INFORMATION_1 if version_bit else ModuleValue.VERSION_INFORMATION_0
+            for (i, j) in version_bit_position_list:
+                self.set_module_value(i, j, module_value)
 
     def get_indeterminate_positions(self):
         positions = []
@@ -269,293 +328,204 @@ class QRCodeDrawer:
     def render_as_image(self, magnification: int = 1) -> None:
         return self.canvas.render_as_image(magnification)
 
-    def count_indeterminate(self):
-        count = 0
-        for i in range(self.height):
-            for j in range(self.width):
-                value = self.get_module_value2(i, j)
-                if value == ModuleValue.INDETERMINATE:
-                    count += 1
-        return count
+def append_pi(de):
+    with open("pi_10k.txt", "r") as fi:
+        pi_chars = fi.read()
+    de.append_alphanumeric_mode_block(pi_chars[:2])
+    de.append_numeric_mode_block(pi_chars[2:7081])
 
+def append_html(de):
+    with open("sidney.html", "r") as fi:
+        html = fi.read()
+    html = "data:text/html," + html
+    de.append_byte_mode_block(html.encode())
 
-def numeric_mode_character_count_bits(version: int) -> int:
-    if (1 <= version <= 9):
-        return 10
-    if (10 <= version <= 26):
-        return 12
-    if (27 <= version <= 40):
-        return 14
-    raise ValueError()
+def append_vcard(de):
+    with open("sidney.vcard", "r") as fi:
+        vcard = fi.read()
+    de.append_byte_mode_block(vcard.encode())
 
-def alphanumeric_mode_character_count_bits(version: int) -> int:
-    if (1 <= version <= 9):
-        return 9
-    if (10 <= version <= 26):
-        return 11
-    if (27 <= version <= 40):
-        return 13
-    raise ValueError()
+def append_geo_position(de):
+    # Supported by iOS
+    #de.append_byte_mode_block(b"geo:37.91334,15.33897")
+    de.append_byte_mode_block(b"geo:37.364722,14.334722")
 
-def byte_mode_character_count_bits(version: int) -> int:
-    if (1 <= version <= 9):
-        return 8
-    if (10 <= version <= 26):
-        return 16
-    if (27 <= version <= 40):
-        return 16
-    raise ValueError()
+def append_mailto(de):
+    # Supported by iOS
+    de.append_byte_mode_block(b"mailto:sidney@jigsaw.nl")
 
-class DataEncoder:
+def append_kanji(de):
+    de.append_kanji_mode_block('点茗')
 
-    def __init__(self, version: int):
+def append_kanji_test(de):
+    de.append_byte_mode_block(b'Japanese characters in Kanji block: ')
+    de.append_kanji_mode_block('点茗')
+    de.append_byte_mode_block(b'\nJapanese characters in byte block (UTF-8 bytes): ' + '点茗'.encode('utf-8') + b'\n')
 
-        if not (1 <= version <= 40):
-            raise ValueError(f"Bad QR code version: {version}.")
+class QRCodeCapacityError(Exception):
+    pass
 
-        self.version = version
-        self.bits = []
-
-    def append_bits(self, s: str) -> None:
-        for c in s:
-            if c == '0':
-                self.bits.append(0)
-            elif c == '1':
-                self.bits.append(1)
-            else:
-                raise ValueError()
-
-    def append_integer_value(self, value: int, numbits: int) -> None:
-        mask = 1 << (numbits - 1)
-        while mask != 0:
-            bit = 1 if (value & mask) != 0 else 0
-            self.bits.append(bit)
-            mask >>= 1
-
-    def append_numeric_mode_block(self, s: str) -> None:
-        if re.fullmatch("[0-9]*", s) is None:
-            raise ValueError()
-
-        self.append_integer_value(1, 4)  # Numeric mode block follows.
-
-        count_bits = numeric_mode_character_count_bits(self.version)
-
-        self.append_integer_value(len(s), count_bits)
-
-        idx = 0
-        while idx != len(s):
-            blocksize = min(3, len(s) - idx)
-            if blocksize == 1:
-                numbits = 4
-            elif blocksize == 2:
-                numbits = 7
-            elif blocksize == 3:
-                numbits = 10
-            else:
-                raise RuntimeError()
-            self.append_integer_value(int(s[idx:idx + blocksize]), numbits)
-            idx += blocksize
-
-    def append_alphanumeric_mode_block(self, s: str) -> None:
-        raise NotImplementedError()
-
-    def append_byte_mode_block(self, b: bytes) -> None:
-
-        self.append_integer_value(4, 4)  # Byte mode block follows.
-
-        count_bits = byte_mode_character_count_bits(self.version)
-
-        self.append_integer_value(len(b), count_bits)
-
-        for value in b:
-            self.append_integer_value(value, 8)
-
-    def append_kanji_mode_block(self, s: str) -> None:
-        raise NotImplementedError()
-
-    def append_terminator(self):
-        self.append_integer_value(0, 4)
-
-    def append_padding_bits(self):
-        while len(self.bits) % 8 != 0:
-            self.bits.append(0)
-
-    def get_words(self):
-
-        if len(self.bits) % 8 != 0:
-            raise RuntimeError("Number of bits is not a multiple of 8.")
-
-        idx = 0
-        words = []
-        while idx != len(self.bits):
-            word = int("".join(map(str, self.bits[idx:idx+8])), 2)
-            words.append(word)
-            idx += 8
-
-        return words
 
 
 def main():
 
-    # This follows appendix I of the standard.
+    magnification = 32
 
-    # We want to encode the data string "01234567" in numeric mode.
-    # Numeric mode data, where each symbol is a decimal digit 0-9, works by encoding groups of 3
-    # digits (0..999) as a 10-bit number. The final group, if it is 2 digits, will be converted as 7 bits. If it is 1 digit: 4 bits.
+    for version in (2, ):
 
-    # 012    0000001100   (10 bits, value 12)
-    # 345    0101011001   (10 bits, value 345)
-    # 67     1000011      (7 bits, value 67)
+        de = DataEncoder(version)
 
-    # Character count indicator is 10 bits for version 1-M.
-    #
-    # The character count is 8: 0000001000
-    #
-    # We also add a data-terminator to the end (4 bits: 0000).
-    #
-    # So we arrive at: 0001-0000001000-0000001100-0101011001-1000011-0000
-    #
-    # Which is:
-    #
-    # 000100000010000000001100010101100110000110000
-    #
-    # Divide in 8-bit groups, adding padding zeros to fill out a multiple of 8 bits.
-    # We end up with 6 bytes.
-    #
-    # 00010000 00100000 00001100 01010110 01100001 10000000
-    #
-    # We add PAD codewords. For version 1-M, 16 data codewords must be present, so we need to add 10 Pad codewords.
-    # Padding codewords are alternatingly 11101100 / 00010001.
-    #
-    # This yields the following 16 codewords:
-    #
-    # 00010000 00100000 00001100 01010110 01100001 10000000 11101100 00010001
-    # 11101100 00010001 11101100 00010001 11101100 00010001 11101100 00010001
-    #
-    # Now we add 10 Reed-Solomon codewords, for error protection, ending up with 26 codewords:
-    #
-    # 00010000 00100000 00001100 01010110 01100001 10000000 11101100 00010001
-    # 11101100 00010001 11101100 00010001 11101100 00010001 11101100 00010001
-    # 10100101 00100100 11010100 11000001 11101101 00110110 11000111 10000111
-    # 00101100 01010101
-    #
-    # No interleaving is required here (what is interleaving ???)
-    #
-    # Place finder patterns.
-    # Place separators.
-    # Place timing patterns.
+        append_geo_position(de)
+        #append_pi(de)
+        #append_mailto(de)
+        #append_kanji_test(de)
 
-    magnification = 1
+        #de.append_eci_designator(899)
+        #de.append_byte_mode_block('Hallo Petra!\n'.encode())
+        #append_kanji(de)
+        #de.append_byte_mode_block('Hallo Sidney!\n'.encode())
+        #de.append_byte_mode_block('Hello ⛄ Snowman!\n'.encode())
+        #de.append_numeric_mode_block("01234567")
+        #de.append_byte_mode_block(b"http://www.jigsaw.nl?data=sidney")
+        #de.append_byte_mode_block(b"https://www.jigsaw.nl/")
 
-    for version in (40, ):
+        de.append_terminator()
+        de.append_padding_bits()
+
+        data = de.get_words()
+
         for level in (ErrorCorrectionLevel.L, ):
+
+
 
             version_specification = version_specifications[(version, level)]
             block_specification = version_specification.block_specification
 
-            for pattern in DataMaskingPattern:
+            qr = QRCodeDrawer(version, True)
+            qr.place_quiet_zone()
+            qr.place_finder_patterns()
+            qr.place_separators()
+            qr.place_timing_patterns()
+            qr.place_alignment_patterns()
 
-                qr = QRCodeDrawer(version, True)
-                qr.place_quiet_zone()
-                qr.place_finder_patterns()
-                qr.place_separators()
-                qr.place_timing_patterns()
-                qr.place_alignment_patterns()
-                qr.place_format_information_regions(level, pattern)
-                qr.place_version_information_regions()
+            # Place a temporary format and version information placeholders.
+            # However, We need to put /something/ there to be able to find the symbol's channel bit positions
+            # later on in the call to qr.get_indeterminate_positions().
+            # After pattern selection, we will fill the actual format and version information.
 
-                de = DataEncoder(version)
+            qr.place_format_information_placeholders()
+            qr.place_version_information_placeholders()
 
-                de.append_byte_mode_block('Hallo Petra!\n'.encode())
-                de.append_byte_mode_block('Hallo Sidney!\n'.encode())
-                de.append_byte_mode_block('Hello ⛄ Snowman\n'.encode())
-                #de.append_numeric_mode_block("01234567")
-                #de.append_byte_mode_block(b"http://www.jigsaw.nl")
-                #de.append_byte_mode_block(b"https://www.jigsaw.nl/")
-                de.append_terminator()
-                de.append_padding_bits()
+            # ==================== Start of: set DATA/ERC code words.
 
-                data = de.get_words()
+            # Check if the data will fit in the selected QR code symbol.
 
-                print("unpadded data length:", len(data))
+            number_of_data_codewords = version_specification.total_number_of_codewords - version_specification.number_of_error_correcting_codewords
 
-                # Pad data to data length.
+            if len(data) > number_of_data_codewords:
+                name = f"{version_specification.version}-{version_specification.error_correction_level.name}"
+                raise QRCodeCapacityError(f"Cannot fit {len(data)} data words in QR code symbol {name} ({number_of_data_codewords} data words available).")
 
-                assert len(data) <= version_specification.total_number_of_codewords - version_specification.number_of_error_correcting_codewords
+            # Append padding to data to fill up the QR code capacity, by adding the words
+            # 0b11101100, 0b00010001 alternatingly.
 
-                pad_word = 0b11101100
-                while len(data) != version_specification.total_number_of_codewords - version_specification.number_of_error_correcting_codewords:
-                    data.append(pad_word)
-                    pad_word ^= 0b11111101
+            pad_word = 0b11101100
+            while len(data) != number_of_data_codewords:
+                data.append(pad_word)
+                pad_word ^= 0b11111101
 
-                # Split op data in datablocks.
+            # Split up data in datablocks, and calculate the corresponding error correction blocks.
 
-                dblocks = []
-                eblocks = []
+            dblocks = []
+            eblocks = []
 
-                idx = 0
-                for (count, (code_c, code_k, code_r)) in version_specification.block_specification:
-                    poly = calculate_reed_solomon_polynomial(code_c - code_k, strip=True)
-                    for rep in range(count):
-                        # Encode 'code_k' words to 'code_c' words, by adding error correction.
-                        dblock = data[idx:idx+code_k]
-                        dblocks.append(dblock)
+            idx = 0
+            for (count, (code_c, code_k, code_r)) in version_specification.block_specification:
+                # Calculate the Reed-Solomon polynomial corresponding the the number of error correction words.
+                poly = calculate_reed_solomon_polynomial(code_c - code_k, strip=True)
+                for rep in range(count):
 
-                        eblock = reed_solomon_code_remainder(dblock, poly)
-                        eblocks.append(eblock)
+                    dblock = data[idx:idx+code_k]
+                    dblocks.append(dblock)
 
-                        idx += code_k
+                    eblock = reed_solomon_code_remainder(dblock, poly)
+                    eblocks.append(eblock)
 
-                assert idx == version_specification.total_number_of_codewords - version_specification.number_of_error_correcting_codewords
+                    idx += code_k
 
-                assert sum(map(len, dblocks)) + sum(map(len, eblocks)) == version_specification.total_number_of_codewords
+            assert idx == version_specification.total_number_of_codewords - version_specification.number_of_error_correcting_codewords
+            assert sum(map(len, dblocks)) + sum(map(len, eblocks)) == version_specification.total_number_of_codewords
 
-                data = []
+            # Interleave the data words and error correction words.
+            # All data words precede all error correction words.
 
-                k = 0
-                while sum(map(len, dblocks)) != 0:
-                    if len(dblocks[k]) != 0:
-                        data.append(dblocks[k].pop(0))
-                    k = (k + 1) % len(dblocks)
+            channelwords = []
 
-                k = 0
-                while sum(map(len, eblocks)) != 0:
-                    if len(eblocks[k]) != 0:
-                        data.append(eblocks[k].pop(0))
-                    k = (k + 1) % len(eblocks)
+            k = 0
+            while sum(map(len, dblocks)) != 0:
+                if len(dblocks[k]) != 0:
+                    channelwords.append(dblocks[k].pop(0))
+                k = (k + 1) % len(dblocks)
 
-                positions = qr.get_indeterminate_positions()
+            k = 0
+            while sum(map(len, eblocks)) != 0:
+                if len(eblocks[k]) != 0:
+                    channelwords.append(eblocks[k].pop(0))
+                k = (k + 1) % len(eblocks)
 
-                databits = []
-                for d in data:
-                    mask = 0x80
-                    while mask != 0:
-                        bit = (d & mask) != 0
-                        databits.append(bit)
-                        mask >>= 1
+            # Convert data-words to data-bits.
 
-                assert len(databits) <= len(positions)
+            channelbits = [channelbit for word in channelwords for channelbit in enumerate_bits(word, 8)]
 
-                num_padding_bits = len(positions) - len(databits)
-                if num_padding_bits != 0:
-                    print(f"Adding {num_padding_bits} padding bits...")
-                    databits.extend([0] * num_padding_bits)
+            # Get the module positions where the data needs to go.
 
-                print("num positions:", len(positions))
-                print("num databits:", len(databits))
+            positions = qr.get_indeterminate_positions()
 
-                assert len(positions) == len(databits)
+            assert len(channelbits) <= len(positions)
 
-                for (position, databit) in zip(positions, databits):
-                    qr.set_module_value(*position, ModuleValue.DATA_ERC_1 if databit else ModuleValue.DATA_ERC_0)
+            # Add padding bits to data-bits if needed.
+
+            num_padding_bits = len(positions) - len(channelbits)
+            if num_padding_bits != 0:
+                print(f"Adding {num_padding_bits} channel padding bits...")
+                channelbits.extend([0] * num_padding_bits)
+
+            #print("num positions:", len(positions))
+            #print("num channelbits:", len(channelbits))
+
+            assert len(positions) == len(channelbits)
+
+            # Place the channel bits in the module.
+
+            for ((i, j), channelbit) in zip(positions, channelbits):
+                qr.set_module_value(i, j, ModuleValue.DATA_ERC_1 if channelbit else ModuleValue.DATA_ERC_0)
+
+            # ==================== End of: set DATA/ERC code words.
+
+            for pattern in DataMaskingPattern: # (DataMaskingPattern.Pattern0, ):
 
                 qr.apply_data_masking_pattern(pattern, positions)
 
+                qr.place_version_information_placeholders()
+                qr.place_format_information_placeholders()
+
+                # Determine score for this pattern, as per the standard.
+
+                # Fill in the definitive version.
+                qr.place_version_information_patterns()
+                qr.place_format_information_patterns(level, pattern)
+
+                # Determine actual score for this pattern, with format and version information filled in.
+
+                # Capture image.
                 im = qr.render_as_image(magnification)
 
                 filename = f"v{version}{level.name}_p{pattern}.png"
                 print(f"Saving {filename} ...")
                 im.save(filename)
+
+                # Revert to the unmasked data.
+                qr.apply_data_masking_pattern(pattern, positions)
 
 
 if __name__ == "__main__":

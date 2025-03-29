@@ -1,5 +1,3 @@
-#! /usr/bin/env python3
-
 """Implement Reed-Solomon codes as used in QR codes."""
 
 def make_gf8_multiplication_tables():
@@ -65,7 +63,7 @@ def multiply_polynomial(pa: list[int], pb: list[int]) -> list[int]:
     return z
 
 
-def calculate_reed_solomon_polynomial(n: int, *, strip: bool):
+def calculate_reed_solomon_polynomial(n: int, *, strip: bool) -> list[int]:
     element = 1
     poly = [1]
     for k in range(n):
@@ -100,7 +98,7 @@ def reed_solomon_code_remainder(data: list[int], poly: list[int]) -> list[int]:
     return residual
 
 
-def poly_string(poly, prepend_prefix_term: bool):
+def poly_string(poly: list[int], prepend_prefix_term: bool) -> str:
 
     terms = []
 

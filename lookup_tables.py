@@ -2,11 +2,11 @@
 
 The alignment pattern positions are copied verbatim from the standard (Table E.1).
 
-They specify both horizontal and vertial center positions of the 5x5 alignment
+They specify both horizontal and vertical center positions of the 5x5 alignment
 patterns present in regular QR codes. The top-left, top-right, and bottom-left
-alignment patterns are left out, as they would clash with the three finder patterns.
+alignment patterns are omitted, as they would clash with the three finder patterns.
 
-QR Code version 1 is exceptional, as it has no embedded alignment pattern at all.
+QR Code version 1 is exceptional, as it has no alignment patterns at all.
 
 For versions 2..40, we observe the following:
 
@@ -21,7 +21,7 @@ For versions 2..40, we observe the following:
     num_positions = 2 + floor(version / 7)
 
     Note that the standard does not explicitly guarantee this.
-    The pattern can be observed easily from the table.
+    The pattern is easily deduced from the table.
 
 (3) The first step (i.e., the difference between the first and second position)
     can differ from all other steps. All steps but the first are identical.
@@ -40,15 +40,15 @@ from typing import NamedTuple
 from enum_types import ErrorCorrectionLevel, DataMaskingPattern
 
 alignment_pattern_positions: dict[int, list[int]] = {
-    1: [],
-    2: [6, 18],
-    3: [6, 22],
-    4: [6, 26],
-    5: [6, 30],
-    6: [6, 34],
-    7: [6, 22, 38],
-    8: [6, 24, 42],
-    9: [6, 26, 46],
+     1: [],
+     2: [6, 18],
+     3: [6, 22],
+     4: [6, 26],
+     5: [6, 30],
+     6: [6, 34],
+     7: [6, 22, 38],
+     8: [6, 24, 42],
+     9: [6, 26, 46],
     10: [6, 28, 50],
     11: [6, 30, 54],
     12: [6, 32, 58],
@@ -161,7 +161,7 @@ version_specifications = {
 
     (12, ErrorCorrectionLevel.L) : VersionSpecification(12, ErrorCorrectionLevel.L,  466,   96, 0, [ (  2, (116,  92, 12)), (  2, (117,  93, 12)) ]),
     (12, ErrorCorrectionLevel.M) : VersionSpecification(12, ErrorCorrectionLevel.M,  466,  176, 0, [ (  6, ( 58,  36, 11)), (  2, ( 59,  37, 11)) ]),
-    (12, ErrorCorrectionLevel.Q) : VersionSpecification(12, ErrorCorrectionLevel.Q,  466,  260, 0, [ (  4, ( 46,  20, 23)), (  6, ( 47,  21, 13)) ]),
+    (12, ErrorCorrectionLevel.Q) : VersionSpecification(12, ErrorCorrectionLevel.Q,  466,  260, 0, [ (  4, ( 46,  20, 13)), (  6, ( 47,  21, 13)) ]),
     (12, ErrorCorrectionLevel.H) : VersionSpecification(12, ErrorCorrectionLevel.H,  466,  308, 0, [ (  7, ( 42,  14, 14)), (  4, ( 43,  15, 14)) ]),
 
     (13, ErrorCorrectionLevel.L) : VersionSpecification(13, ErrorCorrectionLevel.L,  532,  104, 0, [ (  4, (133, 107, 13))                        ]),
@@ -195,7 +195,7 @@ version_specifications = {
     (18, ErrorCorrectionLevel.H) : VersionSpecification(18, ErrorCorrectionLevel.H,  901,  588, 0, [ (  2, ( 42,  14, 14)), ( 19, ( 43,  15, 14)) ]),
 
     (19, ErrorCorrectionLevel.L) : VersionSpecification(19, ErrorCorrectionLevel.L,  991,  196, 0, [ (  3, (141, 113, 14)), (  4, (142, 114, 14)) ]),
-    (19, ErrorCorrectionLevel.M) : VersionSpecification(19, ErrorCorrectionLevel.M,  991,  364, 0, [ (  3, ( 70,  44, 13)), ( 11, ( 71,  45, 14)) ]),
+    (19, ErrorCorrectionLevel.M) : VersionSpecification(19, ErrorCorrectionLevel.M,  991,  364, 0, [ (  3, ( 70,  44, 13)), ( 11, ( 71,  45, 13)) ]),
     (19, ErrorCorrectionLevel.Q) : VersionSpecification(19, ErrorCorrectionLevel.Q,  991,  546, 0, [ ( 17, ( 47,  21, 13)), (  4, ( 48,  22, 13)) ]),
     (19, ErrorCorrectionLevel.H) : VersionSpecification(19, ErrorCorrectionLevel.H,  991,  650, 0, [ (  9, ( 39,  13, 13)), ( 16, ( 40,  14, 13)) ]),
 
@@ -244,7 +244,7 @@ version_specifications = {
     (28, ErrorCorrectionLevel.Q) : VersionSpecification(28, ErrorCorrectionLevel.Q, 1921, 1050, 0, [ (  4, ( 54,  24, 15)), ( 31, ( 55,  25, 15)) ]),
     (28, ErrorCorrectionLevel.H) : VersionSpecification(28, ErrorCorrectionLevel.H, 1921, 1260, 0, [ ( 11, ( 45,  15, 15)), ( 31, ( 46,  16, 15)) ]),
 
-    (29, ErrorCorrectionLevel.L) : VersionSpecification(29, ErrorCorrectionLevel.L, 2051,  420, 0, [ (  7, (146, 116, 15)), (  7, (147, 117, 14)) ]),
+    (29, ErrorCorrectionLevel.L) : VersionSpecification(29, ErrorCorrectionLevel.L, 2051,  420, 0, [ (  7, (146, 116, 15)), (  7, (147, 117, 15)) ]),
     (29, ErrorCorrectionLevel.M) : VersionSpecification(29, ErrorCorrectionLevel.M, 2051,  784, 0, [ ( 21, ( 73,  45, 14)), (  7, ( 74,  46, 14)) ]),
     (29, ErrorCorrectionLevel.Q) : VersionSpecification(29, ErrorCorrectionLevel.Q, 2051, 1140, 0, [ (  1, ( 53,  23, 15)), ( 37, ( 54,  24, 15)) ]),
     (29, ErrorCorrectionLevel.H) : VersionSpecification(29, ErrorCorrectionLevel.H, 2051, 1350, 0, [ ( 19, ( 45,  15, 15)), ( 26, ( 46,  16, 15)) ]),

@@ -1,7 +1,6 @@
-"""
-"""
 
 from enum import IntEnum
+
 
 class DataMaskingPattern(IntEnum):
     Pattern0 = 0b000
