@@ -2,7 +2,9 @@
 
 """Generate QR Code examples."""
 
+import subprocess
 from enum import IntEnum
+
 from PIL import Image, ImageDraw
 
 from enum_types import ErrorCorrectionLevel, DataMaskingPattern
@@ -10,6 +12,7 @@ from binary_codes import format_information_code_remainder, version_information_
 from reed_solomon_code import calculate_reed_solomon_polynomial, reed_solomon_code_remainder
 from lookup_tables import alignment_pattern_positions, data_mask_pattern_functions, version_specifications
 from data_encoder import DataEncoder
+
 
 class ModuleValue(IntEnum):
     QUIET_ZONE_0                      = 10
@@ -22,10 +25,10 @@ class ModuleValue(IntEnum):
     ALIGNMENT_PATTERN_1               = 51
     FORMAT_INFORMATION_0              = 60
     FORMAT_INFORMATION_1              = 61
-    FORMAT_INFORMATION_INDETERMINATE  = 69 # Placeholder
+    FORMAT_INFORMATION_INDETERMINATE  = 69 # Placeholder, to be filled in later.
     VERSION_INFORMATION_0             = 70
     VERSION_INFORMATION_1             = 71
-    VERSION_INFORMATION_INDETERMINATE = 79 # Placeholder
+    VERSION_INFORMATION_INDETERMINATE = 79 # Placeholder, to be filled in later.
     DATA_ERC_0                        = 80
     DATA_ERC_1                        = 81
     INDETERMINATE                     = 99
@@ -62,7 +65,7 @@ render_colormap2 = {
     ModuleValue.ALIGNMENT_PATTERN_1               : '#000000',
     ModuleValue.FORMAT_INFORMATION_0              : '#ffffff',
     ModuleValue.FORMAT_INFORMATION_1              : '#000000',
-    ModuleValue.FORMAT_INFORMATION_INDETERMINATE : '#ffffff',
+    ModuleValue.FORMAT_INFORMATION_INDETERMINATE  : '#ffffff',
     ModuleValue.VERSION_INFORMATION_0             : '#ffffff',
     ModuleValue.VERSION_INFORMATION_1             : '#000000',
     ModuleValue.VERSION_INFORMATION_INDETERMINATE : '#ffffff',
@@ -123,49 +126,46 @@ class QRCodeDrawer:
 
         self.version = version
         self.quiet_zone_margin = 4 if include_quiet_zone else 0
-        self.width = 21 + 4 * (version - 1)
-        self.height = 21 + 4 * (version - 1)
-
-        W = self.width
-        H = self.height
+        self.width = 17 + 4 * version
+        self.height = 17 + 4 * version
 
         self.format_bit_position_lists = [
-            [(8, 0), (H-1, 8)],
-            [(8, 1), (H-2, 8)],
-            [(8, 2), (H-3, 8)],
-            [(8, 3), (H-4, 8)],
-            [(8, 4), (H-5, 8)],
-            [(8, 5), (H-6, 8)],
-            [(8, 7), (H-7, 8)],
-            [(8, 8), (8, W-8)],
-            [(7, 8), (8, W-7)],
-            [(5, 8), (8, W-6)],
-            [(4, 8), (8, W-5)],
-            [(3, 8), (8, W-4)],
-            [(2, 8), (8, W-3)],
-            [(1, 8), (8, W-2)],
-            [(0, 8), (8, W-1)]
+            [(8, 0), (self.height - 1, 8)], # MSB positions
+            [(8, 1), (self.height - 2, 8)],
+            [(8, 2), (self.height - 3, 8)],
+            [(8, 3), (self.height - 4, 8)],
+            [(8, 4), (self.height - 5, 8)],
+            [(8, 5), (self.height - 6, 8)],
+            [(8, 7), (self.height - 7, 8)],
+            [(8, 8), (8, self.width - 8)],
+            [(7, 8), (8, self.width - 7)],
+            [(5, 8), (8, self.width - 6)],
+            [(4, 8), (8, self.width - 5)],
+            [(3, 8), (8, self.width - 4)],
+            [(2, 8), (8, self.width - 3)],
+            [(1, 8), (8, self.width - 2)],
+            [(0, 8), (8, self.width - 1)]  # LSB positions
         ]
 
         self.version_bit_position_lists = [
-            [(H -  9, 5), (5, W -  9)],
-            [(H - 10, 5), (5, W - 10)],
-            [(H - 11, 5), (5, W - 11)],
-            [(H -  9, 4), (4, W -  9)],
-            [(H - 10, 4), (4, W - 10)],
-            [(H - 11, 4), (4, W - 11)],
-            [(H -  9, 3), (3, W -  9)],
-            [(H - 10, 3), (3, W - 10)],
-            [(H - 11, 3), (3, W - 11)],
-            [(H -  9, 2), (2, W -  9)],
-            [(H - 10, 2), (2, W - 10)],
-            [(H - 11, 2), (2, W - 11)],
-            [(H -  9, 1), (1, W -  9)],
-            [(H - 10, 1), (1, W - 10)],
-            [(H - 11, 1), (1, W - 11)],
-            [(H -  9, 0), (0, W -  9)],
-            [(H - 10, 0), (0, W - 10)],
-            [(H - 11, 0), (0, W - 11)]
+            [(self.height -  9, 5), (5, self.width -  9)], # MSB positions
+            [(self.height - 10, 5), (5, self.width - 10)],
+            [(self.height - 11, 5), (5, self.width - 11)],
+            [(self.height -  9, 4), (4, self.width -  9)],
+            [(self.height - 10, 4), (4, self.width - 10)],
+            [(self.height - 11, 4), (4, self.width - 11)],
+            [(self.height -  9, 3), (3, self.width -  9)],
+            [(self.height - 10, 3), (3, self.width - 10)],
+            [(self.height - 11, 3), (3, self.width - 11)],
+            [(self.height -  9, 2), (2, self.width -  9)],
+            [(self.height - 10, 2), (2, self.width - 10)],
+            [(self.height - 11, 2), (2, self.width - 11)],
+            [(self.height -  9, 1), (1, self.width -  9)],
+            [(self.height - 10, 1), (1, self.width - 10)],
+            [(self.height - 11, 1), (1, self.width - 11)],
+            [(self.height -  9, 0), (0, self.width -  9)],
+            [(self.height - 10, 0), (0, self.width - 10)],
+            [(self.height - 11, 0), (0, self.width - 11)]  # LSB positions
         ]
 
         canvas_width = self.width + 2 * self.quiet_zone_margin
@@ -315,7 +315,7 @@ class QRCodeDrawer:
                         positions.append(position)
         return positions
 
-    def apply_data_masking_pattern(self, pattern, positions):
+    def apply_data_masking_pattern(self, pattern: DataMaskingPattern, positions: list[int, int]) -> None:
         pattern_function = data_mask_pattern_functions[pattern]
         for (i, j) in positions:
             value = self.get_module_value(i, j)
@@ -324,6 +324,9 @@ class QRCodeDrawer:
             if pattern_function(i, j):
                 value = ModuleValue.DATA_ERC_1 if value == ModuleValue.DATA_ERC_0 else ModuleValue.DATA_ERC_0
                 self.set_module_value(i, j, value)
+
+    def score(self):
+        return -1
 
     def render_as_image(self, magnification: int = 1) -> None:
         return self.canvas.render_as_image(magnification)
@@ -340,6 +343,9 @@ def append_html(de):
     html = "data:text/html," + html
     de.append_byte_mode_block(html.encode())
 
+def append_url(de):
+    de.append_byte_mode_block(b"http://data.jigsaw.nl/tegeltjes.gif")
+
 def append_vcard(de):
     with open("sidney.vcard", "r") as fi:
         vcard = fi.read()
@@ -348,7 +354,8 @@ def append_vcard(de):
 def append_geo_position(de):
     # Supported by iOS
     #de.append_byte_mode_block(b"geo:37.91334,15.33897")
-    de.append_byte_mode_block(b"geo:37.364722,14.334722")
+    #de.append_byte_mode_block(b"geo:37.364722,14.334722")
+    de.append_byte_mode_block(b"geo:37.917419,15.330548")
 
 def append_mailto(de):
     # Supported by iOS
@@ -366,17 +373,17 @@ class QRCodeCapacityError(Exception):
     pass
 
 
-
 def main():
 
-    magnification = 32
+    magnification = 10
 
-    for version in (2, ):
+    for version in (40, ):
 
         de = DataEncoder(version)
 
-        append_geo_position(de)
-        #append_pi(de)
+        #append_geo_position(de)
+        append_pi(de)
+        #append_url(de)
         #append_mailto(de)
         #append_kanji_test(de)
 
@@ -396,8 +403,6 @@ def main():
 
         for level in (ErrorCorrectionLevel.L, ):
 
-
-
             version_specification = version_specifications[(version, level)]
             block_specification = version_specification.block_specification
 
@@ -408,9 +413,9 @@ def main():
             qr.place_timing_patterns()
             qr.place_alignment_patterns()
 
-            # Place a temporary format and version information placeholders.
-            # However, We need to put /something/ there to be able to find the symbol's channel bit positions
-            # later on in the call to qr.get_indeterminate_positions().
+            # Place temporary format and version information placeholders.
+            # We need to put /something/ there to be able to find the symbol's available
+            # channel bit positions later on in the call to qr.get_indeterminate_positions().
             # After pattern selection, we will fill the actual format and version information.
 
             qr.place_format_information_placeholders()
@@ -422,7 +427,7 @@ def main():
 
             number_of_data_codewords = version_specification.total_number_of_codewords - version_specification.number_of_error_correcting_codewords
 
-            if len(data) > number_of_data_codewords:
+            if not (len(data) <= number_of_data_codewords):
                 name = f"{version_specification.version}-{version_specification.error_correction_level.name}"
                 raise QRCodeCapacityError(f"Cannot fit {len(data)} data words in QR code symbol {name} ({number_of_data_codewords} data words available).")
 
@@ -443,7 +448,7 @@ def main():
             for (count, (code_c, code_k, code_r)) in version_specification.block_specification:
                 # Calculate the Reed-Solomon polynomial corresponding the the number of error correction words.
                 poly = calculate_reed_solomon_polynomial(code_c - code_k, strip=True)
-                for rep in range(count):
+                for k in range(count):
 
                     dblock = data[idx:idx+code_k]
                     dblocks.append(dblock)
@@ -510,12 +515,16 @@ def main():
                 qr.place_format_information_placeholders()
 
                 # Determine score for this pattern, as per the standard.
+                score_standard = qr.score()
 
                 # Fill in the definitive version.
                 qr.place_version_information_patterns()
                 qr.place_format_information_patterns(level, pattern)
 
                 # Determine actual score for this pattern, with format and version information filled in.
+                score_actual = qr.score()
+
+                print(f"pattern {pattern.name} score_standard {score_standard} score_actual {score_actual}")
 
                 # Capture image.
                 im = qr.render_as_image(magnification)
@@ -523,6 +532,7 @@ def main():
                 filename = f"v{version}{level.name}_p{pattern}.png"
                 print(f"Saving {filename} ...")
                 im.save(filename)
+                subprocess.run(["optipng", filename])
 
                 # Revert to the unmasked data.
                 qr.apply_data_masking_pattern(pattern, positions)
