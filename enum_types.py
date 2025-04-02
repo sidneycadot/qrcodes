@@ -1,6 +1,6 @@
 """Enumeration types used for QR code generation."""
 
-from enum import IntEnum
+from enum import Enum, IntEnum
 
 
 class DataMaskingPattern(IntEnum):
@@ -19,3 +19,9 @@ class ErrorCorrectionLevel(IntEnum):
     M = 0b00  # Allows recovery of 15% of bad modules.
     Q = 0b11  # Allows recovery of 25% of bad modules.
     H = 0b10  # Allows recovery of 30% of bad modules.
+
+
+class EncodingVariant(Enum):
+    SMALL  = 1  # versions 1 .. 9
+    MEDIUM = 2  # versions 10 .. 26
+    LARGE  = 3  # versions 27 .. 40

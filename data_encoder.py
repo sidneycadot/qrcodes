@@ -14,6 +14,7 @@ Each sequence starts with a 4-bit indicator. It is followed by a character count
 
 from enum import Enum
 
+from enum_types import EncodingVariant
 from kanji import kanji_character_value
 
 
@@ -32,17 +33,16 @@ alphanumeric_character_map = dict(map(reversed, enumerate("0123456789ABCDEFGHIJK
 
 class DataEncoder:
 
-    def __init__(self, version: int):
+    def __init__(self, variant: EncodingVariant):
 
-        if not (1 <= version <= 40):
-            raise ValueError()
+        assert isinstance(variant, EncodingVariant)
 
-        if version <= 9:
+        if variant == EncodingVariant.SMALL:
             self.numeric_mode_count_bits = 10
             self.alphanumeric_mode_count_bits = 9
             self.byte_mode_count_bits = 8
             self.kanji_mode_count_bits = 8
-        elif version <= 26:
+        elif variant == EncodingVariant.MEDIUM:
             self.numeric_mode_count_bits = 12
             self.alphanumeric_mode_count_bits = 11
             self.byte_mode_count_bits = 16

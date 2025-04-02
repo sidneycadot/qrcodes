@@ -1,6 +1,6 @@
 #! /usr/bin/env -S python3 -B
 
-capacity = {
+data_module_count = {
      1:   208,
      2:   359,
      3:   567,
@@ -43,7 +43,7 @@ capacity = {
     40: 29648
 }
 
-for version in range(1, 41):
+def calculate_capacity_v1(version: int) -> int:
 
     size = 17 + 4 * version
 
@@ -61,10 +61,10 @@ for version in range(1, 41):
     count -= 2 * timing_pattern_length
 
     # correct for format patterns
-    count -= 2 * 15 
+    count -= 2 * 15
     count -= 1  # The one bit that's always one
 
-    # correct for format patterns
+    # correct for version patterns
     if version >= 7:
         count -= 2 * 18
 
@@ -79,8 +79,29 @@ for version in range(1, 41):
         if num_align_side >= 3:
             count += (num_align_side - 2) * 5 * 2
 
-    real_capacity = capacity[version]
+    return count
 
-    print(f"version {version:2d} raw module count {raw_count:5d} usable count {count:5d}      {real_capacity:5d}    {num_align_side} {count % 8}")
 
-    assert count == real_capacity
+def calculate_capacity_v2(version: int) -> int:
+
+    v7 = version // 7
+
+    extra = 0
+    if version == 1: extra += 25
+    if version <= 6: extra += 36
+
+    return 16 * version * (8 + version) - 5 * v7 * (18 + 5 * v7) + 3 + extra
+
+def main():
+    for version in range(1, 41):
+
+        v0 = data_module_count[version]
+        v1 = calculate_capacity_v1(version)
+        v2 = calculate_capacity_v2(version)
+
+        print(f"version {version:2d} v0 {v0:5d} v1 {v1:5d} v2 {v2:5d}")
+        assert v0 == v1 == v2
+
+
+if __name__ == "__main__":
+    main()

@@ -22,7 +22,7 @@ def make_gf8_multiplication_tables():
 
 class GF8:
     """
-    GF(8) generator polynomial is x^8 + x^4 + x^3 + x^2 + 1.
+    The GF(8) polynomial is: x^8 + x^4 + x^3 + x^2 + 1.
 
     Elements are represented as integers between 0 and 255 (inclusive).
 
