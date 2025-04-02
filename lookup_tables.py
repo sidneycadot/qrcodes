@@ -1,43 +1,44 @@
-"""Alignment pattern positions QR codes.
-
-The alignment pattern positions are copied verbatim from the standard (Table E.1).
-
-They specify both horizontal and vertical center positions of the 5x5 alignment
-patterns present in regular QR codes. The top-left, top-right, and bottom-left
-alignment patterns are omitted, as they would clash with the three finder patterns.
-
-QR Code version 1 is exceptional, as it has no alignment patterns at all.
-
-For versions 2..40, we observe the following:
-
-(1) The first and last positions are predictable. They are fixed relative to the
-    edges of the QR code.
-
-    first_position = 6
-    last_position  = 10 + 4 * version
-
-(2) The number of positions occupied is predictable:
-
-    num_positions = 2 + floor(version / 7)
-
-    Note that the standard does not explicitly guarantee this.
-    The pattern is easily deduced from the table.
-
-(3) The first step (i.e., the difference between the first and second position)
-    can differ from all other steps. All steps but the first are identical.
-
-    The standard documents these two facts, but it does not specify how
-    to derive the two step sizes given the version number.
-
-    There appears to be no simple relation to derive the first and
-    non-first step-sizes from the version number that works in all cases.
-
-Given the lack of an algorithmic description of how to obtain the alignment pattern positions
-from the version number, we will use a lookup table instead.
-"""
+"""Tables for QR code generation."""
 
 from typing import NamedTuple
 from enum_types import ErrorCorrectionLevel, DataMaskingPattern
+
+# Alignment pattern positions QR codes.
+#
+# The alignment pattern positions are copied verbatim from the standard (Table E.1).
+#
+# They specify both horizontal and vertical center positions of the 5x5 alignment
+# patterns present in regular QR codes. The top-left, top-right, and bottom-left
+# alignment patterns are omitted, as they would clash with the three finder patterns.
+#
+# QR Code version 1 is exceptional, as it has no alignment patterns at all.
+#
+# For versions 2..40, we observe the following:
+#
+# (1) The first and last positions are predictable. They are fixed relative to the
+#     edges of the QR code.
+#
+#     first_position = 6
+#     last_position  = 10 + 4 * version
+#
+# (2) The number of positions occupied is predictable:
+#
+#     num_positions = 2 + floor(version / 7)
+#
+#    Note that the standard does not explicitly guarantee this.
+#    The pattern is easily deduced from the table.
+#
+# (3) The first step (i.e., the difference between the first and second position)
+#     can differ from all other steps. All steps but the first are identical.
+#
+#     The standard documents these two facts, but it does not specify how
+#     to derive the two step sizes given the version number.
+#
+#     There appears to be no simple relation to derive the first and
+#     non-first step-sizes from the version number that works in all cases.
+#
+# Given the lack of an algorithmic description of how to obtain the alignment pattern positions
+# from the version number, we will use a lookup table instead.
 
 alignment_pattern_positions: dict[int, list[int]] = {
      1: [],
@@ -92,6 +93,7 @@ data_mask_pattern_functions = {
     DataMaskingPattern.Pattern6: lambda i, j: ((i * j) % 2 + (i * j) % 3) % 2 == 0,
     DataMaskingPattern.Pattern7: lambda i, j: ((i + j) % 2 + (i * j) % 3) % 2 == 0
 }
+
 
 class VersionSpecification(NamedTuple):
     version: int

@@ -1,3 +1,4 @@
+"""Enumeration types used for QR code generation."""
 
 from enum import IntEnum
 

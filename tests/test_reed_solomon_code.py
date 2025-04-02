@@ -18,7 +18,7 @@ class TestReedSolomonCode(unittest.TestCase):
             0b01010110,
             0b01100001,
             0b10000000,
-            0b11101100, # padded
+            0b11101100,  # padding
             0b00010001,
             0b11101100,
             0b00010001,
@@ -31,7 +31,7 @@ class TestReedSolomonCode(unittest.TestCase):
         ]
 
         erc = [
-            0b10100101, # error correction codewords
+            0b10100101,  # error correction codewords
             0b00100100,
             0b11010100,
             0b11000001,

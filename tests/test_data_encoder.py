@@ -1,4 +1,4 @@
-#! /usr/bin/env python3
+#! /usr/bin/env -S python3 -B
 
 from enum_types import ErrorCorrectionLevel
 from lookup_tables import version_specifications

@@ -13,7 +13,10 @@ class TestBinaryCodes(unittest.TestCase):
 
         # From the standard, Table C.1.
         #
-        # This table describes a (15, 5) BCH code with generator polynomial G(x) = x**10 + x**8 + x**5 + x**4 + x**2 + x + 1.
+        # This table describes a (15, 5) BCH code with generator polynomial:
+        #
+        #     G(x) = x**10 + x**8 + x**5 + x**4 + x**2 + x + 1
+        #
         # The generator polynomial can be expressed as a binary number 0b10100110111.
         #
         # The input is a 5-bit number.
@@ -64,7 +67,10 @@ class TestBinaryCodes(unittest.TestCase):
 
         # From the standard, Table D.1.
         #
-        # This table describes a (18, 6) Golay code with generator polynomial G(x) = x**12 + x**11 + x**10 + x**9 + x**8 + x**5 + x**2 + 1.
+        # This table describes a (18, 6) Golay code with generator polynomial:
+        #
+        #     G(x) = x**12 + x**11 + x**10 + x**9 + x**8 + x**5 + x**2 + 1
+        #
         # The generator polynomial can be expressed as a binary number 0b1111100100101.
         #
         # The input is a 6-bit number ranging from 7 to 40 (QR code versions 1-6 do not have the version area).

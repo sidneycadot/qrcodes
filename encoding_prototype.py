@@ -1,6 +1,6 @@
 #! /usr/bin/env -S python3 -B
 
-"""Generate QR Code examples."""
+"""Generate QR code examples."""
 
 import subprocess
 from enum import IntEnum

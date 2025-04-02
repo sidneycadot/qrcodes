@@ -1,4 +1,8 @@
-"""Calculation of redundant bits for the format and version information areas using the binary codes described in the standard."""
+"""Calculation of redundant bits for the format and version information areas.
+
+ These use the binary codes described in the standard.
+ """
+
 
 def format_information_code_remainder(data: int) -> int:
 
@@ -21,6 +25,7 @@ def format_information_code_remainder(data: int) -> int:
             residual ^= genpoly
 
     return residual
+
 
 def version_information_code_remainder(data: int) -> int:
 

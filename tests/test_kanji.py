@@ -37,5 +37,6 @@ def main():
 	enumerate_all_representable_kanji_characters()
 	show_example_characters()
 
+
 if __name__ == "__main__":
 	main()
