@@ -5,6 +5,7 @@ from fractions import Fraction
 
 from lookup_tables import alignment_pattern_positions
 
+
 def analyze_alignment_pattern_positions():
 
     for (version, reference_positions) in alignment_pattern_positions.items():
@@ -56,11 +57,6 @@ def analyze_alignment_pattern_positions():
             choice = " B "
         else:
             choice = " ? "
-
-        #print()
-        #print("ideal:", ideal_positions)
-        #print("a", A_pos)
-        #print("b", B_pos)
 
         A_quality = sum( abs(ap - ip)**2 + 0.0 for (ap, ip) in zip(A_pos, ideal_positions))
         B_quality = sum( abs(bp - ip)**2 + 0.0 for (bp, ip) in zip(B_pos, ideal_positions))

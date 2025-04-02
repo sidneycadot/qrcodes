@@ -79,10 +79,8 @@ for version in range(1, 41):
         if num_align_side >= 3:
             count += (num_align_side - 2) * 5 * 2
 
+    real_capacity = capacity[version]
 
-    realcap = capacity[version]
+    print(f"version {version:2d} raw module count {raw_count:5d} usable count {count:5d}      {real_capacity:5d}    {num_align_side} {count % 8}")
 
-
-    print(f"version {version:2d} raw module count {raw_count:5d} usable count {count:5d}      {realcap:5d}    {num_align_side} {count % 8}")
-
-    assert count == realcap
+    assert count == real_capacity

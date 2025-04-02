@@ -332,13 +332,13 @@ class QRCodeDrawer:
         return self.canvas.render_as_image(magnification)
 
 def append_pi(de):
-    with open("pi_10k.txt", "r") as fi:
+    with open("examples/pi_10k.txt", "r") as fi:
         pi_chars = fi.read()
     de.append_alphanumeric_mode_block(pi_chars[:2])
     de.append_numeric_mode_block(pi_chars[2:7081])
 
 def append_html(de):
-    with open("sidney.html", "r") as fi:
+    with open("examples/sidney.html", "r") as fi:
         html = fi.read()
     html = "data:text/html," + html
     de.append_byte_mode_block(html.encode())
@@ -347,7 +347,7 @@ def append_url(de):
     de.append_byte_mode_block(b"http://data.jigsaw.nl/tegeltjes.gif")
 
 def append_vcard(de):
-    with open("sidney.vcard", "r") as fi:
+    with open("examples/sidney.vcard", "r") as fi:
         vcard = fi.read()
     de.append_byte_mode_block(vcard.encode())
 

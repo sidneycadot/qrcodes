@@ -1,5 +1,6 @@
 """Implement Reed-Solomon codes as used in QR codes."""
 
+
 def make_gf8_multiplication_tables():
 
     exptable = 255 * [0]
@@ -74,7 +75,7 @@ def calculate_reed_solomon_polynomial(n: int, *, strip: bool) -> list[int]:
             element ^= 0b100011101
 
     if strip:
-        # Strip the first alement from the polynomial.
+        # Strip the first element from the polynomial.
         # The algorithm we use for the remainder calculation assumes the highest
         # power is not present.
         popped_coefficient = poly.pop(0)
@@ -83,9 +84,10 @@ def calculate_reed_solomon_polynomial(n: int, *, strip: bool) -> list[int]:
 
     return poly
 
+
 def reed_solomon_code_remainder(data: list[int], poly: list[int]) -> list[int]:
 
-    residual = [0 for g in poly]
+    residual = [0] * len(poly)
 
     for d in data:
 
@@ -110,7 +112,7 @@ def poly_string(poly: list[int], prepend_prefix_term: bool) -> str:
 
     for (k, c) in enumerate(poly):
         if c != 0:
-            term = (GF8.logtable[c- 1], n - k - 1)
+            term = (GF8.logtable[c - 1], n - k - 1)
             terms.append(term)
 
     term_strings = []

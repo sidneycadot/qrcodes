@@ -2,25 +2,26 @@
 
 The data payload of QR codes consists of a bitstream containing typed sequences as described in the standard.
 
-Each sequence starts with a 4-bit indicator. It is often followed by a character count, and finally the character data.
+Each sequence starts with a 4-bit indicator. It is followed by a character count, and finally the character data.
 
 0000 terminator symbol. This should be the last typed sequence. 
 
 0001 Numeric data;      alphabet is any of the 10 characters "0123456789".
 0010 Alphanumeric data; alphabet is any of the 45 characters "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ $%*+-./:".
 0100 Byte data;         alphabet is 8-bit bytes, normally interpreted as UTF-8 by phones.
-1000 Kanji data         alphabet is Kanji characters encoded in 13 bits each.
+1000 Kanji data;        alphabet is Kanji characters encoded in 13 bits each.
 """
 
-from typing import NamedTuple
 from enum import Enum
+
+from kanji import kanji_character_value
+
 
 class Encoding(Enum):
     NUMERIC      = 0b0001
     ALPHANUMERIC = 0b0010
     BYTES        = 0b0100
     KANJI        = 0b1000
-
 
 # Map of numeric characters to their integer representation.
 numeric_character_map = dict(map(reversed, enumerate("0123456789")))
@@ -33,23 +34,24 @@ class DataEncoder:
 
     def __init__(self, version: int):
 
-        if (1 <= version <= 9):
+        if not (1 <= version <= 40):
+            raise ValueError()
+
+        if version <= 9:
             self.numeric_mode_count_bits = 10
             self.alphanumeric_mode_count_bits = 9
             self.byte_mode_count_bits = 8
             self.kanji_mode_count_bits = 8
-        elif (10 <= version <= 26):
+        elif version <= 26:
             self.numeric_mode_count_bits = 12
             self.alphanumeric_mode_count_bits = 11
             self.byte_mode_count_bits = 16
             self.kanji_mode_count_bits = 10
-        elif (27 <= version <= 40):
+        else:
             self.numeric_mode_count_bits = 14
             self.alphanumeric_mode_count_bits = 13
             self.byte_mode_count_bits = 16
             self.kanji_mode_count_bits = 12
-        else:
-            raise ValueError()
 
         self.bits = bytearray()
 
@@ -69,11 +71,11 @@ class DataEncoder:
 
     def append_numeric_mode_block(self, s: str) -> None:
 
-        # Verify that all characters can be represented as numeric characters.
+        # Verify that all characters in the string can be represented as numeric characters.
         if not all(c in numeric_character_map for c in s):
             raise ValueError("A string was passed containing characters that cannot be represented in numeric mode.")
 
-        # Verify that it is possible to represent the block length.
+        # Verify that it is possible to represent the character count.
         if not (len(s) < (1 << self.numeric_mode_count_bits)):
             raise ValueError("Numeric string too long.")
 
@@ -100,11 +102,11 @@ class DataEncoder:
 
     def append_alphanumeric_mode_block(self, s: str) -> None:
 
-        # Verify that all characters can be represented as alphanumeric characters.
+        # Verify that all characters in the string can be represented as alphanumeric characters.
         if not all(c in alphanumeric_character_map for c in s):
             raise ValueError("A string was passed containing characters that cannot be represented in alphanumeric mode.")
 
-        # Verify that it is possible to represent the block length.
+        # Verify that it is possible to represent the character count.
         if not (len(s) < (1 << self.alphanumeric_mode_count_bits)):
             raise ValueError("Alphanumeric string too long.")
 
@@ -131,8 +133,9 @@ class DataEncoder:
 
     def append_byte_mode_block(self, b: bytes) -> None:
 
+        # Verify that it is possible to represent the byte count.
         if not (len(b) < (1 << self.byte_mode_count_bits)):
-            raise ValueError("Byte mode block too long.")
+            raise ValueError("Byte sequence too long.")
 
         # Append the byte mode block intro.
         self.append_integer_value(0b0100, 4)
@@ -148,18 +151,9 @@ class DataEncoder:
 
         values = []
         for c in s:
-            value = int.from_bytes(c.encode('shift-jis'), byteorder='big')
-            if (0x8140 <= value <= 0x9ffc):
-                value -= 0x8140
-            elif (0xe040 <= value <= 0xebbf):
-                value -= 0xc140
-            else:
+            value = kanji_character_value(c)
+            if value is None:
                 raise ValueError("A string was passed containing characters that cannot be represented in kanji mode.")
-
-            msb = value // 256
-            lsb = value % 256
-            value = msb * 0xc0 + lsb
-
             values.append(value)
 
         if not (len(values) < (1 << self.kanji_mode_count_bits)):
@@ -169,7 +163,7 @@ class DataEncoder:
         self.append_integer_value(0b1000, 4)
 
         # Append the kanji mode block character count.
-        self.append_integer_value(len(s), self.kanji_mode_count_bits)
+        self.append_integer_value(len(values), self.kanji_mode_count_bits)
 
         # Append the kanji character data.
         for value in values:
@@ -223,66 +217,3 @@ class DataEncoder:
                 mask >>= 1
     
         return words
-
-
-class PartialEncodingDirective(NamedTuple):
-    encoding : Encoding
-    argument : str|bytes
-
-
-class PartialEncodingSolution(NamedTuple):
-    bitcount: int
-    fragments: list[PartialEncodingDirective]
-
-
-def find_optimal_string_encoding(s: str):
-
-    partial_solutions = [
-        PartialEncodingSolution(0, [])
-    ]
-
-    # Walk all characters in the string.
-    for c in s:
-
-        new_partial_solutions = []
-
-        for partial_solution in partial_solutions:
-            if len(partial_solution.fragments) == 0:
-                active_encoding = None
-            else:
-                active_encoding = partial_solution.fragments[-1].encoding
-
-        if active_encoding is None:
-
-            for character_encoding in Encoding:
-                # We are currently in 'active_encoding', which may be None.
-                # We will encode the character in 'character_encoding', if possible.
-                #    this may imply a switch.
-
-
-                if character_encoding.encoding(c) is None:
-                    continue
-
-                if character_encoding != active_encoding:
-                    # Switch to this encoding, and append the first character.
-                    pass
-                else:
-                    # Append the character in the same encoding.
-                    pass
-
-                if active_encoding_after_character != character_encoding:
-                    # Switch to 'active_encoding_after_character'.
-                    pass
-
-
-                # Several options:
-                # - The character can be represented in the currently active encoding.
-                #   It is an option to extend the encoding
-                #
-
-            new_partial_solutions.append(optimal_active_encoding_solution)
-
-        partial_solutions = new_partial_solutions
-
-
-
