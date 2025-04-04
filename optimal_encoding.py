@@ -10,6 +10,7 @@ from kanji import kanji_character_value
 
 
 class EncodingBlock:
+    """Abstract base class for the encoding ranges."""
     pass
 
 
@@ -181,8 +182,8 @@ class EncodingSolution:
         return self.blocks[-1].encoding
 
     def bitcount(self) -> int:
-        # Add 4 bits for the terminator.
-        return sum(block.bitcount() for block in self.blocks) + 4
+        # Note that we DO NOT add 4 bits for the terminator.
+        return sum(block.bitcount() for block in self.blocks)
 
     def strictly_better(self, other: EncodingSolution) -> bool:
         return (self.active_encoding() == other.active_encoding()) and self.better(other)

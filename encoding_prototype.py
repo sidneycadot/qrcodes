@@ -3,9 +3,14 @@
 """Generate QR code examples."""
 
 import subprocess
+import base64
+
+from typing import Optional
 
 from enum_types import ErrorCorrectionLevel, EncodingVariant
 from data_encoder import DataEncoder
+from lookup_tables import version_specifications
+from optimal_encoding import find_optimal_string_encoding
 from qr_code import ModuleValue, make_qr_code
 from render_pil import render_qrcode_as_pil_image
 
@@ -90,13 +95,80 @@ colormap2 = {
 }
 
 
-def main():
+def make_natural_preference_order() -> list[tuple[int, ErrorCorrectionLevel]]:
+    return [
+        (version, level)
+        for version in range(1, 41)
+        for level in (ErrorCorrectionLevel.H, ErrorCorrectionLevel.Q, ErrorCorrectionLevel.M, ErrorCorrectionLevel.L)
+    ]
 
-    magnification = 4
+
+def version_to_variant(version: int) -> EncodingVariant:
+    if not (1 <= version <= 40):
+        raise ValueError()
+
+    if version <= 9:
+        return EncodingVariant.SMALL
+    elif version <= 26:
+        return EncodingVariant.MEDIUM
+    else:
+        return EncodingVariant.LARGE
+
+
+def make_optimal_qrcode(s: str, include_quiet_zone: bool, preflist = None, byte_mode_encoding: Optional[str] = None):
+
+    if preflist is None:
+        preflist = make_natural_preference_order()
+
+    variant_cache = {}
+    for (version, level) in preflist:
+        variant = version_to_variant(version)
+        if variant in variant_cache:
+            solution = variant_cache[variant]
+        else:
+            solutions = find_optimal_string_encoding(s, variant, byte_mode_encoding)
+            if len(solutions) == 0:
+                solution = None
+            else:
+                solution = solutions[0]
+            variant_cache[variant] = solution
+        if solution is None:
+            continue
+
+        # See if this solution would fit in this (version, level) code.
+        version_specification = version_specifications[(version, level)]
+
+        if version_specification.number_of_data_codewords() * 8 >= solution.bitcount():
+            print(f"Selected code: {version}-{level.name}")
+            break
+
+    else:
+        # No acceptable solution found.
+        return None
+
+    de = DataEncoder(variant)
+    solution.render(de)
+
+    return make_qr_code(de, version, level, include_quiet_zone, None)
+
+
+def write_optimal_qrcode(s: str, filename: str, colormap, magnification: int, post_optimize: bool) -> None:
+    qr_canvas = make_optimal_qrcode(s, True)
+    if qr_canvas is None:
+        raise RuntimeError("Unable to store the string in a QR code.")
+    im = render_qrcode_as_pil_image(qr_canvas, 'RGB', colormap, magnification)
+    print(f"Saving {filename} ...")
+    im.save(filename)
+    if post_optimize:
+        subprocess.run(["optipng", filename], stderr=subprocess.DEVNULL)
+
+def main2():
+
     version = 40
     variant = EncodingVariant.LARGE
     level = ErrorCorrectionLevel.L
     include_quiet_zone = True
+    magnification = 4
     post_optimize = True
 
     de = DataEncoder(variant)
@@ -116,9 +188,6 @@ def main():
     #de.append_byte_mode_block(b"http://www.jigsaw.nl?data=sidney")
     #de.append_byte_mode_block(b"https://www.jigsaw.nl/")
 
-    de.append_terminator()
-    de.append_padding_bits()
-
     qr_canvas = make_qr_code(de, version, level, include_quiet_zone, None)
 
     # Capture image.
@@ -128,8 +197,26 @@ def main():
     print(f"Saving {filename} ...")
     im.save(filename)
 
-    if post_optimize:
-        subprocess.run(["optipng", filename])
+def main():
+    #write_optimal_qrcode("Hello World!", "hello.png", colormap1, 20, True)
+    #write_optimal_qrcode("Hello Mr. Snowman! ⛄⛄⛄", "snowman.png", colormap2, 1, True)
+
+    with open("tests/pi_10k.txt", "r") as fi:
+        pi_characters = fi.read()
+    #write_optimal_qrcode(pi_characters[:7082], "pi.png", colormap1, 1, True)
+    write_optimal_qrcode(pi_characters[:4680], "pi.png", colormap1, 1, True)
+
+    #write_optimal_qrcode("http://data.jigsaw.nl/tegeltjes.gif", "rick.png", colormap2, 1, True)
+
+    #with open("examples/sidney.vcard", "r") as fi:
+    #    vcard = fi.read()
+    #write_optimal_qrcode(vcard, "vcard.png", colormap2, 1, True)
+
+    #with open("examples/sidney.html", "r") as fi:
+    #    html = fi.read()
+    #write_optimal_qrcode("data:text/html;base64," + base64.b64encode(html.encode()).decode(), "html.png", colormap2, 1, True)
+
+    #write_optimal_qrcode("geo:37.917419,15.330548", "geo.png", colormap2, 1, True)
 
 
 if __name__ == "__main__":

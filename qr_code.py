@@ -260,7 +260,7 @@ class QRCodeDrawer:
                         positions.append(position)
         return positions
 
-    def apply_data_masking_pattern(self, pattern: DataMaskingPattern, positions: list[int, int]) -> None:
+    def apply_data_masking_pattern(self, pattern: DataMaskingPattern, positions: list[tuple[int, int]]) -> None:
         pattern_function = data_mask_pattern_functions[pattern]
         for (i, j) in positions:
             value = self.get_module_value(i, j)
@@ -271,34 +271,33 @@ class QRCodeDrawer:
                 self.set_module_value(i, j, value)
 
     def score(self):
-        return self.width
+        surplus = 0
+        for i in range(self.height):
+            for j in range(self.width):
+                value = self.get_module_value(i, j) % 10
+                assert value in (0, 1)
+                surplus += 2 * value - 1
+        return abs(surplus)
 
 
 def make_qr_code(de: DataEncoder, version: int, level: ErrorCorrectionLevel, include_quiet_zone: bool,
                  pattern: Optional[DataMaskingPattern] = None) -> QRCodeCanvas:
 
-    data = de.get_words()
 
     version_specification = version_specifications[(version, level)]
 
     # Check if the data will fit in the selected QR code version / level.
 
-    number_of_data_codewords = version_specification.total_number_of_codewords - version_specification.number_of_error_correcting_codewords
+    number_of_data_codewords = version_specification.number_of_data_codewords()
 
-    if not (len(data) <= number_of_data_codewords):
-        name = f"{version_specification.version}-{version_specification.error_correction_level.name}"
-        raise QRCodeCapacityError(
-            f"Cannot fit {len(data)} data words in QR code symbol {name} ({number_of_data_codewords} data words available).")
+    data = de.get_words(number_of_data_codewords)
+
+    if data is None:
+        name = version_specification.name()
+        raise QRCodeCapacityError(f"Cannot fit {len(data)} data words in QR code symbol {name} ({number_of_data_codewords} data words available).")
 
     # Data will fit -- proceed.
 
-    # Append padding to data to fill up the QR code capacity by adding the words
-    # (0b11101100, 0b00010001).
-
-    pad_word = 0b11101100
-    while len(data) != number_of_data_codewords:
-        data.append(pad_word)
-        pad_word ^= 0b11111101
 
     # Split up data in data-blocks, and calculate the corresponding error correction blocks.
 
@@ -369,25 +368,45 @@ def make_qr_code(de: DataEncoder, version: int, level: ErrorCorrectionLevel, inc
 
     num_padding_bits = len(positions) - len(channel_bits)
     if num_padding_bits != 0:
-        print(f"Adding {num_padding_bits} channel padding bits...")
-        channel_bits.extend([0] * num_padding_bits)
-
-    # print("num positions:", len(positions))
-    # print("num channel_bits:", len(channel_bits))
+        channel_bits.extend([False] * num_padding_bits)
 
     assert len(positions) == len(channel_bits)
 
     # Place the channel bits in the QR code symbol.
 
-    for ((i, j), channelbit) in zip(positions, channel_bits):
-        qr.set_module_value(i, j, ModuleValue.DATA_ERC_1 if channelbit else ModuleValue.DATA_ERC_0)
+    for ((i, j), channel_bit) in zip(positions, channel_bits):
+        qr.set_module_value(i, j, ModuleValue.DATA_ERC_1 if channel_bit else ModuleValue.DATA_ERC_0)
 
     # Now for masking.
     # If a pattern is given as a parameter, we will use that. Otherwise, we'll determine
     # the best pattern based on a score (TODO).
 
     if pattern is None:
-        pattern = DataMaskingPattern.Pattern7
+
+        pattern_scores = []
+
+        for pattern in DataMaskingPattern:
+            qr.place_version_information_patterns()
+            qr.place_format_information_patterns(level, pattern)
+
+            # Apply data mask pattern
+            qr.apply_data_masking_pattern(pattern, positions)
+
+            score = qr.score()
+            pattern_scores.append((score + pattern.value, pattern))
+
+            # Un-apply data mask pattern
+            qr.apply_data_masking_pattern(pattern, positions)
+
+        pattern_scores.sort(key=lambda x: x[0])
+
+        for (score, pattern) in pattern_scores:
+            print(f"{score:3d} {pattern.name}")
+
+        # Select pattern that yields the lowest score.
+        pattern = pattern_scores[0][1]
+
+    print(f"Applying data mask pattern {pattern.name}.")
 
     qr.apply_data_masking_pattern(pattern, positions)
 

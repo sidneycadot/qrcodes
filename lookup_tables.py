@@ -83,17 +83,7 @@ alignment_pattern_positions: dict[int, list[int]] = {
     40: [6, 30, 58, 86, 114, 142, 170]
 }
 
-data_mask_pattern_functions = {
-    DataMaskingPattern.Pattern0: lambda i, j: (i + j) % 2 == 0,
-    DataMaskingPattern.Pattern1: lambda i, j: i % 2 == 0,
-    DataMaskingPattern.Pattern2: lambda i, j: j % 3 == 0,
-    DataMaskingPattern.Pattern3: lambda i, j: (i + j) % 3 == 0,
-    DataMaskingPattern.Pattern4: lambda i, j: ((i // 2) + (j // 3)) % 2 == 0,
-    DataMaskingPattern.Pattern5: lambda i, j: (i * j) % 2 + (i * j) % 3 == 0,
-    DataMaskingPattern.Pattern6: lambda i, j: ((i * j) % 2 + (i * j) % 3) % 2 == 0,
-    DataMaskingPattern.Pattern7: lambda i, j: ((i + j) % 2 + (i * j) % 3) % 2 == 0
-}
-
+# Table 9: Error correction characteristics for QR Code
 
 class VersionSpecification(NamedTuple):
     version: int
@@ -103,6 +93,11 @@ class VersionSpecification(NamedTuple):
     p: int
     block_specification: list[tuple[int, tuple[int, int, int]]]
 
+    def name(self) -> str:
+        return f"{self.version}-{self.error_correction_level.name}"
+
+    def number_of_data_codewords(self) -> int:
+        return self.total_number_of_codewords - self.number_of_error_correcting_codewords
 
 version_specifications = {
 
@@ -305,4 +300,17 @@ version_specifications = {
     (40, ErrorCorrectionLevel.M) : VersionSpecification(40, ErrorCorrectionLevel.M, 3706, 1372, 0, [ ( 18, ( 75,  47, 14)), ( 31, ( 76,  48, 14)) ]),
     (40, ErrorCorrectionLevel.Q) : VersionSpecification(40, ErrorCorrectionLevel.Q, 3706, 2040, 0, [ ( 34, ( 54,  24, 15)), ( 34, ( 55,  25, 15)) ]),
     (40, ErrorCorrectionLevel.H) : VersionSpecification(40, ErrorCorrectionLevel.H, 3706, 2430, 0, [ ( 20, ( 45,  15, 15)), ( 61, ( 46,  16, 15)) ])
+}
+
+# Table 10: Data mask pattern generation conditions.
+
+data_mask_pattern_functions = {
+    DataMaskingPattern.Pattern0: lambda i, j: (i + j) % 2 == 0,
+    DataMaskingPattern.Pattern1: lambda i, j: i % 2 == 0,
+    DataMaskingPattern.Pattern2: lambda i, j: j % 3 == 0,
+    DataMaskingPattern.Pattern3: lambda i, j: (i + j) % 3 == 0,
+    DataMaskingPattern.Pattern4: lambda i, j: ((i // 2) + (j // 3)) % 2 == 0,
+    DataMaskingPattern.Pattern5: lambda i, j: (i * j) % 2 + (i * j) % 3 == 0,
+    DataMaskingPattern.Pattern6: lambda i, j: ((i * j) % 2 + (i * j) % 3) % 2 == 0,
+    DataMaskingPattern.Pattern7: lambda i, j: ((i + j) % 2 + (i * j) % 3) % 2 == 0
 }

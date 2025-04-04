@@ -24,6 +24,7 @@ class Encoding(Enum):
     BYTES        = 0b0100
     KANJI        = 0b1000
 
+
 # Map of numeric characters to their integer representation.
 numeric_character_map = dict(map(reversed, enumerate("0123456789")))
 
@@ -186,26 +187,55 @@ class DataEncoder:
         else:
             self.append_integer_value(0xc00000 | value, 24)
 
-    def append_terminator(self) -> None:
-        # Append the terminator pattern.
-        self.append_integer_value(0b0000, 4)
+    def append_structured_append_marker(self, index: int, count: int, parity_data: int) -> None:
+        """Append Structured Append marker."""
 
-    def append_padding_bits(self) -> None:
-        # Append zero bits as needed to make the number of bits a multiple of 8 bits.
-        modulo = len(self.bits) % 8
-        if modulo != 0:
-            self.append_integer_value(0, 8 - modulo)
+        if not (0 <= index <= 15):
+            raise ValueError()
 
-    def get_words(self) -> list[int]:
+        if not (1 <= count <= 16):
+            raise ValueError()
 
-        if len(self.bits) % 8 != 0:
-            raise RuntimeError("Number of bits is not a multiple of 8.")
+        if not (0 <= parity_data <= 255):
+            raise ValueError()
+
+        # Append the Structured Append Marker intro.
+        self.append_integer_value(0b0011, 4)
+
+        # Append the index.
+        self.append_integer_value(index, 4)
+
+        # Append the count.
+        self.append_integer_value(count - 1, 4)
+
+        # Append the parity data (content checksum).
+        self.append_integer_value(parity_data, 8)
+
+    def get_words(self, number_of_data_codewords: int) -> list[int]:
+
+        number_of_data_encoding_bits = len(self.bits)
+        number_of_data_bits_available = number_of_data_codewords * 8
+
+        if number_of_data_encoding_bits > number_of_data_bits_available:
+            return None  # The data cannot fit, even without a terminator.
+
+        # We ideally want 4 zero-bits (terminator), followed by padding zero-bits
+        # to bring the number of bits to a multiple of 8.
+        # However, if there is no room for the terminator, omit it, and just pad.
+
+        slack = number_of_data_bits_available - number_of_data_encoding_bits
+
+        zero_padding_bits = min(slack, (slack - 4) % 8 + 4)
+
+        # Convert bits, including zero padding bits, to words.
+
+        assert (len(self.bits) + zero_padding_bits) % 8 == 0
 
         words = []
 
         mask = 0b10000000
         value = 0
-        for bit in self.bits:
+        for bit in self.bits + bytes(zero_padding_bits):
             if bit != 0:
                 value |= mask
 
@@ -215,5 +245,13 @@ class DataEncoder:
                 mask = 0b10000000
             else:
                 mask >>= 1
-    
+
+        # Append padding to data to fill up the QR code data capacity by adding the words
+        # (0b11101100, 0b00010001) repeatedly.
+
+        pad_word = 0b11101100
+        while len(words) != number_of_data_codewords:
+            words.append(pad_word)
+            pad_word ^= 0b11111101
+
         return words
