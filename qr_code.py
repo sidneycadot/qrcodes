@@ -297,7 +297,7 @@ def make_qr_code(de: DataEncoder, version: int, level: ErrorCorrectionLevel, inc
 
     if data is None:
         name = version_specification.name()
-        raise QRCodeCapacityError(f"Cannot fit {len(data)} data words in QR code symbol {name} ({number_of_data_codewords} data words available).")
+        raise QRCodeCapacityError(f"Cannot fit {len(de.bits)} data bits in QR code symbol {name} ({number_of_data_codewords * 8} data bits available).")
 
     # Data will fit -- proceed.
     # Split up data in data-blocks, and calculate the corresponding error correction blocks.
@@ -386,23 +386,23 @@ def make_qr_code(de: DataEncoder, version: int, level: ErrorCorrectionLevel, inc
 
         score_pattern_tuple_list = []
 
-        for pattern in DataMaskingPattern:
+        for test_pattern in DataMaskingPattern:
             qr.place_version_information_patterns()
-            qr.place_format_information_patterns(level, pattern)
+            qr.place_format_information_patterns(level, test_pattern)
 
             # Apply data mask pattern
-            qr.apply_data_masking_pattern(pattern, positions)
+            qr.apply_data_masking_pattern(test_pattern, positions)
 
             score = qr.score()
-            score_pattern_tuple_list.append((score, pattern))
+            score_pattern_tuple_list.append((score, test_pattern))
 
             # Un-apply data mask pattern
-            qr.apply_data_masking_pattern(pattern, positions)
+            qr.apply_data_masking_pattern(test_pattern, positions)
 
         score_pattern_tuple_list.sort(key=lambda score_pattern_tuple: score_pattern_tuple[0])
 
-        for (score, pattern) in score_pattern_tuple_list:
-            print(f"{score:3d} {pattern.name}")
+        for (score, test_pattern) in score_pattern_tuple_list:
+            print(f"{score:3d} {test_pattern.name}")
 
         # Select pattern that yields the lowest score.
         pattern = score_pattern_tuple_list[0][1]

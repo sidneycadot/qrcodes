@@ -130,15 +130,15 @@ class EncodingBlockKanji(EncodingBlock):
         EncodingVariant.LARGE  : 13
     }
 
-    def __init__(self, count_bits: int, initial_payload: Optional[str] = None):
-        self.count_bits = count_bits
+    def __init__(self, variant: EncodingVariant, initial_payload: Optional[str] = None):
+        self.variant = variant
         self.payload = "" if initial_payload is None else initial_payload
 
     def __repr__(self):
         return f"EncodingBlockKanji({self.payload!r})"
 
     def copy(self) -> EncodingBlockKanji:
-        return EncodingBlockKanji(self.count_bits, self.payload)
+        return EncodingBlockKanji(self.variant, self.payload)
 
     def render(self, data_encoder: DataEncoder) -> None:
         data_encoder.append_kanji_mode_block(self.payload)
@@ -146,10 +146,10 @@ class EncodingBlockKanji(EncodingBlock):
     def append_character(self, c: str) -> None:
         self.payload = self.payload + c
 
-    def bitcount(self, style: EncodingVariant) -> int:
+    def bitcount(self) -> int:
         n = len(self.payload)
-        countbits = self.countbits_map[style]
-        return 4 + countbits + n * 13
+        count_bits = self.countbits_map[self.variant]
+        return 4 + count_bits + n * 13
 
 
 class EncodingSolution:

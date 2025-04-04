@@ -65,4 +65,4 @@ def write_optimal_qrcode(s: str, filename: str, *, mode=None, colormap=None, mag
     print(f"Saving {filename} ...")
     im.save(filename)
     if post_optimize:
-        subprocess.run(["optipng", filename], stderr=subprocess.DEVNULL)
+        subprocess.run(["optipng", filename], stderr=subprocess.DEVNULL, check=False)

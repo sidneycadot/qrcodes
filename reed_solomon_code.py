@@ -124,13 +124,13 @@ def poly_string(poly: list[int], prepend_prefix_term: bool) -> str:
         elif alpha_exponent == 1:
             factors.append("α")
         else:
-            factors.append("α^{}".format(alpha_exponent))
+            factors.append(f"α^{alpha_exponent}")
         if x_exponent == 0:
             pass
         elif x_exponent == 1:
             factors.append("x")
         else:
-            factors.append("x^{}".format(x_exponent))
+            factors.append(f"x^{x_exponent}")
         if len(factors) == 0:
             term_strings.append("1")
         else:

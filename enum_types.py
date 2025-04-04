@@ -27,6 +27,7 @@ class EncodingVariant(Enum):
     MEDIUM = 2  # versions 10 .. 26
     LARGE  = 3  # versions 27 .. 40
 
+    @staticmethod
     def from_version(version: int) -> EncodingVariant:
         if not (1 <= version <= 40):
             raise ValueError("Bad version.")
