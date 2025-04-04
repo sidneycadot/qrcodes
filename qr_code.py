@@ -1,4 +1,4 @@
-"""QR code rendering functionality."""
+"""QR code canvaa and canvas drawing functionality."""
 
 from enum import IntEnum
 from typing import Optional
@@ -35,6 +35,10 @@ class ModuleValue(IntEnum):
 
 
 class QRCodeCanvas:
+    """A QRCodeCanvas defines a rectangular array of modules (pixels).
+
+    The QR codes defined by the standard are square, so the width is equal to the height.
+    """
 
     def __init__(self, width: int, height: int):
         self.width = width
@@ -55,7 +59,7 @@ class QRCodeCanvas:
 
 
 def enumerate_bits(value: int, num_bits: int):
-    """Enumerate the bits in value, starting from the MSB and going down to the LSB."""
+    """Enumerate the bits in the unsigned integer value as booleans, going from the MSB down to the LSB."""
     assert 0 <= value < (1 << num_bits)
     mask = 1 << (num_bits - 1)
     while mask != 0:
@@ -64,7 +68,7 @@ def enumerate_bits(value: int, num_bits: int):
 
 
 class QRCodeDrawer:
-
+    """A QRCodeDrawer knows how to draw the different areas in a QR code."""
     def __init__(self, version: int, include_quiet_zone: bool):
 
         if not (1 <= version <= 40):
@@ -283,7 +287,6 @@ class QRCodeDrawer:
 def make_qr_code(de: DataEncoder, version: int, level: ErrorCorrectionLevel, include_quiet_zone: bool,
                  pattern: Optional[DataMaskingPattern] = None) -> QRCodeCanvas:
 
-
     version_specification = version_specifications[(version, level)]
 
     # Check if the data will fit in the selected QR code version / level.
@@ -297,8 +300,6 @@ def make_qr_code(de: DataEncoder, version: int, level: ErrorCorrectionLevel, inc
         raise QRCodeCapacityError(f"Cannot fit {len(data)} data words in QR code symbol {name} ({number_of_data_codewords} data words available).")
 
     # Data will fit -- proceed.
-
-
     # Split up data in data-blocks, and calculate the corresponding error correction blocks.
 
     dblocks = []
@@ -321,7 +322,7 @@ def make_qr_code(de: DataEncoder, version: int, level: ErrorCorrectionLevel, inc
     assert sum(map(len, dblocks)) + sum(map(len, eblocks)) == version_specification.total_number_of_codewords
 
     # Interleave the data words and error correction words.
-    # All data words precede all error correction words.
+    # All data words will precede all error correction words.
 
     channel_words = []
 
@@ -379,11 +380,11 @@ def make_qr_code(de: DataEncoder, version: int, level: ErrorCorrectionLevel, inc
 
     # Now for masking.
     # If a pattern is given as a parameter, we will use that. Otherwise, we'll determine
-    # the best pattern based on a score (TODO).
+    # the best pattern based on a score (TODO: implement scoring function described by the standard).
 
     if pattern is None:
 
-        pattern_scores = []
+        score_pattern_tuple_list = []
 
         for pattern in DataMaskingPattern:
             qr.place_version_information_patterns()
@@ -393,18 +394,18 @@ def make_qr_code(de: DataEncoder, version: int, level: ErrorCorrectionLevel, inc
             qr.apply_data_masking_pattern(pattern, positions)
 
             score = qr.score()
-            pattern_scores.append((score + pattern.value, pattern))
+            score_pattern_tuple_list.append((score, pattern))
 
             # Un-apply data mask pattern
             qr.apply_data_masking_pattern(pattern, positions)
 
-        pattern_scores.sort(key=lambda x: x[0])
+        score_pattern_tuple_list.sort(key=lambda score_pattern_tuple: score_pattern_tuple[0])
 
-        for (score, pattern) in pattern_scores:
+        for (score, pattern) in score_pattern_tuple_list:
             print(f"{score:3d} {pattern.name}")
 
         # Select pattern that yields the lowest score.
-        pattern = pattern_scores[0][1]
+        pattern = score_pattern_tuple_list[0][1]
 
     print(f"Applying data mask pattern {pattern.name}.")
 

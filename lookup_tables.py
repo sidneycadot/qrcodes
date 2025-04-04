@@ -32,7 +32,7 @@ from enum_types import ErrorCorrectionLevel, DataMaskingPattern
 #     can differ from all other steps. All steps but the first are identical.
 #
 #     The standard documents these two facts, but it does not specify how
-#     to derive the two step sizes given the version number.
+#     to derive the two step-sizes given the version number.
 #
 #     There appears to be no simple relation to derive the first and
 #     non-first step-sizes from the version number that works in all cases.

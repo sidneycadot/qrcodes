@@ -4,18 +4,21 @@ The data payload of QR codes consists of a bitstream containing typed sequences 
 
 Each sequence starts with a 4-bit indicator. It is followed by a character count, and finally the character data.
 
-0000 terminator symbol. This should be the last typed sequence. 
 
 0001 Numeric data;      alphabet is any of the 10 characters "0123456789".
 0010 Alphanumeric data; alphabet is any of the 45 characters "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ $%*+-./:".
 0100 Byte data;         alphabet is 8-bit bytes, normally interpreted as UTF-8 by phones.
 1000 Kanji data;        alphabet is Kanji characters encoded in 13 bits each.
+
+0000 terminator symbol; This should be the last typed sequence. It may be omitted if the QR code symbol
+                        doesn't have space for it.
 """
 
 from enum import Enum
+from typing import Optional
 
 from enum_types import EncodingVariant
-from kanji import kanji_character_value
+from kanji_encode import kanji_character_value
 
 
 class Encoding(Enum):
@@ -26,10 +29,12 @@ class Encoding(Enum):
 
 
 # Map of numeric characters to their integer representation.
-numeric_character_map = dict(map(reversed, enumerate("0123456789")))
+numeric_characters = "0123456789"
+numeric_character_map = dict((c, index) for (index, c) in enumerate(numeric_characters))
 
 # Map of alphanumeric characters to their integer representation.
-alphanumeric_character_map = dict(map(reversed, enumerate("0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ $%*+-./:")))
+alphanumeric_characters = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ $%*+-./:"
+alphanumeric_character_map = dict((c, index) for (index, c) in enumerate(alphanumeric_characters))
 
 
 class DataEncoder:
@@ -211,7 +216,7 @@ class DataEncoder:
         # Append the parity data (content checksum).
         self.append_integer_value(parity_data, 8)
 
-    def get_words(self, number_of_data_codewords: int) -> list[int]:
+    def get_words(self, number_of_data_codewords: int) -> Optional[list[int]]:
 
         number_of_data_encoding_bits = len(self.bits)
         number_of_data_bits_available = number_of_data_codewords * 8

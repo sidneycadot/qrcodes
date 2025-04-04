@@ -1,4 +1,4 @@
-"""Find optimal encoding of a string."""
+"""Find optimal (shortest) data encoding of a string."""
 
 from __future__ import annotations
 
@@ -6,7 +6,7 @@ from typing import Optional
 
 from data_encoder import Encoding, numeric_character_map, alphanumeric_character_map, DataEncoder
 from enum_types import EncodingVariant
-from kanji import kanji_character_value
+from kanji_encode import kanji_character_value
 
 
 class EncodingBlock:
@@ -199,12 +199,21 @@ class EncodingSolution:
 
 
 def find_optimal_string_encoding(s: str, variant: EncodingVariant, byte_mode_encoding: Optional[str] = None) -> list[EncodingSolution]:
+    """Find the optimal (shortest) encoding of a given string.
+
+    There are three variants of the encoding, that differ only in the number of bits used to represent
+    character counts in each of the four data block types (numeric, alphanumeric, bytes, and Kanji).
+    Larger versions of the QR code symbols allow more bits for those counts.
+
+    The byte mode encoding specifies which encoding should be assumed for 'byte' mode blocks. For most modern
+    applications, UTF-8 is a good default.
+    """
 
     if byte_mode_encoding is None:
         byte_mode_encoding = 'utf-8'
 
     partial_solutions = [
-        EncodingSolution(variant)
+        EncodingSolution(variant)  # An enmpty data solution.
     ]
 
     # Walk all characters in the string.
@@ -282,10 +291,13 @@ def find_optimal_string_encoding(s: str, variant: EncodingVariant, byte_mode_enc
 
         partial_solutions.clear()
 
+        # Make a new list of partial solutions before processing the next character,
+        # by pruning the solutions that can never become optimal.
         for p1 in partial_solution_candidates:
             if not any(p2.strictly_better(p1) for p2 in partial_solution_candidates):
                 partial_solutions.append(p1)
 
+    # All characters have now been processed. Prune all non-optimal solutions.
     solution_candidates = partial_solutions
 
     solutions = []
@@ -293,10 +305,9 @@ def find_optimal_string_encoding(s: str, variant: EncodingVariant, byte_mode_enc
         if not any(s2.better(s1) for s2 in solution_candidates):
             solutions.append(s1)
 
-    solutions = [(solution.bitcount(), solution) for solution in solutions]
-
-    solutions.sort(key=lambda x: x[0], reverse=True)
-
-    solutions = [solution for (bitcount, solution) in solutions]
+    # Sort solutions by bitcount.
+    solutions_list = [(solution.bitcount(), solution) for solution in solutions]
+    solutions_list.sort(key=lambda x: x[0], reverse=True)
+    solutions = [solution for (bitcount, solution) in solutions_list]
 
     return solutions

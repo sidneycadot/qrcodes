@@ -1,14 +1,29 @@
 #! /usr/bin/env -S python3 -B
 
+"""Test version specification table."""
+
+import unittest
+
 from lookup_tables import version_specifications
 
-for (key, vspec) in version_specifications.items():
+class TestVersionSpecificationsTable(unittest.TestCase):
 
-	print(key)
+	def test_version_specification_properties(self):
 
-	assert key == (vspec.version, vspec.error_correction_level)
+		for (key, vspec) in version_specifications.items():
 
-	assert vspec.total_number_of_codewords == sum(count * c for (count, (c, k, r)) in vspec.block_specification)
-	assert vspec.total_number_of_codewords == vspec.number_of_error_correcting_codewords + sum(count * k for (count, (c, k, r)) in vspec.block_specification)
+			self.assertEqual(key, (vspec.version, vspec.error_correction_level))
 
-	assert len(set(r for (count, (c, k, r)) in vspec.block_specification)) == 1
+			self.assertEqual(vspec.total_number_of_codewords,
+							 sum(count * c for (count, (c, k, r)) in vspec.block_specification))
+
+			self.assertEqual(vspec.total_number_of_codewords,
+							 vspec.number_of_error_correcting_codewords +
+							 sum(count * k for (count, (c, k, r)) in vspec.block_specification)
+							 )
+
+			self.assertEqual(len(set(r for (count, (c, k, r)) in vspec.block_specification)), 1)
+
+
+if __name__ == "__main__":
+	unittest.main()

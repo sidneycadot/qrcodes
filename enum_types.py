@@ -1,5 +1,6 @@
 """Enumeration types used for QR code generation."""
 
+from __future__ import annotations
 from enum import Enum, IntEnum
 
 
@@ -25,3 +26,13 @@ class EncodingVariant(Enum):
     SMALL  = 1  # versions 1 .. 9
     MEDIUM = 2  # versions 10 .. 26
     LARGE  = 3  # versions 27 .. 40
+
+    def from_version(version: int) -> EncodingVariant:
+        if not (1 <= version <= 40):
+            raise ValueError("Bad version.")
+        if version <= 9:
+            return EncodingVariant.SMALL
+        elif version <= 26:
+            return EncodingVariant.MEDIUM
+        else:
+            return EncodingVariant.LARGE

@@ -1,6 +1,6 @@
 #! /usr/bin/env -S python3 -B
 
-"""Test binary codes used for the format and version information areas using the binary codes described and tabulated in the standard."""
+"""Test binary codes used for the format and version information as described and tabulated in the standard."""
 
 import unittest
 

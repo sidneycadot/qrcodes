@@ -7,7 +7,7 @@ from typing import Optional
 
 
 def kanji_character_value(c: str) -> Optional[int]:
-    """Give the encoding of a character as a 13-bit integer value."""
+    """Give the encoding of a character as a 13-bit integer value, or None if the character cannot be encoded."""
 
     if len(c) != 1:
         raise ValueError("Expected a single character.")
@@ -24,6 +24,7 @@ def kanji_character_value(c: str) -> Optional[int]:
     elif 0xe040 <= value <= 0xebbf:
         value -= 0xc140
     else:
+        # The character is not in the supported range.
         return None
 
     msb = value // 256
