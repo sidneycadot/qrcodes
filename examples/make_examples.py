@@ -1,26 +1,11 @@
 #! /usr/bin/env -S python3 -B
 
-"""Write example QR codes.
-
-The following formats are widely supported:
-
-* Text
-* URL
-* VCard
-* Phone
-* Email
-* SMS
-* WIFI
-* Location
-* Event
-
-This script generates examples for some of these.
-"""
+"""Write example QR codes."""
 
 import subprocess
 
 from data_encoder import DataEncoder
-from enum_types import ErrorCorrectionLevel, EncodingVariant
+from enum_types import ErrorCorrectionLevel, EncodingVariant, DataMaskingPattern
 from qr_code import make_qr_code
 from render_pil import render_qrcode_as_pil_image
 from utilities import write_optimal_qrcode
@@ -129,19 +114,6 @@ pi_10k = (
     "2645600162374288021092764579310657922955249887275846101264836999892256959688159205600101655256375678"
 )
 
-"""
-def append_html(de):
-    with open("examples/sidney.html", "r") as fi:
-        html = fi.read()
-    html = "data:text/html," + html
-    de.append_byte_mode_block(html.encode())
-
-def append_vcard(de):
-    with open("examples/sidney.vcard", "r") as fi:
-        vcard = fi.read()
-    de.append_byte_mode_block(vcard.encode())
-"""
-
 
 def write_example_kanji_encodings(s: str, filename: str, *, post_optimize: bool = False) -> None:
     """Represent Kanji characters as both UTF-8 and Kanji encoding.
@@ -154,7 +126,7 @@ def write_example_kanji_encodings(s: str, filename: str, *, post_optimize: bool 
     de.append_byte_mode_block("As Kanji mode block: ".encode())
     de.append_kanji_mode_block(s)
     de.append_byte_mode_block(f"\nAs byte mode block with UTF-8 encoding: {s}".encode())
-    qr_canvas = make_qr_code(de, 6, ErrorCorrectionLevel.L, True, None)
+    qr_canvas = make_qr_code(de, 6, ErrorCorrectionLevel.L)
     im = render_qrcode_as_pil_image(qr_canvas)
     print(f"Saving {filename} ...")
     im.save(filename)
@@ -163,13 +135,44 @@ def write_example_kanji_encodings(s: str, filename: str, *, post_optimize: bool 
 
 
 def main():
+
+    # This produces a QR code with an empty string.
     write_optimal_qrcode("", "example_empty.png", post_optimize=True)
+
+    # This produces a QR code with a snowman character (0x2603) from UTF-8.
+    write_optimal_qrcode("☃", "example_snowman.png", post_optimize=True)
+
+    # This example reproduces the QR code of Appendix I of the standard.
+    write_optimal_qrcode("01234567", "example_01234567.png", pattern=DataMaskingPattern.Pattern2, version_preference_list=[(1, ErrorCorrectionLevel.M)], post_optimize=True)
+
+    # The largest Pi that QR coees can handle includes everything up to the 7080th digit after the decimal point.
     write_optimal_qrcode(pi_10k[:7082], "example_pi.png", post_optimize=True)
-    write_optimal_qrcode("http://www.jigsaw.nl", "example_url.png", post_optimize=True)
+
+    # A simple URL.
+    write_optimal_qrcode("http://www.google.com/", "example_url.png", post_optimize=True)
+
+    # A geolocation URL (RFC 5870).
     write_optimal_qrcode("geo:52.000000,4.000000", "example_geo.png", post_optimize=True)
+
+    # A mailto URL (RFC 6068).
     write_optimal_qrcode("mailto:sidney@jigsaw.nl", "example_mailto.png", post_optimize=True)
+
+    # A simple example using Kanji encoding.
+    # The Kanji text says: "I don't understand Japanese."
     write_optimal_qrcode("日本語はわかりません。", "example_kanji.png", post_optimize=True)
+
+    # An example where the same Kanji text is first rendered in Kanji mode, then later on in
+    # UTF-8 mode. The Kanji text says: "I don't understand Japanese."
     write_example_kanji_encodings("日本語はわかりません。", "example_kanji_encodings.png", post_optimize=True)
+
+    # Some more examples may be added:
+    # - vcard
+    # - phone
+    # - email
+    # - sms
+    # - wifi
+    # - event
+    # - embedded HTML (even though it's not supported).
 
 
 if __name__ == "__main__":

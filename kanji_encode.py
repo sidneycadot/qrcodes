@@ -24,7 +24,7 @@ def kanji_character_value(c: str) -> Optional[int]:
     elif 0xe040 <= value <= 0xebbf:
         value -= 0xc140
     else:
-        # The character is not in the supported range.
+        # The character is not in the supported ranges.
         return None
 
     msb = value // 256

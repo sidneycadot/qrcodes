@@ -62,18 +62,59 @@ class DataEncoder:
         self.bits = bytearray()
 
     def append_integer_value(self, value: int, numbits: int) -> None:
-
+        """Append unsigned integer value to the encoded bits."""
         if not (numbits > 0):
             raise ValueError("Number of bits must be positive.")
 
         if not (0 <= value < (1 << numbits)):
-            raise ValueError("The value passed cannot be represented in the number of bits given.")
+            raise ValueError("The value passed cannot be represented in the number of bits available.")
 
         mask = 1 << (numbits - 1)
         while mask != 0:
             bit = 1 if (value & mask) != 0 else 0
             self.bits.append(bit)
             mask >>= 1
+
+    def append_structured_append_marker(self, index: int, count: int, parity_data: int) -> None:
+        """Append Structured Append marker."""
+
+        if not (0 <= index <= 15):
+            raise ValueError()
+
+        if not (1 <= count <= 16):
+            raise ValueError()
+
+        if not (0 <= parity_data <= 255):
+            raise ValueError()
+
+        # Append the Structured Append Marker intro.
+        self.append_integer_value(0b0011, 4)
+
+        # Append the index.
+        self.append_integer_value(index, 4)
+
+        # Append the count.
+        self.append_integer_value(count - 1, 4)
+
+        # Append the parity data (content checksum).
+        self.append_integer_value(parity_data, 8)
+
+    def append_eci_designator(self, value: int) -> None:
+        """Append Extended Channel Interpretation (ECI) block."""
+
+        if not (0 <= value <= 999999):
+            raise ValueError("Bad ECI designator.")
+
+        # Append the ECI designator intro.
+        self.append_integer_value(0b0111, 4)
+
+        # Append the ECI designator value.
+        if value <= 127:
+            self.append_integer_value(value, 8)
+        elif value <= 16383:
+            self.append_integer_value(0x8000 | value, 16)
+        else:
+            self.append_integer_value(0xc00000 | value, 24)
 
     def append_numeric_mode_block(self, s: str) -> None:
 
@@ -175,48 +216,21 @@ class DataEncoder:
         for value in values:
             self.append_integer_value(value, 13)
 
-    def append_eci_designator(self, value: int) -> None:
-        """Append Extended Channel Interpretation (ECI) block."""
-
-        if not (0 <= value <= 999999):
-            raise ValueError("Bad ECI designator.")
-
-        # Append the ECI designator intro.
-        self.append_integer_value(0b0111, 4)
-
-        # Append the ECI  designator value.
-        if value <= 127:
-            self.append_integer_value(value, 8)
-        elif value <= 16383:
-            self.append_integer_value(0x8000 | value, 16)
-        else:
-            self.append_integer_value(0xc00000 | value, 24)
-
-    def append_structured_append_marker(self, index: int, count: int, parity_data: int) -> None:
-        """Append Structured Append marker."""
-
-        if not (0 <= index <= 15):
-            raise ValueError()
-
-        if not (1 <= count <= 16):
-            raise ValueError()
-
-        if not (0 <= parity_data <= 255):
-            raise ValueError()
-
-        # Append the Structured Append Marker intro.
-        self.append_integer_value(0b0011, 4)
-
-        # Append the index.
-        self.append_integer_value(index, 4)
-
-        # Append the count.
-        self.append_integer_value(count - 1, 4)
-
-        # Append the parity data (content checksum).
-        self.append_integer_value(parity_data, 8)
-
     def get_words(self, number_of_data_codewords: int) -> Optional[list[int]]:
+        """Represent the DataEncoder's data bits as words for further processing.
+
+        First, a check is made to see if the data bits currently stored in the DataEncoder
+        will fit in the 'number_of_data_codewords' specified. If not, None is returned.
+
+        Next, a number of zero padding bits is determined. This includes a terminator
+        (if there is room for it) and bits needed to get to total number of bits up to a multiple
+        of eight bits.
+
+        The next step is for the data bits and padding bits to be represented as 8-bit words.
+
+        Finally, two alternating words (0xec, ox11) are added as world-level padding, to fill
+        out the words list to be of length 'number_of_data_codewords', if necessary.
+        """
 
         number_of_data_encoding_bits = len(self.bits)
         number_of_data_bits_available = number_of_data_codewords * 8
@@ -224,9 +238,10 @@ class DataEncoder:
         if number_of_data_encoding_bits > number_of_data_bits_available:
             return None  # The data cannot fit, even without a terminator.
 
-        # We ideally want 4 zero-bits (terminator), followed by padding zero-bits
-        # to bring the number of bits to a multiple of 8.
-        # However, if there is no room for the terminator, omit it, and just pad.
+        # The Standard prescribes a terminator pattern consisting of four zero-bits,
+        # followed by padding zero-bits to bring the number of bits to a multiple of 8.
+        # However, if there is no room for the terminator, the Standard says the
+        # terminator pattern can be omitted.
 
         slack = number_of_data_bits_available - number_of_data_encoding_bits
 

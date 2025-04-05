@@ -1,4 +1,4 @@
-"""QR code canvaa and canvas drawing functionality."""
+"""QR code canvas and canvas drawing functionality."""
 
 from enum import IntEnum
 from typing import Optional
@@ -15,6 +15,7 @@ class QRCodeCapacityError(Exception):
 
 
 class ModuleValue(IntEnum):
+    """Values for the modules (pixels) that make up the content of the QRCodeCanvas."""
     QUIET_ZONE_0                      = 10
     FINDER_PATTERN_0                  = 20
     FINDER_PATTERN_1                  = 21
@@ -69,10 +70,13 @@ def enumerate_bits(value: int, num_bits: int):
 
 class QRCodeDrawer:
     """A QRCodeDrawer knows how to draw the different areas in a QR code."""
-    def __init__(self, version: int, include_quiet_zone: bool):
+    def __init__(self, version: int, *, include_quiet_zone: Optional[bool]):
 
         if not (1 <= version <= 40):
             raise ValueError(f"Bad QR code version: {version}.")
+
+        if include_quiet_zone is None:
+            include_quiet_zone = True
 
         self.version = version
         self.quiet_zone_margin = 4 if include_quiet_zone else 0
@@ -221,8 +225,8 @@ class QRCodeDrawer:
 
     def place_version_information_placeholders(self):
 
-        # The version information is only present in versions 7..40.
-        if not (7 <= self.version <= 40):
+        # The version information is only present in versions 7 and higher,
+        if not (self.version >= 7):
             return
 
         # Place the two version information patterns.
@@ -232,8 +236,8 @@ class QRCodeDrawer:
 
     def place_version_information_patterns(self):
 
-        # The version information is only present in versions 7..40.
-        if not (7 <= self.version <= 40):
+        # The version information is only present in versions 7 and higher.
+        if not (self.version >= 7):
             return
 
         # Extend the 6-bit version number with 12 bits of error-correction data.
@@ -245,7 +249,12 @@ class QRCodeDrawer:
             for (i, j) in version_bit_position_list:
                 self.set_module_value(i, j, module_value)
 
-    def get_indeterminate_positions(self):
+    def get_indeterminate_positions(self) -> list[tuple[int, int]]:
+        """Traverse modules for data/error correction bits, and return those that are currently INDETERMINATE.
+
+        The order in which the modules are visited (and, hence, the order in which the positions are returned)
+        reflects the placement of data and error correction bits in the final QR code.
+        """
         positions = []
         assert self.width % 2 == 1
         for h_outer in range((self.width - 1) // 2):
@@ -256,7 +265,7 @@ class QRCodeDrawer:
                 for h_inner in range(2):
                     h = h_outer * 2 + h_inner
                     j = (self.width - 1 - h)
-                    if j <= 6:  # Skip vertical timing pattern.
+                    if j <= 6:  # Skip the vertical timing pattern line.
                         j -= 1
                     value = self.get_module_value(i, j)
                     if value == ModuleValue.INDETERMINATE:
@@ -290,8 +299,12 @@ class QRCodeDrawer:
         return abs(surplus)
 
 
-def make_qr_code(de: DataEncoder, version: int, level: ErrorCorrectionLevel, include_quiet_zone: bool,
-                 pattern: Optional[DataMaskingPattern] = None) -> QRCodeCanvas:
+def make_qr_code(
+        de: DataEncoder, version: int, level: ErrorCorrectionLevel,
+        *,
+        include_quiet_zone: Optional[bool] = None,
+        pattern: Optional[DataMaskingPattern] = None
+    ) -> QRCodeCanvas:
 
     version_specification = version_specifications[(version, level)]
 
@@ -350,7 +363,7 @@ def make_qr_code(de: DataEncoder, version: int, level: ErrorCorrectionLevel, inc
 
     # We prepared the channel bits. Now prepare the QR code symbol.
 
-    qr = QRCodeDrawer(version, include_quiet_zone)
+    qr = QRCodeDrawer(version, include_quiet_zone = include_quiet_zone)
     qr.place_quiet_zone()
     qr.place_finder_patterns()
     qr.place_separators()
@@ -408,8 +421,8 @@ def make_qr_code(de: DataEncoder, version: int, level: ErrorCorrectionLevel, inc
 
         score_pattern_tuple_list.sort(key=lambda score_pattern_tuple: score_pattern_tuple[0])
 
-        for (score, test_pattern) in score_pattern_tuple_list:
-            print(f"{score:3d} {test_pattern.name}")
+        # for (score, test_pattern) in score_pattern_tuple_list:
+        #     print(f"{score:3d} {test_pattern.name}")
 
         # Select pattern that yields the lowest score.
         pattern = score_pattern_tuple_list[0][1]

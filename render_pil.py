@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Optional
+
 try:
     from PIL import Image, ImageDraw
 except ModuleNotFoundError:
@@ -50,7 +52,7 @@ colormap_color = {
 }
 
 
-def render_qrcode_as_pil_image(qr_canvas: QRCodeCanvas, *, mode=None, colormap=None, magnification: int=1) -> Image.Image:
+def render_qrcode_as_pil_image(qr_canvas: QRCodeCanvas, *, mode=None, colormap=None, magnification: Optional[int] = None) -> Image.Image:
 
     if mode is None:
         mode = "RGB"
@@ -62,6 +64,9 @@ def render_qrcode_as_pil_image(qr_canvas: QRCodeCanvas, *, mode=None, colormap=N
         colormap = colormap_default
     elif colormap == 'color':
         colormap = colormap_color
+
+    if magnification is None:
+        magnification = 1
 
     im = Image.new(mode, (qr_canvas.width * magnification, qr_canvas.height * magnification))
     draw = ImageDraw.Draw(im)
