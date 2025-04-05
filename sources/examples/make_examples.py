@@ -123,10 +123,10 @@ def write_example_kanji_encodings(s: str, filename: str, *, post_optimize: bool 
     or indirectly).
     """
     de = DataEncoder(EncodingVariant.SMALL)
-    de.append_byte_mode_block("As Kanji mode block: ".encode())
+    de.append_byte_mode_block("Kanji characters as Kanji mode block:\n\n".encode())
     de.append_kanji_mode_block(s)
-    de.append_byte_mode_block(f"\nAs byte mode block with UTF-8 encoding: {s}".encode())
-    qr_canvas = make_qr_code(de, 6, ErrorCorrectionLevel.L)
+    de.append_byte_mode_block(f"\n\nKanji characters as byte mode block with UTF-8 encoding:\n\n{s}".encode())
+    qr_canvas = make_qr_code(de, 7, ErrorCorrectionLevel.L)
     im = render_qrcode_as_pil_image(qr_canvas)
     print(f"Saving {filename} ...")
     im.save(filename)
@@ -139,10 +139,10 @@ def main():
     # This produces a QR code with an empty string.
     write_optimal_qrcode("", "example_empty.png", post_optimize=True)
 
-    # This produces a QR code with a snowman character (0x2603) from UTF-8.
+    # This produces a QR code with the snowman character (\u2603) from UTF-8, written in a "bytes" block.
     write_optimal_qrcode("☃", "example_utf8_snowman.png", post_optimize=True)
 
-    # A simple example using Kanji encoding.
+    # A simple example that uses a single Kanji block.
     # The Kanji text says: "I don't understand Japanese."
     write_optimal_qrcode("日本語はわかりません。", "example_kanji.png", post_optimize=True)
 
@@ -155,7 +155,8 @@ def main():
                          pattern=DataMaskingPattern.Pattern2,
                          version_preference_list=[(1, ErrorCorrectionLevel.M)], post_optimize=True)
 
-    # The most digits of Pi that can be stored into a QR code (up to the 7080th digit after the decimal point).
+    # The most digits of Pi that can be stored into a QR code;
+    # "3." followed by 7080 digits after the decimal point.
     write_optimal_qrcode(pi_10k[:7082], "example_pi_digits.png",
                          version_preference_list=[(40, ErrorCorrectionLevel.L)], post_optimize=True)
 

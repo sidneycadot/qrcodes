@@ -31,7 +31,7 @@ class EncodingVariant(Enum):
     @staticmethod
     def from_version(version: int) -> EncodingVariant:
         if not (1 <= version <= 40):
-            raise ValueError("Bad version.")
+            raise ValueError("Bad QR code version.")
         if version <= 9:
             return EncodingVariant.SMALL
         elif version <= 26:
