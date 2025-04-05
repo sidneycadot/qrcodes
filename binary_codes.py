@@ -1,6 +1,6 @@
 """Calculation of redundant bits for the format and version information areas.
 
- These use the binary codes described in the standard.
+ These use the binary block codes described in the standard.
  """
 
 

@@ -275,6 +275,12 @@ class QRCodeDrawer:
                 self.set_module_value(i, j, value)
 
     def score(self):
+        """Determine a qr-code's score; lower is better.
+
+        The score as implemented here is not compliant to the Standard.
+
+        TODO: Fix score calculation.
+        """
         surplus = 0
         for i in range(self.height):
             for j in range(self.width):
@@ -299,7 +305,7 @@ def make_qr_code(de: DataEncoder, version: int, level: ErrorCorrectionLevel, inc
         name = version_specification.name()
         raise QRCodeCapacityError(f"Cannot fit {len(de.bits)} data bits in QR code symbol {name} ({number_of_data_codewords * 8} data bits available).")
 
-    # Data will fit -- proceed.
+    # The data will fit, we can proceed.
     # Split up data in data-blocks, and calculate the corresponding error correction blocks.
 
     dblocks = []
@@ -378,9 +384,10 @@ def make_qr_code(de: DataEncoder, version: int, level: ErrorCorrectionLevel, inc
     for ((i, j), channel_bit) in zip(positions, channel_bits):
         qr.set_module_value(i, j, ModuleValue.DATA_ERC_1 if channel_bit else ModuleValue.DATA_ERC_0)
 
-    # Now for masking.
-    # If a pattern is given as a parameter, we will use that. Otherwise, we'll determine
-    # the best pattern based on a score (TODO: implement scoring function described by the standard).
+    # Handle data pattern masking.
+    #
+    # If a pattern is given as a parameter, we will use that.
+    # Otherwise, we'll determine the best pattern based on a score.
 
     if pattern is None:
 

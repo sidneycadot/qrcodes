@@ -1,4 +1,7 @@
-"""Find optimal (shortest) data encoding of a string."""
+"""Find optimal (shortest) data encoding of a given string.
+
+Solutions are represented by a class that can be rendered into a DataEncoder.
+"""
 
 from __future__ import annotations
 

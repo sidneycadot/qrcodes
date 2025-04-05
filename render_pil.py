@@ -50,7 +50,7 @@ colormap_color = {
 }
 
 
-def render_qrcode_as_pil_image(qr_canvas: QRCodeCanvas, *, mode=None, colormap=None, magnification: int = 1) -> Image.Image:
+def render_qrcode_as_pil_image(qr_canvas: QRCodeCanvas, *, mode=None, colormap=None, magnification: int=1) -> Image.Image:
 
     if mode is None:
         mode = "RGB"

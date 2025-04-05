@@ -1,4 +1,4 @@
-"""Generate QR code examples."""
+"""High-level utility functions to generate QR codes."""
 
 import subprocess
 
@@ -45,6 +45,7 @@ def make_optimal_qrcode(s: str, include_quiet_zone: bool, preflist = None, byte_
 
         if version_specification.number_of_data_codewords() * 8 >= solution.bitcount():
             print(f"Selected code: {version}-{level.name}")
+            print(solution)
             break
 
     else:

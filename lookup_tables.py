@@ -83,7 +83,9 @@ alignment_pattern_positions: dict[int, list[int]] = {
     40: [6, 30, 58, 86, 114, 142, 170]
 }
 
+
 # Table 9: Error correction characteristics for QR Code
+
 
 class VersionSpecification(NamedTuple):
     version: int
@@ -98,6 +100,7 @@ class VersionSpecification(NamedTuple):
 
     def number_of_data_codewords(self) -> int:
         return self.total_number_of_codewords - self.number_of_error_correcting_codewords
+
 
 version_specifications = {
 
