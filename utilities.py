@@ -7,8 +7,8 @@ from typing import Optional
 from enum_types import ErrorCorrectionLevel, EncodingVariant, DataMaskingPattern
 from data_encoder import DataEncoder
 from lookup_tables import version_specifications
-from optimal_encoding import find_optimal_string_encoding
-from qr_code import make_qr_code
+from optimal_encoding import find_optimal_string_encoding, EncodingSolution
+from qr_code import make_qr_code, QRCodeCanvas
 from render_pil import render_qrcode_as_pil_image
 
 
@@ -20,16 +20,18 @@ def make_default_version_preference_list() -> list[tuple[int, ErrorCorrectionLev
     ]
 
 
-def make_optimal_qrcode(s: str, *,
-                        include_quiet_zone: bool,
-                        pattern : Optional[DataMaskingPattern] = None,
-                        version_preference_list: Optional[list[tuple[int, ErrorCorrectionLevel]]] = None,
-                        byte_mode_encoding: Optional[str] = None):
+def make_optimal_qrcode(
+            s: str, *,
+            include_quiet_zone: Optional[bool] = None,
+            pattern: Optional[DataMaskingPattern] = None,
+            version_preference_list: Optional[list[tuple[int, ErrorCorrectionLevel]]] = None,
+            byte_mode_encoding: Optional[str] = None
+        ) -> Optional[QRCodeCanvas]:
 
     if version_preference_list is None:
         version_preference_list = make_default_version_preference_list()
 
-    variant_cache = {}
+    variant_cache: dict[EncodingVariant, Optional[EncodingSolution]] = {}
     for (version, level) in version_preference_list:
         variant = EncodingVariant.from_version(version)
         if variant in variant_cache:
@@ -59,28 +61,30 @@ def make_optimal_qrcode(s: str, *,
     de = DataEncoder(variant)
     solution.render(de)
 
-    return make_qr_code(de, version, level, include_quiet_zone = include_quiet_zone, pattern = pattern)
+    return make_qr_code(de, version, level, include_quiet_zone=include_quiet_zone, pattern=pattern)
 
 
-def write_optimal_qrcode(s: str, filename: str, *,
-                         include_quiet_zone: Optional[bool] = None,
-                         pattern: Optional[DataMaskingPattern] = None,
-                         version_preference_list: Optional[list[tuple[int, ErrorCorrectionLevel]]] = None,
-                         byte_mode_encoding: Optional[str] = None,
-                         mode=None,
-                         colormap=None,
-                         magnification: Optional[int] = None,
-                         post_optimize: bool=None) -> None:
+def write_optimal_qrcode(
+            s: str, filename: str, *,
+            include_quiet_zone: Optional[bool] = None,
+            pattern: Optional[DataMaskingPattern] = None,
+            version_preference_list: Optional[list[tuple[int, ErrorCorrectionLevel]]] = None,
+            byte_mode_encoding: Optional[str] = None,
+            mode=None,
+            colormap=None,
+            magnification: Optional[int] = None,
+            post_optimize: Optional[bool] = None
+        ) -> None:
 
     if post_optimize is None:
         post_optimize = False
 
     qr_canvas = make_optimal_qrcode(
         s,
-        include_quiet_zone = include_quiet_zone,
-        pattern = pattern,
-        version_preference_list = version_preference_list,
-        byte_mode_encoding = byte_mode_encoding
+        include_quiet_zone=include_quiet_zone,
+        pattern=pattern,
+        version_preference_list=version_preference_list,
+        byte_mode_encoding=byte_mode_encoding
     )
     if qr_canvas is None:
         raise RuntimeError("Unable to store the string in a QR code.")

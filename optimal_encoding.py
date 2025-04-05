@@ -216,7 +216,7 @@ def find_optimal_string_encoding(s: str, variant: EncodingVariant, byte_mode_enc
         byte_mode_encoding = 'utf-8'
 
     partial_solutions = [
-        EncodingSolution(variant)  # An enmpty data solution.
+        EncodingSolution(variant)  # An empty encoding solution.
     ]
 
     # Walk all characters in the string.

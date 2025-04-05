@@ -140,22 +140,7 @@ def main():
     write_optimal_qrcode("", "example_empty.png", post_optimize=True)
 
     # This produces a QR code with a snowman character (0x2603) from UTF-8.
-    write_optimal_qrcode("☃", "example_snowman.png", post_optimize=True)
-
-    # This example reproduces the QR code of Appendix I of the standard.
-    write_optimal_qrcode("01234567", "example_01234567.png", pattern=DataMaskingPattern.Pattern2, version_preference_list=[(1, ErrorCorrectionLevel.M)], post_optimize=True)
-
-    # The largest Pi that QR coees can handle includes everything up to the 7080th digit after the decimal point.
-    write_optimal_qrcode(pi_10k[:7082], "example_pi.png", post_optimize=True)
-
-    # A simple URL.
-    write_optimal_qrcode("http://www.google.com/", "example_url.png", post_optimize=True)
-
-    # A geolocation URL (RFC 5870).
-    write_optimal_qrcode("geo:52.000000,4.000000", "example_geo.png", post_optimize=True)
-
-    # A mailto URL (RFC 6068).
-    write_optimal_qrcode("mailto:sidney@jigsaw.nl", "example_mailto.png", post_optimize=True)
+    write_optimal_qrcode("☃", "example_utf8_snowman.png", post_optimize=True)
 
     # A simple example using Kanji encoding.
     # The Kanji text says: "I don't understand Japanese."
@@ -165,12 +150,30 @@ def main():
     # UTF-8 mode. The Kanji text says: "I don't understand Japanese."
     write_example_kanji_encodings("日本語はわかりません。", "example_kanji_encodings.png", post_optimize=True)
 
+    # This example reproduces the QR code of Appendix I of the standard.
+    write_optimal_qrcode("01234567", "example_appendix_i.png",
+                         pattern=DataMaskingPattern.Pattern2,
+                         version_preference_list=[(1, ErrorCorrectionLevel.M)], post_optimize=True)
+
+    # The most digits of Pi that can be stored into a QR code (up to the 7080th digit after the decimal point).
+    write_optimal_qrcode(pi_10k[:7082], "example_pi_digits.png",
+                         version_preference_list=[(40, ErrorCorrectionLevel.L)], post_optimize=True)
+
+    # A simple URL.
+    write_optimal_qrcode("http://www.google.com/", "example_url.png", post_optimize=True)
+
+    # A geolocation URL (RFC 5870).
+    write_optimal_qrcode("geo:52.000000,4.000000", "example_geolocation.png", post_optimize=True)
+
+    # A mailto URL (RFC 6068).
+    write_optimal_qrcode("mailto:sidney@jigsaw.nl", "example_mailto.png", post_optimize=True)
+
     # Some more examples may be added:
     # - vcard
     # - phone
     # - email
     # - sms
-    # - wifi
+    # - Wi-Fi
     # - event
     # - embedded HTML (even though it's not supported).
 

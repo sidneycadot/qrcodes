@@ -300,11 +300,11 @@ class QRCodeDrawer:
 
 
 def make_qr_code(
-        de: DataEncoder, version: int, level: ErrorCorrectionLevel,
-        *,
-        include_quiet_zone: Optional[bool] = None,
-        pattern: Optional[DataMaskingPattern] = None
-    ) -> QRCodeCanvas:
+            de: DataEncoder, version: int, level: ErrorCorrectionLevel,
+            *,
+            include_quiet_zone: Optional[bool] = None,
+            pattern: Optional[DataMaskingPattern] = None
+        ) -> QRCodeCanvas:
 
     version_specification = version_specifications[(version, level)]
 
@@ -363,7 +363,7 @@ def make_qr_code(
 
     # We prepared the channel bits. Now prepare the QR code symbol.
 
-    qr = QRCodeDrawer(version, include_quiet_zone = include_quiet_zone)
+    qr = QRCodeDrawer(version, include_quiet_zone=include_quiet_zone)
     qr.place_quiet_zone()
     qr.place_finder_patterns()
     qr.place_separators()
