@@ -3,11 +3,11 @@
 from enum import IntEnum
 from typing import Optional
 
-from enum_types import ErrorCorrectionLevel, DataMaskingPattern
-from binary_codes import format_information_code_remainder, version_information_code_remainder
-from reed_solomon_code import calculate_reed_solomon_polynomial, reed_solomon_code_remainder
-from lookup_tables import alignment_pattern_positions, data_mask_pattern_functions, version_specifications
-from data_encoder import DataEncoder
+from .enum_types import ErrorCorrectionLevel, DataMaskingPattern
+from .binary_codes import format_information_code_remainder, version_information_code_remainder
+from .reed_solomon_code import calculate_reed_solomon_polynomial, reed_solomon_code_remainder
+from .lookup_tables import alignment_pattern_positions, data_mask_pattern_functions, version_specifications
+from .data_encoder import DataEncoder
 
 
 class QRCodeCapacityError(Exception):

@@ -4,7 +4,7 @@
 
 import unittest
 
-from lookup_tables import version_specifications
+from qrcode_generator.lookup_tables import version_specifications
 
 
 class TestVersionSpecificationsTable(unittest.TestCase):

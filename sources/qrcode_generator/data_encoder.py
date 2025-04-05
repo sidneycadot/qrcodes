@@ -17,8 +17,8 @@ Each sequence starts with a 4-bit indicator. It is followed by a character count
 from enum import Enum
 from typing import Optional
 
-from enum_types import EncodingVariant
-from kanji_encode import kanji_character_value
+from .enum_types import EncodingVariant
+from .kanji_encode import kanji_character_value
 
 
 class Encoding(Enum):

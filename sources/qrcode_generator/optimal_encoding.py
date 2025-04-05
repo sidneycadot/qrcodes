@@ -7,9 +7,9 @@ from __future__ import annotations
 
 from typing import Optional
 
-from data_encoder import Encoding, numeric_character_map, alphanumeric_character_map, DataEncoder
-from enum_types import EncodingVariant
-from kanji_encode import kanji_character_value
+from .data_encoder import Encoding, numeric_character_map, alphanumeric_character_map, DataEncoder
+from .enum_types import EncodingVariant
+from .kanji_encode import kanji_character_value
 
 
 class EncodingBlock:

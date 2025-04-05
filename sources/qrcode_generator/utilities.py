@@ -1,15 +1,14 @@
 """High-level utility functions to generate QR codes."""
 
 import subprocess
-
 from typing import Optional
 
-from enum_types import ErrorCorrectionLevel, EncodingVariant, DataMaskingPattern
-from data_encoder import DataEncoder
-from lookup_tables import version_specifications
-from optimal_encoding import find_optimal_string_encoding, EncodingSolution
-from qr_code import make_qr_code, QRCodeCanvas
-from render_pil import render_qrcode_as_pil_image
+from .enum_types import ErrorCorrectionLevel, EncodingVariant, DataMaskingPattern
+from .data_encoder import DataEncoder
+from .lookup_tables import version_specifications
+from .optimal_encoding import find_optimal_string_encoding, EncodingSolution
+from .qr_code import make_qr_code, QRCodeCanvas
+from .render_pil import render_qrcode_as_pil_image
 
 
 def make_default_version_preference_list() -> list[tuple[int, ErrorCorrectionLevel]]:

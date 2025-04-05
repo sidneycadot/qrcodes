@@ -2,8 +2,8 @@
 
 import matplotlib.pyplot as plt
 
-from enum_types import ErrorCorrectionLevel
-from lookup_tables import version_specifications
+from qrcode_generator.enum_types import ErrorCorrectionLevel
+from qrcode_generator.lookup_tables import version_specifications
 
 data = {}
 for version_specification in version_specifications.values():

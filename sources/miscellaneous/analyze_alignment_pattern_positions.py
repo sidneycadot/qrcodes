@@ -3,7 +3,7 @@
 import math
 from fractions import Fraction
 
-from lookup_tables import alignment_pattern_positions
+from qrcode_generator.lookup_tables import alignment_pattern_positions
 
 
 def analyze_alignment_pattern_positions():

@@ -9,7 +9,7 @@ try:
 except ModuleNotFoundError:
     pass
 
-from qr_code import QRCodeCanvas, ModuleValue
+from .qr_code import QRCodeCanvas, ModuleValue
 
 colormap_default = {
     ModuleValue.QUIET_ZONE_0: '#ffffff',

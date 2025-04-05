@@ -1,6 +1,6 @@
 #! /usr/bin/env -S python3 -B
 
-from kanji_encode import kanji_character_value
+from qrcode_generator.kanji_encode import kanji_character_value
 
 
 def show_example_characters():

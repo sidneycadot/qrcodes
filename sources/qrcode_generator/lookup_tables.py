@@ -1,7 +1,8 @@
 """Lookup tables for QR code generation."""
 
 from typing import NamedTuple
-from enum_types import ErrorCorrectionLevel, DataMaskingPattern
+
+from .enum_types import ErrorCorrectionLevel, DataMaskingPattern
 
 # Alignment pattern positions QR codes.
 #

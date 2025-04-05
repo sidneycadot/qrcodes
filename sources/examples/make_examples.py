@@ -4,11 +4,11 @@
 
 import subprocess
 
-from data_encoder import DataEncoder
-from enum_types import ErrorCorrectionLevel, EncodingVariant, DataMaskingPattern
-from qr_code import make_qr_code
-from render_pil import render_qrcode_as_pil_image
-from utilities import write_optimal_qrcode
+from sources.qrcode_generator.data_encoder import DataEncoder
+from sources.qrcode_generator.enum_types import ErrorCorrectionLevel, EncodingVariant, DataMaskingPattern
+from sources.qrcode_generator.qr_code import make_qr_code
+from sources.qrcode_generator.render_pil import render_qrcode_as_pil_image
+from sources.qrcode_generator.utilities import write_optimal_qrcode
 
 pi_10k = (
     "3."
