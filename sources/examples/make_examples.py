@@ -146,37 +146,38 @@ def main():
     # The Kanji text says: "I don't understand Japanese."
     write_optimal_qrcode("日本語はわかりません。", "example_kanji.png", post_optimize=True)
 
-    # An example where the same Kanji text is first rendered in Kanji mode, then later on in
-    # UTF-8 mode. The Kanji text says: "I don't understand Japanese."
+    # An example where the same Kanji text is first rendered in Kanji mode, then later on in UTF-8 mode.
+    # The Kanji text says: "I don't understand Japanese."
     write_example_kanji_encodings("日本語はわかりません。", "example_kanji_encodings.png", post_optimize=True)
 
-    # This example reproduces the QR code of Appendix I of the standard.
+    # This example reproduces the example QR code of Appendix I of the standard.
     write_optimal_qrcode("01234567", "example_appendix_i.png",
-                         pattern=DataMaskingPattern.Pattern2,
+                         pattern=DataMaskingPattern.PATTERN2,
                          version_preference_list=[(1, ErrorCorrectionLevel.M)], post_optimize=True)
 
-    # The most digits of Pi that can be stored into a QR code;
-    # "3." followed by 7080 digits after the decimal point.
+    # The most digits of Pi that can be stored into a QR code: "3." followed by 7080 digits after the decimal point.
     write_optimal_qrcode(pi_10k[:7082], "example_pi_digits.png",
                          version_preference_list=[(40, ErrorCorrectionLevel.L)], post_optimize=True)
 
     # A simple URL.
-    write_optimal_qrcode("http://www.google.com/", "example_url.png", post_optimize=True)
+    write_optimal_qrcode("https://www.example.com/", "example_url.png", post_optimize=True)
 
-    # A geolocation URL (RFC 5870).
-    write_optimal_qrcode("geo:52.000000,4.000000", "example_geolocation.png", post_optimize=True)
+    # A geolocation URL (RFC 5870). This one is for the Big Ben in London,UK.
+    write_optimal_qrcode("geo:51.5007,-0.1245", "example_geolocation.png", post_optimize=True)
 
     # A mailto URL (RFC 6068).
-    write_optimal_qrcode("mailto:sidney@jigsaw.nl", "example_mailto.png", post_optimize=True)
+    write_optimal_qrcode("mailto:john.doe@example.com", "example_mailto.png", post_optimize=True)
 
     # Some more examples may be added:
+    # - Other encodings, using the ECI functionality.
+    # - Multiple QR codes that combine to one, using the Structured Append feature.
     # - vcard
     # - phone
-    # - email
     # - sms
     # - Wi-Fi
     # - event
-    # - embedded HTML (even though it's not supported).
+    # - embedded HTML (even though it's not supported by QR code reader apps).
+    # - embedded PNG (even though it's not supported by QR code reader apps).
 
 
 if __name__ == "__main__":

@@ -6,14 +6,14 @@ from enum import Enum, IntEnum
 
 
 class DataMaskingPattern(IntEnum):
-    Pattern0 = 0b000
-    Pattern1 = 0b001
-    Pattern2 = 0b010
-    Pattern3 = 0b011
-    Pattern4 = 0b100
-    Pattern5 = 0b101
-    Pattern6 = 0b110
-    Pattern7 = 0b111
+    PATTERN0 = 0b000
+    PATTERN1 = 0b001
+    PATTERN2 = 0b010
+    PATTERN3 = 0b011
+    PATTERN4 = 0b100
+    PATTERN5 = 0b101
+    PATTERN6 = 0b110
+    PATTERN7 = 0b111
 
 
 class ErrorCorrectionLevel(IntEnum):
@@ -24,9 +24,9 @@ class ErrorCorrectionLevel(IntEnum):
 
 
 class EncodingVariant(Enum):
-    SMALL  = 1  # versions 1 .. 9
+    SMALL = 1   # versions 1 .. 9
     MEDIUM = 2  # versions 10 .. 26
-    LARGE  = 3  # versions 27 .. 40
+    LARGE = 3   # versions 27 .. 40
 
     @staticmethod
     def from_version(version: int) -> EncodingVariant:

@@ -309,12 +309,12 @@ version_specifications = {
 # Table 10: Data mask pattern generation conditions.
 
 data_mask_pattern_functions = {
-    DataMaskingPattern.Pattern0: lambda i, j: (i + j) % 2 == 0,
-    DataMaskingPattern.Pattern1: lambda i, j: i % 2 == 0,
-    DataMaskingPattern.Pattern2: lambda i, j: j % 3 == 0,
-    DataMaskingPattern.Pattern3: lambda i, j: (i + j) % 3 == 0,
-    DataMaskingPattern.Pattern4: lambda i, j: ((i // 2) + (j // 3)) % 2 == 0,
-    DataMaskingPattern.Pattern5: lambda i, j: (i * j) % 2 + (i * j) % 3 == 0,
-    DataMaskingPattern.Pattern6: lambda i, j: ((i * j) % 2 + (i * j) % 3) % 2 == 0,
-    DataMaskingPattern.Pattern7: lambda i, j: ((i + j) % 2 + (i * j) % 3) % 2 == 0
+    DataMaskingPattern.PATTERN0: lambda i, j: (i + j) % 2 == 0,
+    DataMaskingPattern.PATTERN1: lambda i, j: i % 2 == 0,
+    DataMaskingPattern.PATTERN2: lambda i, j: j % 3 == 0,
+    DataMaskingPattern.PATTERN3: lambda i, j: (i + j) % 3 == 0,
+    DataMaskingPattern.PATTERN4: lambda i, j: ((i // 2) + (j // 3)) % 2 == 0,
+    DataMaskingPattern.PATTERN5: lambda i, j: (i * j) % 2 + (i * j) % 3 == 0,
+    DataMaskingPattern.PATTERN6: lambda i, j: ((i * j) % 2 + (i * j) % 3) % 2 == 0,
+    DataMaskingPattern.PATTERN7: lambda i, j: ((i + j) % 2 + (i * j) % 3) % 2 == 0
 }

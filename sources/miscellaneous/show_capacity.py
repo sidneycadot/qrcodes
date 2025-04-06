@@ -83,14 +83,15 @@ def calculate_capacity_v1(version: int) -> int:
 
 
 def calculate_capacity_v2(version: int) -> int:
-
+    """Return the number of modules (pixels) available for storing data and error correction bits."""
     v7 = version // 7
 
     extra = 0
-    if version == 1: extra += 25
-    if version <= 6: extra += 36
+    if version == 1: extra += 25  # No alignment pattern.
+    if version <= 6: extra += 36  # No version information.
 
     return 16 * version * (8 + version) - 5 * v7 * (18 + 5 * v7) + 3 + extra
+
 
 def main():
     for version in range(1, 41):

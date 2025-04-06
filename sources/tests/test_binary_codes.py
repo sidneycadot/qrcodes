@@ -9,7 +9,7 @@ from qrcode_generator.binary_codes import format_information_code_remainder, ver
 
 class TestBinaryCodes(unittest.TestCase):
 
-    def test_format_information_code(self):
+    def test_format_information_code_table(self):
 
         # From the standard, Table C.1.
         #
@@ -61,9 +61,9 @@ class TestBinaryCodes(unittest.TestCase):
 
         for (key, value) in format_information_lookup_table.items():
             residual = format_information_code_remainder(key)
-            self.assertEqual(residual, value)
+            self.assertEqual(value, residual)
 
-    def test_version_information_code(self):
+    def test_version_information_code_table(self):
 
         # From the standard, Table D.1.
         #
@@ -114,7 +114,8 @@ class TestBinaryCodes(unittest.TestCase):
 
         for (key, value) in version_information_lookup_table.items():
             residual = version_information_code_remainder(key)
-            self.assertEqual(residual | key << 12, value)
+            key_residual_concatenation = key << 12 | residual
+            self.assertEqual(value, key_residual_concatenation)
 
 
 if __name__ == "__main__":
