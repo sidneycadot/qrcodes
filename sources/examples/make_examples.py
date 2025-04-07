@@ -6,7 +6,7 @@ import subprocess
 
 from sources.qrcode_generator.data_encoder import DataEncoder
 from sources.qrcode_generator.enum_types import ErrorCorrectionLevel, EncodingVariant, DataMaskingPattern
-from sources.qrcode_generator.qr_code import make_qr_code
+from sources.qrcode_generator.qr_code import make_qr_code, QRCodeCapacityError
 from sources.qrcode_generator.render_pil import render_qrcode_as_pil_image
 from sources.qrcode_generator.utilities import write_optimal_qrcode
 
@@ -134,7 +134,45 @@ def write_example_kanji_encodings(s: str, filename: str, *, post_optimize: bool 
         subprocess.run(["optipng", filename], stderr=subprocess.DEVNULL, check=False)
 
 
+def write_examples_structured_append():
+    """This produces the four "structured append mode" qr-codes from section 8.1."""
+
+    s = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+    checksum = 0
+    for c in s:
+        checksum ^= ord(c)
+    print("checksum:", checksum)
+
+    subcode_specs = [
+        (0, DataMaskingPattern.PATTERN0, "ABCDEFGHIJKLMN"),
+        (1, DataMaskingPattern.PATTERN7, "OPQRSTUVWXYZ0123"),
+        (2, DataMaskingPattern.PATTERN7, "456789ABCDEFGHIJ"),
+        (3, DataMaskingPattern.PATTERN3, "KLMNOPQRSTUVWXYZ")
+    ]
+
+    post_optimize = True
+
+    for (index, pattern, substring) in subcode_specs:
+        de = DataEncoder(EncodingVariant.SMALL)
+        de.append_structured_append_marker(index, 4, checksum)
+        de.append_alphanumeric_mode_block(substring)
+        filename = f"example_standard_fig_29_page_60_1Mp{pattern.value}_index_{index}.png"
+        qr_canvas = make_qr_code(de, 1, ErrorCorrectionLevel.M, pattern=pattern)
+        im = render_qrcode_as_pil_image(qr_canvas)
+        print(f"Saving {filename} ...")
+        im.save(filename)
+        if post_optimize:
+            subprocess.run(["optipng", filename], stderr=subprocess.DEVNULL, check=False)
+
+
 def main():
+
+    #pathological_string = "#" + 184 * (15 * "A" + "#")
+    #pathological_string = "#" + 1 * (5 * "A" + 6 * "0" + "#")
+    #pathological_string = "#" + 5 * (4 * "A" + 5 * "0" + "#")
+    #print(f"String length {len(pathological_string)}.")
+    #write_optimal_qrcode(pathological_string, "example_pathological.png", version_preference_list=[(40, ErrorCorrectionLevel.L)], post_optimize=True)
+    #return
 
     # This produces a QR code with an empty string.
     write_optimal_qrcode("", "example_empty.png", post_optimize=True)
@@ -150,8 +188,23 @@ def main():
     # The Kanji text says: "I don't understand Japanese."
     write_example_kanji_encodings("日本語はわかりません。", "example_kanji_encodings.png", post_optimize=True)
 
-    # This example reproduces the example QR code of Appendix I of the standard.
-    write_optimal_qrcode("01234567", "example_appendix_i.png",
+    # This example reproduces the example QR code of Figure 1 (Section 6.2; page 7) of the standard.
+
+    write_optimal_qrcode("QR Code Symbol", f"example_standard_fig_1_page_7_1Mp5.png",
+                         pattern=DataMaskingPattern.PATTERN5,
+                         version_preference_list=[(1, ErrorCorrectionLevel.M)], post_optimize=True)
+
+    # This example reproduces the example QR code of Figure 29 (Section 8.1; page 60) of the standard.
+    write_optimal_qrcode("ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+                         f"example_standard_fig_29_page_60_4Mp4.png",
+                         pattern=DataMaskingPattern.PATTERN4,
+                         version_preference_list=[(4, ErrorCorrectionLevel.M)], post_optimize=True)
+
+    # Reproduce the "structured append" examples.
+    write_examples_structured_append()
+
+    # This example reproduces the example QR code of Figure I.2 (Appendix I; page 96) of the standard.
+    write_optimal_qrcode("01234567", "example_standard_fig_i2_page_96_1Mp2.png",
                          pattern=DataMaskingPattern.PATTERN2,
                          version_preference_list=[(1, ErrorCorrectionLevel.M)], post_optimize=True)
 
