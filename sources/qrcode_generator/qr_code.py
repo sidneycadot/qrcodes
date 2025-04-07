@@ -3,10 +3,10 @@
 from enum import IntEnum
 from typing import Optional
 
+from .auxiliary import calculate_qrcode_capacity, enumerate_bits
 from .enum_types import ErrorCorrectionLevel, DataMaskingPattern
 from .binary_codes import format_information_code_remainder, version_information_code_remainder
-from .reed_solomon_code import calculate_reed_solomon_polynomial, reed_solomon_code_remainder
-from .lookup_tables import alignment_pattern_positions, data_mask_pattern_functions, version_specifications
+from .lookup_tables import alignment_pattern_positions, data_mask_pattern_functions
 from .data_encoder import DataEncoder
 
 
@@ -32,6 +32,7 @@ class ModuleValue(IntEnum):
     VERSION_INFORMATION_INDETERMINATE = 79  # Placeholder, to be filled in later.
     DATA_ERC_0                        = 80
     DATA_ERC_1                        = 81
+    DATA_ERC_INDETERMINATE            = 89  # Placeholder, to be filled in later.
     INDETERMINATE                     = 99
 
 
@@ -57,15 +58,6 @@ class QRCodeCanvas:
             raise ValueError(f"Bad module coordinate (i={i}, j={j}).")
         index = i * self.width + j
         return ModuleValue(self.modules[index])
-
-
-def enumerate_bits(value: int, num_bits: int):
-    """Enumerate the bits in the unsigned integer value as booleans, going from the MSB down to the LSB."""
-    assert 0 <= value < (1 << num_bits)
-    mask = 1 << (num_bits - 1)
-    while mask != 0:
-        yield (value & mask) != 0
-        mask >>= 1
 
 
 class QRCodeDrawer:
@@ -126,6 +118,30 @@ class QRCodeDrawer:
         canvas_height = self.height + 2 * self.quiet_zone_margin
 
         self.canvas = QRCodeCanvas(canvas_width, canvas_height)
+
+        # Fill in canvas, except:
+        # - format information
+        # - version information
+        # - data and error correction words
+
+        self.place_quiet_zone()
+        self.place_finder_patterns()
+        self.place_separators()
+        self.place_timing_patterns()
+        self.place_alignment_patterns()
+
+        # Place temporary format and version information placeholders.
+        # We need to put /something/ there to be able to find the symbol's available
+        # channel bit positions later on in the call to qr.get_indeterminate_positions().
+        # After pattern selection, we will fill the actual format and version information.
+
+        self.place_format_information_placeholders()
+        self.place_version_information_placeholders()
+
+        # Mark the module positions where the data needs to go, and return
+        # their positions.
+
+        self.data_and_error_correction_positions = self.mark_data_and_error_correction_positions()
 
     def set_module_value(self, i: int, j: int, value: ModuleValue) -> None:
         self.canvas.set_module_value(i + self.quiet_zone_margin, j + self.quiet_zone_margin, value)
@@ -249,7 +265,7 @@ class QRCodeDrawer:
             for (i, j) in version_bit_position_list:
                 self.set_module_value(i, j, module_value)
 
-    def get_indeterminate_positions(self) -> list[tuple[int, int]]:
+    def mark_data_and_error_correction_positions(self) -> list[tuple[int, int]]:
         """Traverse modules for data/error correction bits, and return those that are currently INDETERMINATE.
 
         The order in which the modules are visited (and, hence, the order in which the positions are returned)
@@ -269,13 +285,29 @@ class QRCodeDrawer:
                         j -= 1
                     value = self.get_module_value(i, j)
                     if value == ModuleValue.INDETERMINATE:
+                        self.set_module_value(i, j, ModuleValue.DATA_ERC_INDETERMINATE)
                         position = (i, j)
                         positions.append(position)
+
+        assert len(positions) == calculate_qrcode_capacity(self.version)
+
         return positions
 
-    def apply_data_masking_pattern(self, pattern: DataMaskingPattern, positions: list[tuple[int, int]]) -> None:
+    def place_data_and_error_correction_bits(self, de: DataEncoder, level: ErrorCorrectionLevel) -> None:
+
+        channel_bits = de.get_channel_bits(self.version, level)
+        if channel_bits is None:
+            raise QRCodeCapacityError()
+
+        assert len(self.data_and_error_correction_positions) == len(channel_bits)
+
+        # Place the channel bits in the QR code symbol.
+        for ((i, j), channel_bit) in zip(self.data_and_error_correction_positions, channel_bits):
+            self.set_module_value(i, j, ModuleValue.DATA_ERC_1 if channel_bit else ModuleValue.DATA_ERC_0)
+
+    def apply_data_masking_pattern(self, pattern: DataMaskingPattern) -> None:
         pattern_function = data_mask_pattern_functions[pattern]
-        for (i, j) in positions:
+        for (i, j) in self.data_and_error_correction_positions:
             value = self.get_module_value(i, j)
             assert value in (ModuleValue.DATA_ERC_0, ModuleValue.DATA_ERC_1)
             # Invert if the pattern condition is True
@@ -306,96 +338,11 @@ def make_qr_code(
             pattern: Optional[DataMaskingPattern] = None
         ) -> QRCodeCanvas:
 
-    version_specification = version_specifications[(version, level)]
-
-    # Check if the data will fit in the selected QR code version / level.
-
-    number_of_data_codewords = version_specification.number_of_data_codewords()
-
-    data = de.get_words(number_of_data_codewords)
-
-    if data is None:
-        name = version_specification.name()
-        raise QRCodeCapacityError(f"Cannot fit {len(de.bits)} data bits in QR code symbol {name} ({number_of_data_codewords * 8} data bits available).")
-
-    # The data will fit, we can proceed.
-    # Split up data in data-blocks, and calculate the corresponding error correction blocks.
-
-    dblocks = []
-    eblocks = []
-
-    idx = 0
-    for (count, (code_c, code_k, code_r)) in version_specification.block_specification:
-        # Calculate the Reed-Solomon polynomial corresponding to the number of error correction words.
-        poly = calculate_reed_solomon_polynomial(code_c - code_k, strip=True)
-        for k in range(count):
-            dblock = data[idx:idx + code_k]
-            dblocks.append(dblock)
-
-            eblock = reed_solomon_code_remainder(dblock, poly)
-            eblocks.append(eblock)
-
-            idx += code_k
-
-    assert idx == version_specification.total_number_of_codewords - version_specification.number_of_error_correcting_codewords
-    assert sum(map(len, dblocks)) + sum(map(len, eblocks)) == version_specification.total_number_of_codewords
-
-    # Interleave the data words and error correction words.
-    # All data words will precede all error correction words.
-
-    channel_words = []
-
-    k = 0
-    while sum(map(len, dblocks)) != 0:
-        if len(dblocks[k]) != 0:
-            channel_words.append(dblocks[k].pop(0))
-        k = (k + 1) % len(dblocks)
-
-    k = 0
-    while sum(map(len, eblocks)) != 0:
-        if len(eblocks[k]) != 0:
-            channel_words.append(eblocks[k].pop(0))
-        k = (k + 1) % len(eblocks)
-
-    # Convert data-words to data-bits.
-
-    channel_bits = [channel_bit for word in channel_words for channel_bit in enumerate_bits(word, 8)]
-
     # We prepared the channel bits. Now prepare the QR code symbol.
 
     qr = QRCodeDrawer(version, include_quiet_zone=include_quiet_zone)
-    qr.place_quiet_zone()
-    qr.place_finder_patterns()
-    qr.place_separators()
-    qr.place_timing_patterns()
-    qr.place_alignment_patterns()
 
-    # Place temporary format and version information placeholders.
-    # We need to put /something/ there to be able to find the symbol's available
-    # channel bit positions later on in the call to qr.get_indeterminate_positions().
-    # After pattern selection, we will fill the actual format and version information.
-
-    qr.place_format_information_placeholders()
-    qr.place_version_information_placeholders()
-
-    # Get the module positions where the data needs to go.
-
-    positions = qr.get_indeterminate_positions()
-
-    assert len(channel_bits) <= len(positions)
-
-    # Add padding bits to data-bits if needed.
-
-    num_padding_bits = len(positions) - len(channel_bits)
-    if num_padding_bits != 0:
-        channel_bits.extend([False] * num_padding_bits)
-
-    assert len(positions) == len(channel_bits)
-
-    # Place the channel bits in the QR code symbol.
-
-    for ((i, j), channel_bit) in zip(positions, channel_bits):
-        qr.set_module_value(i, j, ModuleValue.DATA_ERC_1 if channel_bit else ModuleValue.DATA_ERC_0)
+    qr.place_data_and_error_correction_bits(de, level)
 
     # Handle data pattern masking.
     #
@@ -411,25 +358,25 @@ def make_qr_code(
             qr.place_format_information_patterns(level, test_pattern)
 
             # Apply data mask pattern
-            qr.apply_data_masking_pattern(test_pattern, positions)
+            qr.apply_data_masking_pattern(test_pattern)
 
             score = qr.score()
             score_pattern_tuple_list.append((score, test_pattern))
 
             # Un-apply data mask pattern
-            qr.apply_data_masking_pattern(test_pattern, positions)
+            qr.apply_data_masking_pattern(test_pattern)
 
         score_pattern_tuple_list.sort(key=lambda score_pattern_tuple: score_pattern_tuple[0])
 
-        # for (score, test_pattern) in score_pattern_tuple_list:
-        #     print(f"{score:3d} {test_pattern.name}")
+        for (score, test_pattern) in score_pattern_tuple_list:
+            print(f"{score:3d} {test_pattern.name}")
 
         # Select pattern that yields the lowest score.
         pattern = score_pattern_tuple_list[0][1]
 
     print(f"Applying data mask pattern {pattern.name}.")
 
-    qr.apply_data_masking_pattern(pattern, positions)
+    qr.apply_data_masking_pattern(pattern)
 
     qr.place_version_information_patterns()
     qr.place_format_information_patterns(level, pattern)

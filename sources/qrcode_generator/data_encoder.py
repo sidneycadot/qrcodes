@@ -20,8 +20,11 @@ The message is ended by a four-bit terminator sequence (if space allows). It doe
 from enum import Enum
 from typing import Optional
 
-from .enum_types import EncodingVariant
+from .enum_types import EncodingVariant, ErrorCorrectionLevel
 from .kanji_encode import kanji_character_value
+from .lookup_tables import version_specifications
+from .auxiliary import enumerate_bits, calculate_qrcode_capacity
+from .reed_solomon_code import calculate_reed_solomon_polynomial, reed_solomon_code_remainder
 
 
 class Encoding(Enum):
@@ -45,6 +48,8 @@ class DataEncoder:
     def __init__(self, variant: EncodingVariant):
 
         assert isinstance(variant, EncodingVariant)
+
+        self.variant = variant
 
         if variant == EncodingVariant.SMALL:
             self.numeric_mode_count_bits = 10
@@ -280,3 +285,76 @@ class DataEncoder:
             pad_word ^= 0b11111101
 
         return words
+
+    def get_channel_bits(self, version: int, level: ErrorCorrectionLevel) -> Optional[list[bool]]:
+
+        if EncodingVariant.from_version(version) != self.variant:
+            raise RuntimeError("Cannot get channel bits; version incompatible with variant.")
+
+        version_specification = version_specifications[(version, level)]
+
+        # Check if the data will fit in the selected QR code version / level.
+
+        number_of_data_codewords = version_specification.number_of_data_codewords()
+
+        data = self.get_words(number_of_data_codewords)
+
+        if data is None:
+            return None
+
+        # The data will fit, we can proceed.
+        # Split up data in data-blocks, and calculate the corresponding error correction blocks.
+
+        dblocks = []
+        eblocks = []
+
+        idx = 0
+        for (count, (code_c, code_k, code_r)) in version_specification.block_specification:
+            # Calculate the Reed-Solomon polynomial corresponding to the number of error correction words.
+            poly = calculate_reed_solomon_polynomial(code_c - code_k, strip=True)
+            for k in range(count):
+                dblock = data[idx:idx + code_k]
+                dblocks.append(dblock)
+
+                eblock = reed_solomon_code_remainder(dblock, poly)
+                eblocks.append(eblock)
+
+                idx += code_k
+
+        assert idx == version_specification.total_number_of_codewords - version_specification.number_of_error_correcting_codewords
+        assert sum(map(len, dblocks)) + sum(map(len, eblocks)) == version_specification.total_number_of_codewords
+
+        # Interleave the data words and error correction words.
+        # All data words will precede all error correction words.
+
+        channel_words = []
+
+        k = 0
+        while sum(map(len, dblocks)) != 0:
+            if len(dblocks[k]) != 0:
+                channel_words.append(dblocks[k].pop(0))
+            k = (k + 1) % len(dblocks)
+
+        k = 0
+        while sum(map(len, eblocks)) != 0:
+            if len(eblocks[k]) != 0:
+                channel_words.append(eblocks[k].pop(0))
+            k = (k + 1) % len(eblocks)
+
+        # Convert data-words to data-bits.
+
+        channel_bits = [channel_bit for word in channel_words for channel_bit in enumerate_bits(word, 8)]
+
+        # Add padding bits if needed.
+
+        channel_bits_available = calculate_qrcode_capacity(version)
+
+        assert len(channel_bits) <= channel_bits_available
+
+        if len(channel_bits) < channel_bits_available:
+            num_padding_bits = channel_bits_available - len(channel_bits)
+            channel_bits.extend([False] * num_padding_bits)
+
+        # All done.
+
+        return channel_bits

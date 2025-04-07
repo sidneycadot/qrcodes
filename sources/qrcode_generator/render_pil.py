@@ -28,6 +28,7 @@ colormap_default = {
     ModuleValue.VERSION_INFORMATION_INDETERMINATE: '#ffffff',
     ModuleValue.DATA_ERC_0: '#ffffff',
     ModuleValue.DATA_ERC_1: '#000000',
+    ModuleValue.DATA_ERC_INDETERMINATE: '#ffffff',
     ModuleValue.INDETERMINATE: '#ffffff'
 }
 
@@ -48,6 +49,7 @@ colormap_color = {
     ModuleValue.VERSION_INFORMATION_INDETERMINATE: '#ddddff',
     ModuleValue.DATA_ERC_0: '#ffffff',
     ModuleValue.DATA_ERC_1: '#000000',
+    ModuleValue.DATA_ERC_INDETERMINATE: '#777777',
     ModuleValue.INDETERMINATE: '#ff0000'
 }
 

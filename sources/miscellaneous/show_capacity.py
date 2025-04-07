@@ -43,6 +43,7 @@ data_module_count = {
     40: 29648
 }
 
+
 def calculate_capacity_v1(version: int) -> int:
 
     size = 17 + 4 * version
