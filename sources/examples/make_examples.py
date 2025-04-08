@@ -134,6 +134,29 @@ def write_example_kanji_encodings(s: str, filename: str, *, post_optimize: bool 
         subprocess.run(["optipng", filename], stderr=subprocess.DEVNULL, check=False)
 
 
+def write_example_eci_greek(filename: str, *, correct: bool, post_optimize: bool = False) -> None:
+    """Represent Greek characters in ISO-8859-7, which corredsponds to ECI designator 9.
+
+    # This is an example in the standard, but the encoding given there is wrong.
+    """
+
+    if correct:
+        s = "ΑΒΓΔΕ"
+        octets = s.encode("iso-8859-7")
+    else:
+        # The QR code standard incorrectly gives this as the encoding of "ΑΒΓΔΕ" in ISO-8859-7.
+        octets = b"\xa1\xa2\xa3\xa4\xa4"
+    de = DataEncoder(EncodingVariant.SMALL)
+    de.append_eci_designator(9)
+    de.append_byte_mode_block(octets)
+    qr_canvas = make_qr_code(de, 1, ErrorCorrectionLevel.H)
+    im = render_qrcode_as_pil_image(qr_canvas)
+    print(f"Saving {filename} ...")
+    im.save(filename)
+    if post_optimize:
+        subprocess.run(["optipng", filename], stderr=subprocess.DEVNULL, check=False)
+
+
 def write_examples_structured_append():
     """This produces the four "structured append mode" qr-codes from section 8.1."""
 
@@ -180,6 +203,12 @@ def main():
     # This produces a QR code with the snowman character (\u2603) from UTF-8, written in a "bytes" block.
     write_optimal_qrcode("☃", "example_utf8_snowman.png", post_optimize=True)
 
+    # This produces a QR code with the Greek characters "ΑΒΓΔΕ" encoded in ISO-8859-7, using ECI designator 9.
+    write_example_eci_greek("example_eci_greek_correct.png", correct=True, post_optimize=True)
+    write_example_eci_greek("example_eci_greek_incorrect.png", correct=False, post_optimize=True)
+
+    return
+
     # A simple example that uses a single Kanji block.
     # The Kanji text says: "I don't understand Japanese."
     write_optimal_qrcode("日本語はわかりません。", "example_kanji.png", post_optimize=True)
@@ -208,14 +237,15 @@ def main():
                          pattern=DataMaskingPattern.PATTERN2,
                          version_preference_list=[(1, ErrorCorrectionLevel.M)], post_optimize=True)
 
-    # The most digits of Pi that can be stored into a QR code: "3." followed by 7080 digits after the decimal point.
+    # The most digits of Pi that can be stored into a QR code:
+    # "3." followed by 7080 digits after the decimal point.
     write_optimal_qrcode(pi_10k[:7082], "example_pi_digits.png",
                          version_preference_list=[(40, ErrorCorrectionLevel.L)], post_optimize=True)
 
     # A simple URL.
     write_optimal_qrcode("https://www.example.com/", "example_url.png", post_optimize=True)
 
-    # A geolocation URL (RFC 5870). This one is for the Big Ben in London,UK.
+    # A geolocation URL (RFC 5870). This one is for the Big Ben in London, UK.
     write_optimal_qrcode("geo:51.5007,-0.1245", "example_geolocation.png", post_optimize=True)
 
     # A mailto URL (RFC 6068).
