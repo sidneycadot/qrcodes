@@ -1,12 +1,14 @@
 #! /usr/bin/env -S python3 -B
 
 """Write example QR codes."""
-
+import glob
+import os
 import subprocess
+import textwrap
 
 from sources.qrcode_generator.data_encoder import DataEncoder
 from sources.qrcode_generator.enum_types import ErrorCorrectionLevel, EncodingVariant, DataMaskingPattern
-from sources.qrcode_generator.qr_code import make_qr_code, QRCodeCapacityError
+from sources.qrcode_generator.qr_code import make_qr_code
 from sources.qrcode_generator.render_pil import render_qrcode_as_pil_image
 from sources.qrcode_generator.utilities import write_optimal_qrcode
 
@@ -134,18 +136,14 @@ def write_example_kanji_encodings(s: str, filename: str, *, post_optimize: bool 
         subprocess.run(["optipng", filename], stderr=subprocess.DEVNULL, check=False)
 
 
-def write_example_eci_greek(filename: str, *, correct: bool, post_optimize: bool = False) -> None:
-    """Represent Greek characters in ISO-8859-7, which corredsponds to ECI designator 9.
+def write_example_eci_greek(s: str, filename: str, *, post_optimize: bool = False) -> None:
+    """Represent Greek characters in ISO-8859-7, which corresponds to ECI designator 9.
 
-    # This is an example in the standard, but the encoding given there is wrong.
+    # This is an example in the standard, but the encoding given there is wrong;
+    # ΑΒΓΔΕ encoded is 0xc1..0xc5, not 0xa1..0xa5.
     """
 
-    if correct:
-        s = "ΑΒΓΔΕ"
-        octets = s.encode("iso-8859-7")
-    else:
-        # The QR code standard incorrectly gives this as the encoding of "ΑΒΓΔΕ" in ISO-8859-7.
-        octets = b"\xa1\xa2\xa3\xa4\xa4"
+    octets = s.encode("iso-8859-7")
     de = DataEncoder(EncodingVariant.SMALL)
     de.append_eci_designator(9)
     de.append_byte_mode_block(octets)
@@ -190,6 +188,10 @@ def write_examples_structured_append():
 
 def main():
 
+    for filename in glob.glob("example_*.png"):
+        print("Removing", filename, "...")
+        os.remove(filename)
+
     #pathological_string = "#" + 184 * (15 * "A" + "#")
     #pathological_string = "#" + 1 * (5 * "A" + 6 * "0" + "#")
     #pathological_string = "#" + 5 * (4 * "A" + 5 * "0" + "#")
@@ -204,10 +206,7 @@ def main():
     write_optimal_qrcode("☃", "example_utf8_snowman.png", post_optimize=True)
 
     # This produces a QR code with the Greek characters "ΑΒΓΔΕ" encoded in ISO-8859-7, using ECI designator 9.
-    write_example_eci_greek("example_eci_greek_correct.png", correct=True, post_optimize=True)
-    write_example_eci_greek("example_eci_greek_incorrect.png", correct=False, post_optimize=True)
-
-    return
+    write_example_eci_greek("ΑΒΓΔΕ", "example_eci_greek.png", post_optimize=True)
 
     # A simple example that uses a single Kanji block.
     # The Kanji text says: "I don't understand Japanese."
@@ -233,6 +232,8 @@ def main():
     write_examples_structured_append()
 
     # This example reproduces the example QR code of Figure I.2 (Appendix I; page 96) of the standard.
+    # Note: the 2000 version of the standard selects PATTERN3 here, while the 2015 version
+    # of the standard selects PATTERN2.
     write_optimal_qrcode("01234567", "example_standard_fig_i2_page_96_1Mp2.png",
                          pattern=DataMaskingPattern.PATTERN2,
                          version_preference_list=[(1, ErrorCorrectionLevel.M)], post_optimize=True)
@@ -248,15 +249,53 @@ def main():
     # A geolocation URL (RFC 5870). This one is for the Big Ben in London, UK.
     write_optimal_qrcode("geo:51.5007,-0.1245", "example_geolocation.png", post_optimize=True)
 
+    # A Wi-Fi qrcode.
+    write_optimal_qrcode("WIFI:S:MyNetworkName;T:WPA;P:MyPassword", "example_wifi.png", post_optimize=True)
+
+    # This produces QR codes with an SMS address and (optionally) a body.
+    # The iPhone app, at least, ignores the body part.
+    write_optimal_qrcode("sms:+31624872425", "example_sms_1.png", post_optimize=True)
+    write_optimal_qrcode("sms:+31624872425:Example Body", "example_sms_2.png", post_optimize=True)
+    write_optimal_qrcode("sms:+31624872425?body=Example%20Body", "example_sms_3.png", post_optimize=True)
+    write_optimal_qrcode("smsto:+31624872425", "example_sms_4.png", post_optimize=True)
+    write_optimal_qrcode("smsto:+31624872425:Example Body", "example_sms_5.png", post_optimize=True)
+    write_optimal_qrcode("smsto:+31624872425?body=Example%20Body", "example_sms_6.png", post_optimize=True)
+
     # A mailto URL (RFC 6068).
-    write_optimal_qrcode("mailto:john.doe@example.com", "example_mailto.png", post_optimize=True)
+    write_optimal_qrcode("mailto:john.doe@example.com?subject=This%20is%20the%20subject.&body=Hi%20there.", "example_mailto.png", post_optimize=True)
+
+    # A telephone number.
+    write_optimal_qrcode("tel:+31624872425", "example_telephone.png", post_optimize=True)
+
+    # An event.
+
+    vevent_descriptor = textwrap.dedent("""
+    BEGIN:VEVENT
+    SUMMARY:Sidney is jarig
+    DTSTART:20250408T120000
+    DTEND:20250408T120000
+    END:VEVENT 
+    """).strip()
+
+    write_optimal_qrcode(vevent_descriptor, "example_vevent.png", post_optimize=True)
+
+    # A vcard.
+
+    vcard_descriptor = textwrap.dedent("""
+    BEGIN:VCARD
+    VERSION:4.0
+    FN:Albert Einstein
+    N:Einstein;Albert;;;
+    BDAY:19721020
+    GENDER:M
+    END:VCARD
+    """).strip()
+
+    print(repr(vcard_descriptor))
+
+    write_optimal_qrcode(vcard_descriptor, "example_vcard.png", post_optimize=True)
 
     # Some more examples may be added:
-    # - Other encodings, using the ECI functionality.
-    # - Multiple QR codes that combine to one, using the Structured Append feature.
-    # - vcard
-    # - phone
-    # - sms
     # - Wi-Fi
     # - event
     # - embedded HTML (even though it's not supported by QR code reader apps).
