@@ -62,7 +62,7 @@ class QRCodeCanvas:
 
 class QRCodeDrawer:
     """A QRCodeDrawer knows how to draw the different areas in a QR code."""
-    def __init__(self, version: int, *, include_quiet_zone: Optional[bool]):
+    def __init__(self, version: int, *, include_quiet_zone: Optional[bool] = None):
 
         if not (1 <= version <= 40):
             raise ValueError(f"Bad QR code version: {version}.")
@@ -318,17 +318,143 @@ class QRCodeDrawer:
     def score(self):
         """Determine a qr-code's score; lower is better.
 
-        The score as implemented here is not compliant to the Standard.
+        The score as implemented here is not yet compliant to the Standard.
 
         TODO: Fix score calculation.
         """
-        surplus = 0
+
+        # Contribution 1: consecutive same-color blocks, hor/ver.
+
+        points = 0
+
+        for i in range(self.height):
+            prev_value = None
+            consecutive = 0
+            for j in range(self.width):
+                value = self.get_module_value(i, j) % 10 % 9
+                if value == prev_value:
+                    consecutive += 1
+                    if consecutive == 5:
+                        points += 3
+                    elif consecutive > 5:
+                        points += 1
+                else:
+                    consecutive = 1
+                    prev_value = value
+
+        for j in range(self.width):
+            prev_value = None
+            consecutive = 0
+            for i in range(self.height):
+                value = self.get_module_value(i, j) % 10 % 9
+                if value == prev_value:
+                    consecutive += 1
+                    if consecutive == 5:
+                        points += 3
+                    elif consecutive > 5:
+                        points += 1
+                else:
+                    consecutive = 1
+                    prev_value = value
+
+        contribution_1 = points  # ??? x3???
+
+        # Contribution 2: 2x2 blocks of the same color.
+
+        num_blocks = 0
+        for i in range(self.height - 1):
+            for j in range(self.width - 1):
+                value00 = self.get_module_value(i + 0, j + 0) % 10 % 9
+                value01 = self.get_module_value(i + 0, j + 1) % 10 % 9
+                value10 = self.get_module_value(i + 1, j + 0) % 10 % 9
+                value11 = self.get_module_value(i + 1, j + 1) % 10 % 9
+
+                if value00 == value01 == value10 == value11:
+                    num_blocks += 1
+
+        contribution_2 = 3 * num_blocks
+
+        # Contribution 3: 1011101 with preceding or following 4 white pixels.
+
+        occurrences = 0
+        pattern=bytes([1, 0, 1, 1, 1, 0, 1])
+        b = bytearray()
+
+        for i in range(self.height):
+            b.clear()
+            b.append(0)
+            b.append(0)
+            b.append(0)
+            b.append(0)
+            for j in range(self.width):
+                value = self.get_module_value(i, j) % 10 % 9
+                b.append(value)
+            b.append(0)
+            b.append(0)
+            b.append(0)
+            b.append(0)
+
+            assert len(b) == self.width + 8
+
+            idx = 0
+            while True:
+                idx = b.find(pattern, idx)
+                if idx == -1:
+                    break
+                before = all(b[idx-k-1]==0 for k in range(4))
+                after = all(b[idx+7+k]==0 for k in range(4))
+                if before or after:
+                    occurrences += 1
+                idx += 1
+
+        for j in range(self.width):
+            b.clear()
+            b.append(0)
+            b.append(0)
+            b.append(0)
+            b.append(0)
+            for i in range(self.height):
+                value = self.get_module_value(i, j) % 10 % 9
+                b.append(value)
+            b.append(0)
+            b.append(0)
+            b.append(0)
+            b.append(0)
+
+            assert len(b) == self.height + 8
+
+            idx = 0
+            while True:
+                idx = b.find(pattern, idx)
+                if idx == -1:
+                    break
+                before = all(b[idx-k-1]==0 for k in range(4))
+                after = all(b[idx+7+k]==0 for k in range(4))
+                if before or after:
+                    occurrences += 1
+                idx += 1
+
+        contribution_3 = 40 * occurrences
+
+        # Contribution 4: black/white imbalance.
+
+        count_ones = 0
         for i in range(self.height):
             for j in range(self.width):
-                value = self.get_module_value(i, j) % 10
-                assert value in (0, 1)
-                surplus += 2 * value - 1
-        return abs(surplus)
+                value = self.get_module_value(i, j) % 10 % 9
+                if value == 1:
+                    count_ones += 1
+
+        # 0..5: 0
+        # 5..10: 10
+        # 10..15: 20
+        deviation_percentage = abs(count_ones / (self.height * self.width) * 100.0 - 50.0)
+        k = round(deviation_percentage // 5.0)
+
+        contribution_4 = 10 * k
+
+        #print(contribution_1, contribution_2, contribution_3, contribution_4)
+        return contribution_1 + contribution_2 + contribution_3 + contribution_4
 
 
 def make_qr_code(
