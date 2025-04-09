@@ -3,10 +3,10 @@
 An encoding solution is optimal if:
 
   (1) its bit-count is minimal;
-  (2) among the encoding solutions with minimal bit-count, the number of mode switches is minimal.
+  (2) among the encoding solutions with minimal bit-count, the number of blocks is minimal.
 
 Note: pathological input strings exist that lead to many different optimal encoding solutions that are all
-optimal in the sense as defined above.
+      optimal in the sense as defined above.
 
 Solutions are represented by instances of the EncodingSolution class. They can be rendered into a DataEncoder.
 """

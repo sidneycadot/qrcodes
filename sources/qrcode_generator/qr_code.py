@@ -16,24 +16,24 @@ class QRCodeCapacityError(Exception):
 
 class ModuleValue(IntEnum):
     """Values for the modules (pixels) that make up the content of the QRCodeCanvas."""
-    QUIET_ZONE_0                      = 10
-    FINDER_PATTERN_0                  = 20
-    FINDER_PATTERN_1                  = 21
-    SEPARATOR_0                       = 30
-    TIMING_PATTERN_0                  = 40
-    TIMING_PATTERN_1                  = 41
-    ALIGNMENT_PATTERN_0               = 50
-    ALIGNMENT_PATTERN_1               = 51
-    FORMAT_INFORMATION_0              = 60
-    FORMAT_INFORMATION_1              = 61
-    FORMAT_INFORMATION_INDETERMINATE  = 69  # Placeholder, to be filled in later.
-    VERSION_INFORMATION_0             = 70
-    VERSION_INFORMATION_1             = 71
-    VERSION_INFORMATION_INDETERMINATE = 79  # Placeholder, to be filled in later.
-    DATA_ERC_0                        = 80
-    DATA_ERC_1                        = 81
-    DATA_ERC_INDETERMINATE            = 89  # Placeholder, to be filled in later.
-    INDETERMINATE                     = 99
+    QUIET_ZONE_0                      = 0x10
+    FINDER_PATTERN_0                  = 0x20
+    FINDER_PATTERN_1                  = 0x21
+    SEPARATOR_0                       = 0x30
+    TIMING_PATTERN_0                  = 0x40
+    TIMING_PATTERN_1                  = 0x41
+    ALIGNMENT_PATTERN_0               = 0x50
+    ALIGNMENT_PATTERN_1               = 0x51
+    FORMAT_INFORMATION_0              = 0x60
+    FORMAT_INFORMATION_1              = 0x61
+    FORMAT_INFORMATION_INDETERMINATE  = 0x6E  # Placeholder, to be filled in later. Defaults to 0.
+    VERSION_INFORMATION_0             = 0x70
+    VERSION_INFORMATION_1             = 0x71
+    VERSION_INFORMATION_INDETERMINATE = 0x7E  # Placeholder, to be filled in later. Defaults to 0.
+    DATA_ERC_0                        = 0x80
+    DATA_ERC_1                        = 0x81
+    DATA_ERC_INDETERMINATE            = 0x8E  # Placeholder, to be filled in later. Defaults to 0.
+    INDETERMINATE                     = 0x9E  # Defaults to 0.
 
 
 class QRCodeCanvas:
@@ -119,7 +119,7 @@ class QRCodeDrawer:
 
         self.canvas = QRCodeCanvas(canvas_width, canvas_height)
 
-        # Fill in canvas, except:
+        # Fill in QR code canvas, except:
         # - format information
         # - version information
         # - data and error correction words
@@ -138,8 +138,8 @@ class QRCodeDrawer:
         self.place_format_information_placeholders()
         self.place_version_information_placeholders()
 
-        # Mark the module positions where the data needs to go, and return
-        # their positions.
+        # Mark the module positions where the data and error correction bits needs to go, and
+        # remember their positions.
 
         self.data_and_error_correction_positions = self.mark_data_and_error_correction_positions()
 
@@ -336,7 +336,7 @@ class QRCodeDrawer:
             previous_value = None
             consecutive = 0
             for j in range(self.width):
-                value = self.get_module_value(i, j) % 10 % 9
+                value = self.get_module_value(i, j) % 2
                 if value == previous_value:
                     consecutive += 1
                     if consecutive == 5:
@@ -351,7 +351,7 @@ class QRCodeDrawer:
             previous_value = None
             consecutive = 0
             for i in range(self.height):
-                value = self.get_module_value(i, j) % 10 % 9
+                value = self.get_module_value(i, j) % 2
                 if value == previous_value:
                     consecutive += 1
                     if consecutive == 5:
@@ -369,10 +369,10 @@ class QRCodeDrawer:
         num_blocks = 0
         for i in range(self.height - 1):
             for j in range(self.width - 1):
-                value00 = self.get_module_value(i + 0, j + 0) % 10 % 9
-                value01 = self.get_module_value(i + 0, j + 1) % 10 % 9
-                value10 = self.get_module_value(i + 1, j + 0) % 10 % 9
-                value11 = self.get_module_value(i + 1, j + 1) % 10 % 9
+                value00 = self.get_module_value(i + 0, j + 0) % 2
+                value01 = self.get_module_value(i + 0, j + 1) % 2
+                value10 = self.get_module_value(i + 1, j + 0) % 2
+                value11 = self.get_module_value(i + 1, j + 1) % 2
 
                 if value00 == value01 == value10 == value11:
                     num_blocks += 1
@@ -382,7 +382,7 @@ class QRCodeDrawer:
         # Contribution 3: 1011101 with preceding or following 4 white pixels.
 
         occurrences = 0
-        pattern=bytes([1, 0, 1, 1, 1, 0, 1])
+        pattern = bytes([1, 0, 1, 1, 1, 0, 1])
         b = bytearray()
 
         for i in range(self.height):
@@ -392,7 +392,7 @@ class QRCodeDrawer:
             b.append(0)
             b.append(0)
             for j in range(self.width):
-                value = self.get_module_value(i, j) % 10 % 9
+                value = self.get_module_value(i, j) % 2
                 b.append(value)
             b.append(0)
             b.append(0)
@@ -419,7 +419,7 @@ class QRCodeDrawer:
             b.append(0)
             b.append(0)
             for i in range(self.height):
-                value = self.get_module_value(i, j) % 10 % 9
+                value = self.get_module_value(i, j) % 2
                 b.append(value)
             b.append(0)
             b.append(0)
@@ -446,7 +446,7 @@ class QRCodeDrawer:
         count_ones = 0
         for i in range(self.height):
             for j in range(self.width):
-                value = self.get_module_value(i, j) % 10 % 9
+                value = self.get_module_value(i, j) % 2
                 if value == 1:
                     count_ones += 1
 

@@ -4,15 +4,16 @@ from __future__ import annotations
 
 from typing import Optional
 
-pil_import_success = False
+from .qr_code import QRCodeCanvas, ModuleValue
+
+pil_imported_succesfully = False
 try:
     from PIL import Image, ImageDraw
 except ModuleNotFoundError:
     pass
 else:
-    pil_import_success = True
+    pil_imported_succesfully = True
 
-from .qr_code import QRCodeCanvas, ModuleValue
 
 colormap_default = {
     ModuleValue.QUIET_ZONE_0: '#ffffff',
@@ -60,7 +61,7 @@ colormap_color = {
 def render_qrcode_as_pil_image(qr_canvas: QRCodeCanvas, *, mode=None, colormap=None, magnification: Optional[int] = None) -> Image.Image:
     """Render QRCodeCanvas as a PIL image."""
 
-    if not pil_import_success:
+    if not pil_imported_succesfully:
         raise RuntimeError("PIL package not available.")
 
     if mode is None:

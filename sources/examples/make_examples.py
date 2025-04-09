@@ -257,18 +257,18 @@ def main():
     write_optimal_qrcode("WIFI:S:MyNetworkName;T:WPA;P:MyPassword", "example_wifi.png", post_optimize=True)
 
     # A telephone number.
-    write_optimal_qrcode("tel:+31624872425", "example_telephone.png", post_optimize=True)
+    write_optimal_qrcode("tel:+123456789", "example_telephone.png", post_optimize=True)
 
     # This produces QR codes with an SMS address and (optionally) a body.
     # Both "sms:" and "smsto:" prefixes appear to work.
     # The iPhone app, at least, ignores the body part.
-    write_optimal_qrcode("sms:+31624872425", "example_sms_1.png", post_optimize=True)
-    write_optimal_qrcode("sms:+31624872425:Example Body", "example_sms_2.png", post_optimize=True)
-    write_optimal_qrcode("sms:+31624872425?body=Example%20Body", "example_sms_3.png", post_optimize=True)
+    write_optimal_qrcode("sms:+123456789", "example_sms_1.png", post_optimize=True)
+    write_optimal_qrcode("sms:+123456789:Example Body", "example_sms_2.png", post_optimize=True)
+    write_optimal_qrcode("sms:+123456789?body=Example%20Body", "example_sms_3.png", post_optimize=True)
 
-    write_optimal_qrcode("smsto:+31624872425", "example_smsto_1.png", post_optimize=True)
-    write_optimal_qrcode("smsto:+31624872425:Example Body", "example_smsto_2.png", post_optimize=True)
-    write_optimal_qrcode("smsto:+31624872425?body=Example%20Body", "example_smsto_3.png", post_optimize=True)
+    write_optimal_qrcode("smsto:+123456789", "example_smsto_1.png", post_optimize=True)
+    write_optimal_qrcode("smsto:+123456789:Example Body", "example_smsto_2.png", post_optimize=True)
+    write_optimal_qrcode("smsto:+123456789?body=Example%20Body", "example_smsto_3.png", post_optimize=True)
 
     # An event (for calendar applications).
 
@@ -293,8 +293,6 @@ def main():
     GENDER:M
     END:VCARD
     """).strip()
-
-    print(repr(vcard_descriptor))
 
     write_optimal_qrcode(vcard_descriptor, "example_vcard.png", post_optimize=True)
 
