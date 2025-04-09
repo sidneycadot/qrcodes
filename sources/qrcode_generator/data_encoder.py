@@ -268,6 +268,11 @@ class DataEncoder:
         return words
 
     def get_channel_bits(self, version: int, level: ErrorCorrectionLevel) -> Optional[list[bool]]:
+        """Represent the data in the encoder as channel bits, intended for the given version/level QR code.
+
+        If it is impossible to fit the data into the (version, level) QR code symbol, this
+        method will return None.
+        """
 
         if EncodingVariant.from_version(version) != self.variant:
             raise RuntimeError("Cannot get channel bits; version incompatible with variant.")

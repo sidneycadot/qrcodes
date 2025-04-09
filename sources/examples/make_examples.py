@@ -1,16 +1,17 @@
 #! /usr/bin/env -S python3 -B
 
-"""Write example QR codes."""
+"""Write example QR codes as PNG image files."""
+
 import glob
 import os
 import subprocess
 import textwrap
 
-from sources.qrcode_generator.data_encoder import DataEncoder
-from sources.qrcode_generator.enum_types import ErrorCorrectionLevel, EncodingVariant, DataMaskingPattern
-from sources.qrcode_generator.qr_code import make_qr_code
-from sources.qrcode_generator.render_pil import render_qrcode_as_pil_image
-from sources.qrcode_generator.utilities import write_optimal_qrcode
+from qrcode_generator.data_encoder import DataEncoder
+from qrcode_generator.enum_types import ErrorCorrectionLevel, EncodingVariant, DataMaskingPattern
+from qrcode_generator.qr_code import make_qr_code
+from qrcode_generator.render_pil import render_qrcode_as_pil_image
+from qrcode_generator.utilities import write_optimal_qrcode
 
 pi_10k = (
     "3."
@@ -155,7 +156,7 @@ def write_example_eci_greek(s: str, filename: str, *, post_optimize: bool = Fals
         subprocess.run(["optipng", filename], stderr=subprocess.DEVNULL, check=False)
 
 
-def write_examples_structured_append():
+def write_examples_structured_append(*, post_optimize: bool = False):
     """This produces the four "structured append mode" qr-codes from section 8.1."""
 
     s = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"
@@ -170,8 +171,6 @@ def write_examples_structured_append():
         (2, DataMaskingPattern.PATTERN7, "456789ABCDEFGHIJ"),
         (3, DataMaskingPattern.PATTERN3, "KLMNOPQRSTUVWXYZ")
     ]
-
-    post_optimize = True
 
     for (index, pattern, substring) in subcode_specs:
         de = DataEncoder(EncodingVariant.SMALL)
@@ -228,8 +227,9 @@ def main():
                          pattern=DataMaskingPattern.PATTERN4,
                          version_preference_list=[(4, ErrorCorrectionLevel.M)], post_optimize=True)
 
-    # Reproduce the "structured append" examples.
-    write_examples_structured_append()
+    # Reproduce the four "structured append" examples, where the information in the previous
+    # example is split over four QR codes.
+    write_examples_structured_append(post_optimize=True)
 
     # This example reproduces the example QR code of Figure I.2 (Appendix I; page 96) of the standard.
     # Note: the 2000 version of the standard selects PATTERN3 here, while the 2015 version
@@ -243,50 +243,53 @@ def main():
     write_optimal_qrcode(pi_10k[:7082], "example_pi_digits.png",
                          version_preference_list=[(40, ErrorCorrectionLevel.L)], post_optimize=True)
 
-    # A simple URL.
-    write_optimal_qrcode("https://www.example.com/", "example_url.png", post_optimize=True)
-
-    # A geolocation URL (RFC 5870). This one is for the Big Ben in London, UK.
-    write_optimal_qrcode("geo:51.5007,-0.1245", "example_geolocation.png", post_optimize=True)
-
-    # A Wi-Fi qrcode.
-    write_optimal_qrcode("WIFI:S:MyNetworkName;T:WPA;P:MyPassword", "example_wifi.png", post_optimize=True)
-
-    # This produces QR codes with an SMS address and (optionally) a body.
-    # The iPhone app, at least, ignores the body part.
-    write_optimal_qrcode("sms:+31624872425", "example_sms_1.png", post_optimize=True)
-    write_optimal_qrcode("sms:+31624872425:Example Body", "example_sms_2.png", post_optimize=True)
-    write_optimal_qrcode("sms:+31624872425?body=Example%20Body", "example_sms_3.png", post_optimize=True)
-    write_optimal_qrcode("smsto:+31624872425", "example_sms_4.png", post_optimize=True)
-    write_optimal_qrcode("smsto:+31624872425:Example Body", "example_sms_5.png", post_optimize=True)
-    write_optimal_qrcode("smsto:+31624872425?body=Example%20Body", "example_sms_6.png", post_optimize=True)
+    # Simple URLs to HTTP/HTTPS.
+    write_optimal_qrcode("http://www.example.com/", "example_http_url.png", post_optimize=True)
+    write_optimal_qrcode("https://www.example.com/", "example_https_url.png", post_optimize=True)
 
     # A mailto URL (RFC 6068).
     write_optimal_qrcode("mailto:john.doe@example.com?subject=This%20is%20the%20subject.&body=Hi%20there.", "example_mailto.png", post_optimize=True)
 
+    # A geolocation URL (RFC 5870). This one points to the Big Ben clock tower in London, UK.
+    write_optimal_qrcode("geo:51.5007,-0.1245", "example_geolocation.png", post_optimize=True)
+
+    # A Wi-Fi network specification.
+    write_optimal_qrcode("WIFI:S:MyNetworkName;T:WPA;P:MyPassword", "example_wifi.png", post_optimize=True)
+
     # A telephone number.
     write_optimal_qrcode("tel:+31624872425", "example_telephone.png", post_optimize=True)
 
-    # An event.
+    # This produces QR codes with an SMS address and (optionally) a body.
+    # Both "sms:" and "smsto:" prefixes appear to work.
+    # The iPhone app, at least, ignores the body part.
+    write_optimal_qrcode("sms:+31624872425", "example_sms_1.png", post_optimize=True)
+    write_optimal_qrcode("sms:+31624872425:Example Body", "example_sms_2.png", post_optimize=True)
+    write_optimal_qrcode("sms:+31624872425?body=Example%20Body", "example_sms_3.png", post_optimize=True)
+
+    write_optimal_qrcode("smsto:+31624872425", "example_smsto_1.png", post_optimize=True)
+    write_optimal_qrcode("smsto:+31624872425:Example Body", "example_smsto_2.png", post_optimize=True)
+    write_optimal_qrcode("smsto:+31624872425?body=Example%20Body", "example_smsto_3.png", post_optimize=True)
+
+    # An event (for calendar applications).
 
     vevent_descriptor = textwrap.dedent("""
     BEGIN:VEVENT
-    SUMMARY:Sidney is jarig
-    DTSTART:20250408T120000
-    DTEND:20250408T120000
+    SUMMARY:Fifth Solvay Conference on Physics
+    DTSTART:19271024T120000
+    DTEND:19271029T120000
     END:VEVENT 
     """).strip()
 
     write_optimal_qrcode(vevent_descriptor, "example_vevent.png", post_optimize=True)
 
-    # A vcard.
+    # A vcard (for contact applications).
 
     vcard_descriptor = textwrap.dedent("""
     BEGIN:VCARD
     VERSION:4.0
     FN:Albert Einstein
-    N:Einstein;Albert;;;
-    BDAY:19721020
+    N:Einstein;Albert;;;Dr.
+    BDAY:18790314
     GENDER:M
     END:VCARD
     """).strip()
@@ -296,10 +299,8 @@ def main():
     write_optimal_qrcode(vcard_descriptor, "example_vcard.png", post_optimize=True)
 
     # Some more examples may be added:
-    # - Wi-Fi
-    # - event
-    # - embedded HTML (even though it's not supported by QR code reader apps).
-    # - embedded PNG (even though it's not supported by QR code reader apps).
+    # - embedded HTML (even though it's not supported by standard QR code reader apps).
+    # - embedded PNG (even though it's not supported by standard QR code reader apps).
 
 
 if __name__ == "__main__":

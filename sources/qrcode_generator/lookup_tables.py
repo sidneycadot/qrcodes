@@ -4,7 +4,7 @@ from typing import NamedTuple
 
 from .enum_types import ErrorCorrectionLevel, DataMaskingPattern, EncodingVariant, CharacterEncodingType
 
-# Number of bits in character count indicator as specified in Table 3 of ISO/IEC 18004:2015(E).
+# Number of bits in the character count indicator as specified in Table 3 of ISO/IEC 18004:2015(E).
 
 count_bits_table = {
     EncodingVariant.SMALL: {
@@ -28,12 +28,13 @@ count_bits_table = {
 }
 
 # QR Code version specifications as given in Table 9 of ISO/IEC 18004:2015(E).
-# These specify the Reed-Solomon codes used in each of the 160 QR code
-# formats described by the standard (40 versions with 4 error correction
-# levels per version).
+#
+# Most importantly, these specify the Reed-Solomon codes used in each of the 160 QR code formats
+# described by the standard (40 versions with 4 error correction levels per version).
 
 
 class VersionSpecification(NamedTuple):
+    """Represent version-specific information."""
     version: int
     error_correction_level: ErrorCorrectionLevel
     total_number_of_codewords: int

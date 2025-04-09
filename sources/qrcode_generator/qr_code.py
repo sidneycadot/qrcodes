@@ -297,7 +297,7 @@ class QRCodeDrawer:
 
         channel_bits = de.get_channel_bits(self.version, level)
         if channel_bits is None:
-            raise QRCodeCapacityError()
+            raise QRCodeCapacityError("Unable to fit the data in the selected QR code symbol.")
 
         assert len(self.data_and_error_correction_positions) == len(channel_bits)
 
@@ -470,10 +470,11 @@ def make_qr_code(
             pattern: Optional[DataMaskingPattern] = None
         ) -> QRCodeCanvas:
 
-    # We prepared the channel bits. Now prepare the QR code symbol.
+    # Prepare the selected QR code symbol and fill it with the data.
 
     qr = QRCodeDrawer(version, include_quiet_zone=include_quiet_zone)
 
+    # This may raise a QRCodeCapacityError.
     qr.place_data_and_error_correction_bits(de, level)
 
     # Handle data pattern masking.
@@ -486,30 +487,44 @@ def make_qr_code(
         score_pattern_tuple_list = []
 
         for test_pattern in DataMaskingPattern:
-            qr.place_version_information_patterns()
-            qr.place_format_information_patterns(level, test_pattern)
 
-            # Apply data mask pattern
+            standard_compliant = True
+            if standard_compliant:
+                # The standard prescribes that the version and format information should
+                # be left empty when scoring the patterns.
+                qr.place_version_information_placeholders()
+                qr.place_format_information_placeholders()
+            else:
+                # A more sensible, but not standards-compliant approach is to fill the
+                # version and format information, since it is all known at this point.
+                qr.place_version_information_patterns()
+                qr.place_format_information_patterns(level, test_pattern)
+
+            # Apply the data mask test pattern.
             qr.apply_data_masking_pattern(test_pattern)
 
+            # Calculate and record the score for this test pattern.
             score = qr.score()
             score_pattern_tuple_list.append((score, test_pattern))
 
-            # Un-apply data mask pattern
+            # Un-apply the data mask test pattern.
             qr.apply_data_masking_pattern(test_pattern)
 
+        # Sort test patterns by score.
         score_pattern_tuple_list.sort(key=lambda score_pattern_tuple: score_pattern_tuple[0])
 
+        # As a debugging aid, print the scores for the different test patterns.
         for (score, test_pattern) in score_pattern_tuple_list:
             print(f"{score:3d} {test_pattern.name}")
 
-        # Select pattern that yields the lowest score.
+        # Select test pattern that yields the lowest score.
         pattern = score_pattern_tuple_list[0][1]
 
+    # Apply the selected data masking pattern.
     print(f"Applying data mask pattern {pattern.name}.")
-
     qr.apply_data_masking_pattern(pattern)
 
+    # Fill in the definitive version and format information.
     qr.place_version_information_patterns()
     qr.place_format_information_patterns(level, pattern)
 
