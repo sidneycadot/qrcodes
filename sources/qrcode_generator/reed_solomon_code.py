@@ -65,6 +65,10 @@ def multiply_polynomial(pa: list[int], pb: list[int]) -> list[int]:
 
 
 def calculate_reed_solomon_polynomial(n: int, *, strip: bool) -> list[int]:
+    """Determine the n'th Reed-Solomon polynomial used for QR codes.
+
+    This reproduces the polynomials given in Appendix A of ISO/IEC 18004:2015(E).
+    """
     element = 1
     poly = [1]
     for k in range(n):
@@ -86,6 +90,7 @@ def calculate_reed_solomon_polynomial(n: int, *, strip: bool) -> list[int]:
 
 
 def reed_solomon_code_remainder(data: list[int], poly: list[int]) -> list[int]:
+    """Determine remainder of data(x) ** x^n + poly(x)."""
 
     residual = [0] * len(poly)
 
@@ -101,7 +106,7 @@ def reed_solomon_code_remainder(data: list[int], poly: list[int]) -> list[int]:
 
 
 def poly_string(poly: list[int], prepend_prefix_term: bool) -> str:
-
+    """Represent a GF8 polynomial as a string."""
     terms = []
 
     n = len(poly)

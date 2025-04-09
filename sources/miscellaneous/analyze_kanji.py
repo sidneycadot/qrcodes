@@ -6,10 +6,10 @@ from qrcode_generator.kanji_encode import kanji_character_value
 def show_example_characters():
 
 	examples = {
-		'点' : 0x0d9f,  # Section 7.4.6, 0x935f
-		'茗' : 0x1aaa,  # Section 7.4.6, 0xe4aa
-		'日' : 0x0e3a,  # Section 8.3, 0x93fa
-		'本' : 0x0ffb   # Section 8.3, 0x967b
+		'点': 0x0d9f,  # Section 7.4.6, 0x935f
+		'茗': 0x1aaa,  # Section 7.4.6, 0xe4aa
+		'日': 0x0e3a,  # Section 8.3, 0x93fa
+		'本': 0x0ffb   # Section 8.3, 0x967b
 	}
 
 	for (c, reference_value) in examples.items():

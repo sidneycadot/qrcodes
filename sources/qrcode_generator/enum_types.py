@@ -5,6 +5,14 @@ from __future__ import annotations
 from enum import Enum, IntEnum
 
 
+class CharacterEncodingType(Enum):
+    """The four encodings of characters in data blocks."""
+    NUMERIC = 1
+    ALPHANUMERIC = 2
+    BYTES = 3
+    KANJI = 4
+
+
 class DataMaskingPattern(IntEnum):
     PATTERN0 = 0b000
     PATTERN1 = 0b001

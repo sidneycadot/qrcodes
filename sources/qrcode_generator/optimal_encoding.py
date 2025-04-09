@@ -1,31 +1,34 @@
-"""Find optimal (shortest) data encoding of a given string.
+"""Find the optimal data encoding(s) of a given string.
 
-Solutions are represented by a class that can be rendered into a DataEncoder.
+An encoding solution is optimal if:
+
+  (1) its bit-count is minimal;
+  (2) among the encoding solutions with minimal bit-count, the number of mode switches is minimal.
+
+Note: pathological input strings exist that lead to many different optimal encoding solutions that are all
+optimal in the sense as defined above.
+
+Solutions are represented by instances of the EncodingSolution class. They can be rendered into a DataEncoder.
 """
 
 from __future__ import annotations
 
 from typing import Optional
 
-from .data_encoder import Encoding, numeric_character_map, alphanumeric_character_map, DataEncoder
-from .enum_types import EncodingVariant
+from .data_encoder import numeric_character_map, alphanumeric_character_map, DataEncoder
+from .enum_types import CharacterEncodingType, EncodingVariant
 from .kanji_encode import kanji_character_value
+from .lookup_tables import count_bits_table
 
 
 class EncodingBlock:
-    """Abstract base class for the encoding ranges."""
+    """Abstract base class for data encoding blocks in QR codes."""
     pass
 
 
 class EncodingBlockNumeric(EncodingBlock):
 
-    encoding = Encoding.NUMERIC
-
-    countbits_map = {
-        EncodingVariant.SMALL  : 10,
-        EncodingVariant.MEDIUM : 12,
-        EncodingVariant.LARGE  : 14
-    }
+    encoding = CharacterEncodingType.NUMERIC
 
     def __init__(self, variant: EncodingVariant, initial_payload: Optional[str] = None):
         self.variant = variant
@@ -45,7 +48,7 @@ class EncodingBlockNumeric(EncodingBlock):
 
     def bitcount(self) -> int:
         n = len(self.payload)
-        count_bits = self.countbits_map[self.variant]
+        count_bits = count_bits_table[self.variant][self.encoding]
         if n % 3 == 0:
             return 4 + count_bits + (n // 3) * 10
         if n % 3 == 1:
@@ -56,13 +59,7 @@ class EncodingBlockNumeric(EncodingBlock):
 
 class EncodingBlockAlphanumeric(EncodingBlock):
 
-    encoding = Encoding.ALPHANUMERIC
-
-    countbits_map = {
-        EncodingVariant.SMALL  : 9,
-        EncodingVariant.MEDIUM : 11,
-        EncodingVariant.LARGE  : 13
-    }
+    encoding = CharacterEncodingType.ALPHANUMERIC
 
     def __init__(self, variant: EncodingVariant, initial_payload: Optional[str] = None):
         if not isinstance(variant, EncodingVariant):
@@ -84,7 +81,7 @@ class EncodingBlockAlphanumeric(EncodingBlock):
 
     def bitcount(self) -> int:
         n = len(self.payload)
-        count_bits = self.countbits_map[self.variant]
+        count_bits = count_bits_table[self.variant][self.encoding]
         if n % 2 == 0:
             return 4 + count_bits + (n // 2) * 11
         if n % 2 == 1:
@@ -93,13 +90,7 @@ class EncodingBlockAlphanumeric(EncodingBlock):
 
 class EncodingBlockBytes(EncodingBlock):
 
-    encoding = Encoding.BYTES
-
-    countbits_map = {
-        EncodingVariant.SMALL  : 8,
-        EncodingVariant.MEDIUM : 16,
-        EncodingVariant.LARGE  : 16
-    }
+    encoding = CharacterEncodingType.BYTES
 
     def __init__(self, variant: EncodingVariant, initial_payload: Optional[bytes] = None):
         self.variant = variant
@@ -119,19 +110,13 @@ class EncodingBlockBytes(EncodingBlock):
 
     def bitcount(self) -> int:
         n = len(self.payload)
-        count_bits = self.countbits_map[self.variant]
+        count_bits = count_bits_table[self.variant][self.encoding]
         return 4 + count_bits + n * 8
 
 
 class EncodingBlockKanji(EncodingBlock):
 
-    encoding = Encoding.KANJI
-
-    countbits_map = {
-        EncodingVariant.SMALL  : 9,
-        EncodingVariant.MEDIUM : 11,
-        EncodingVariant.LARGE  : 13
-    }
+    encoding = CharacterEncodingType.KANJI
 
     def __init__(self, variant: EncodingVariant, initial_payload: Optional[str] = None):
         self.variant = variant
@@ -151,7 +136,7 @@ class EncodingBlockKanji(EncodingBlock):
 
     def bitcount(self) -> int:
         n = len(self.payload)
-        count_bits = self.countbits_map[self.variant]
+        count_bits = count_bits_table[self.variant][self.encoding]
         return 4 + count_bits + n * 13
 
 
@@ -179,7 +164,7 @@ class EncodingSolution:
     def pop_block(self) -> EncodingBlock:
         return self.blocks.pop()
 
-    def active_encoding(self) -> Optional[Encoding]:
+    def active_encoding(self) -> Optional[CharacterEncodingType]:
         if len(self.blocks) == 0:
             return None
         return self.blocks[-1].encoding
@@ -232,7 +217,7 @@ def find_optimal_string_encoding(s: str, variant: EncodingVariant, byte_mode_enc
 
             if c in numeric_character_map:
                 partial_solution_candidate = partial_solution.copy()
-                if active_encoding == Encoding.NUMERIC:
+                if active_encoding == CharacterEncodingType.NUMERIC:
                     # Append the character to the last block.
                     block = partial_solution_candidate.pop_block()
                     block.append_character(c)
@@ -247,7 +232,7 @@ def find_optimal_string_encoding(s: str, variant: EncodingVariant, byte_mode_enc
 
             if c in alphanumeric_character_map:
                 partial_solution_candidate = partial_solution.copy()
-                if active_encoding == Encoding.ALPHANUMERIC:
+                if active_encoding == CharacterEncodingType.ALPHANUMERIC:
                     # Append the character to the last encoding block.
                     block = partial_solution_candidate.pop_block()
                     block.append_character(c)
@@ -266,7 +251,7 @@ def find_optimal_string_encoding(s: str, variant: EncodingVariant, byte_mode_enc
                 pass
             else:
                 partial_solution_candidate = partial_solution.copy()
-                if active_encoding == Encoding.BYTES:
+                if active_encoding == CharacterEncodingType.BYTES:
                     # Append the character to the last encoding block.
                     block = partial_solution_candidate.pop_block()
                     block.append_bytes(encoded_character_bytes)
@@ -281,7 +266,7 @@ def find_optimal_string_encoding(s: str, variant: EncodingVariant, byte_mode_enc
 
             if kanji_character_value(c) is not None:
                 partial_solution_candidate = partial_solution.copy()
-                if active_encoding == Encoding.KANJI:
+                if active_encoding == CharacterEncodingType.KANJI:
                     # Append the character to the last encoding block.
                     block = partial_solution_candidate.pop_block()
                     block.append_character(c)

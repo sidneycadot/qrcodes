@@ -3,12 +3,12 @@
 import math
 from fractions import Fraction
 
-from qrcode_generator.lookup_tables import alignment_pattern_positions
+from qrcode_generator.lookup_tables import alignment_pattern_position_table
 
 
 def analyze_alignment_pattern_positions():
 
-    for (version, reference_positions) in alignment_pattern_positions.items():
+    for (version, reference_positions) in alignment_pattern_position_table.items():
 
         if version == 1:
             # Version 1 is special; ignore it.

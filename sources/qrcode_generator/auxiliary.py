@@ -15,7 +15,7 @@ def calculate_qrcode_capacity(version: int) -> int:
     v7 = version // 7
 
     extra = 0
-    if version == 1: extra += 25  # No alignment pattern.
-    if version <= 6: extra += 36  # No version information.
+    if version == 1: extra += 25  # V1 omits an alignment pattern (5x5 pixels).
+    if version <= 6: extra += 36  # V1-V6 have no version information (2x18 pixels).
 
     return 16 * version * (8 + version) - 5 * v7 * (18 + 5 * v7) + 3 + extra

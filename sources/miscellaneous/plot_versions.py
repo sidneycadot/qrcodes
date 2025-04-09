@@ -3,10 +3,10 @@
 import matplotlib.pyplot as plt
 
 from qrcode_generator.enum_types import ErrorCorrectionLevel
-from qrcode_generator.lookup_tables import version_specifications
+from qrcode_generator.lookup_tables import version_specification_table
 
 data = {}
-for version_specification in version_specifications.values():
+for version_specification in version_specification_table.values():
     if version_specification.error_correction_level not in data:
         data[version_specification.error_correction_level] = []
     number_of_data_codewords = version_specification.total_number_of_codewords - version_specification.number_of_error_correcting_codewords

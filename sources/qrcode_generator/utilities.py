@@ -5,7 +5,7 @@ from typing import Optional
 
 from .enum_types import ErrorCorrectionLevel, EncodingVariant, DataMaskingPattern
 from .data_encoder import DataEncoder
-from .lookup_tables import version_specifications
+from .lookup_tables import version_specification_table
 from .optimal_encoding import find_optimal_string_encoding, EncodingSolution
 from .qr_code import make_qr_code, QRCodeCanvas
 from .render_pil import render_qrcode_as_pil_image
@@ -50,7 +50,7 @@ def make_optimal_qrcode(
             continue
 
         # See if this solution would fit in this (version, level) code.
-        version_specification = version_specifications[(version, level)]
+        version_specification = version_specification_table[(version, level)]
 
         if version_specification.number_of_data_codewords() * 8 >= solution.bitcount():
             print(f"Selected code: {version}-{level.name}")

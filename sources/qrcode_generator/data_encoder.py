@@ -1,37 +1,27 @@
 """QR code data encoder.
 
-The data payload of QR codes consists of a bitstream containing typed sequences as described in the standard.
+The data payload of QR codes consists of a bitstream containing typed blocks as described in the standard.
 
-Each type sequence starts with a 4-bit indicator.
+Each block starts with a 4-bit indicator.
 
-Four sequence types encode string data; they are followed by a character count, and finally the character data:
+Four block types encode string data; they are followed by a character count, and finally the character data:
 
 0001 Numeric data;      alphabet is any of the 10 characters "0123456789".
 0010 Alphanumeric data; alphabet is any of the 45 characters "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ $%*+-./:".
-0100 Byte data;         alphabet is 8-bit bytes, normally interpreted as UTF-8 by phones.
+0100 Byte data;         Eight-bit bytes, representing a string in some encoding. The standard specifies a default
+                        encoding that can be changed with an ECI block.
 1000 Kanji data;        alphabet is Kanji characters encoded in 13 bits each.
 
-The message is ended by a four-bit terminator sequence (if space allows). It doesn't have any follow-up bits.
-
-0000 terminator symbol; This should be the last typed sequence. It may be omitted if the QR code symbol
-                        doesn't have space for it.
+The message is ended by a four-bit terminator, if the QR code symbol has room for it.
 """
 
-from enum import Enum
 from typing import Optional
 
-from .enum_types import EncodingVariant, ErrorCorrectionLevel
+from .enum_types import EncodingVariant, ErrorCorrectionLevel, CharacterEncodingType
 from .kanji_encode import kanji_character_value
-from .lookup_tables import version_specifications
+from .lookup_tables import version_specification_table, count_bits_table
 from .auxiliary import enumerate_bits, calculate_qrcode_capacity
 from .reed_solomon_code import calculate_reed_solomon_polynomial, reed_solomon_code_remainder
-
-
-class Encoding(Enum):
-    NUMERIC = 1
-    ALPHANUMERIC = 2
-    BYTES = 3
-    KANJI = 4
 
 
 # Map of numeric characters to their integer representation.
@@ -50,23 +40,6 @@ class DataEncoder:
         assert isinstance(variant, EncodingVariant)
 
         self.variant = variant
-
-        if variant == EncodingVariant.SMALL:
-            self.numeric_mode_count_bits = 10
-            self.alphanumeric_mode_count_bits = 9
-            self.byte_mode_count_bits = 8
-            self.kanji_mode_count_bits = 8
-        elif variant == EncodingVariant.MEDIUM:
-            self.numeric_mode_count_bits = 12
-            self.alphanumeric_mode_count_bits = 11
-            self.byte_mode_count_bits = 16
-            self.kanji_mode_count_bits = 10
-        else:
-            self.numeric_mode_count_bits = 14
-            self.alphanumeric_mode_count_bits = 13
-            self.byte_mode_count_bits = 16
-            self.kanji_mode_count_bits = 12
-
         self.bits = bytearray()
 
     def append_integer_value(self, value: int, numbits: int) -> None:
@@ -130,15 +103,17 @@ class DataEncoder:
         if not all(c in numeric_character_map for c in s):
             raise ValueError("Not all characters can be represented in numeric mode.")
 
+        count_bits = count_bits_table[self.variant][CharacterEncodingType.NUMERIC]
+
         # Verify that it is possible to represent the character count.
-        if not (len(s) < (1 << self.numeric_mode_count_bits)):
+        if not (len(s) < (1 << count_bits)):
             raise ValueError("Numeric string too long.")
 
         # Append the numeric mode block intro.
         self.append_integer_value(0b0001, 4)
 
         # Append the numeric mode block character count.
-        self.append_integer_value(len(s), self.numeric_mode_count_bits)
+        self.append_integer_value(len(s), count_bits)
 
         # Append the numeric character data, in chunks of 1, 2, or 3 characters.
         idx = 0
@@ -161,15 +136,17 @@ class DataEncoder:
         if not all(c in alphanumeric_character_map for c in s):
             raise ValueError("Not all characters can be represented in alphanumeric mode.")
 
+        count_bits = count_bits_table[self.variant][CharacterEncodingType.ALPHANUMERIC]
+
         # Verify that it is possible to represent the character count.
-        if not (len(s) < (1 << self.alphanumeric_mode_count_bits)):
+        if not (len(s) < (1 << count_bits)):
             raise ValueError("Alphanumeric string too long.")
 
         # Append the alphanumeric mode block intro.
         self.append_integer_value(0b0010, 4)
 
         # Append the alphanumeric mode block character count.
-        self.append_integer_value(len(s), self.alphanumeric_mode_count_bits)
+        self.append_integer_value(len(s), count_bits)
 
         # Append the alphanumeric character data, in chunks of 1 or 2 characters.
         idx = 0
@@ -188,15 +165,17 @@ class DataEncoder:
 
     def append_byte_mode_block(self, b: bytes) -> None:
 
+        count_bits = count_bits_table[self.variant][CharacterEncodingType.BYTES]
+
         # Verify that it is possible to represent the byte count.
-        if not (len(b) < (1 << self.byte_mode_count_bits)):
+        if not (len(b) < (1 << count_bits)):
             raise ValueError("Byte sequence too long.")
 
         # Append the byte mode block intro.
         self.append_integer_value(0b0100, 4)
 
         # Append the byte mode block character count.
-        self.append_integer_value(len(b), self.byte_mode_count_bits)
+        self.append_integer_value(len(b), count_bits)
 
         # Append the byte data.
         for value in b:
@@ -211,14 +190,16 @@ class DataEncoder:
                 raise ValueError("Not all characters can be represented in kanji mode.")
             values.append(value)
 
-        if not (len(values) < (1 << self.kanji_mode_count_bits)):
+        count_bits = count_bits_table[self.variant][CharacterEncodingType.ALPHANUMERIC]
+
+        if not (len(values) < (1 << count_bits)):
             raise ValueError("Kanji string too long.")
 
         # Append the kanji mode block intro.
         self.append_integer_value(0b1000, 4)
 
         # Append the kanji mode block character count.
-        self.append_integer_value(len(values), self.kanji_mode_count_bits)
+        self.append_integer_value(len(values), count_bits)
 
         # Append the kanji character data.
         for value in values:
@@ -291,7 +272,7 @@ class DataEncoder:
         if EncodingVariant.from_version(version) != self.variant:
             raise RuntimeError("Cannot get channel bits; version incompatible with variant.")
 
-        version_specification = version_specifications[(version, level)]
+        version_specification = version_specification_table[(version, level)]
 
         # Check if the data will fit in the selected QR code version / level.
 

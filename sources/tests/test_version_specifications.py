@@ -4,14 +4,14 @@
 
 import unittest
 
-from qrcode_generator.lookup_tables import version_specifications
+from qrcode_generator.lookup_tables import version_specification_table
 
 
 class TestVersionSpecificationsTable(unittest.TestCase):
 
     def test_version_specification_properties(self):
 
-        for (key, vspec) in version_specifications.items():
+        for (key, vspec) in version_specification_table.items():
 
             self.assertEqual(key, (vspec.version, vspec.error_correction_level))
 

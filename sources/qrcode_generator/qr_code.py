@@ -6,7 +6,7 @@ from typing import Optional
 from .auxiliary import calculate_qrcode_capacity, enumerate_bits
 from .enum_types import ErrorCorrectionLevel, DataMaskingPattern
 from .binary_codes import format_information_code_remainder, version_information_code_remainder
-from .lookup_tables import alignment_pattern_positions, data_mask_pattern_functions
+from .lookup_tables import alignment_pattern_position_table, data_mask_pattern_function_table
 from .data_encoder import DataEncoder
 
 
@@ -194,7 +194,7 @@ class QRCodeDrawer:
 
     def place_alignment_patterns(self) -> None:
 
-        positions = alignment_pattern_positions[self.version]
+        positions = alignment_pattern_position_table[self.version]
         num = len(positions)
 
         for v in range(num):
@@ -306,7 +306,7 @@ class QRCodeDrawer:
             self.set_module_value(i, j, ModuleValue.DATA_ERC_1 if channel_bit else ModuleValue.DATA_ERC_0)
 
     def apply_data_masking_pattern(self, pattern: DataMaskingPattern) -> None:
-        pattern_function = data_mask_pattern_functions[pattern]
+        pattern_function = data_mask_pattern_function_table[pattern]
         for (i, j) in self.data_and_error_correction_positions:
             value = self.get_module_value(i, j)
             assert value in (ModuleValue.DATA_ERC_0, ModuleValue.DATA_ERC_1)
@@ -406,8 +406,8 @@ class QRCodeDrawer:
                 idx = b.find(pattern, idx)
                 if idx == -1:
                     break
-                before = all(b[idx-k-1]==0 for k in range(4))
-                after = all(b[idx+7+k]==0 for k in range(4))
+                before = all(b[idx-k-1] == 0 for k in range(4))
+                after = all(b[idx+7+k] == 0 for k in range(4))
                 if before or after:
                     occurrences += 1
                 idx += 1
@@ -433,8 +433,8 @@ class QRCodeDrawer:
                 idx = b.find(pattern, idx)
                 if idx == -1:
                     break
-                before = all(b[idx-k-1]==0 for k in range(4))
-                after = all(b[idx+7+k]==0 for k in range(4))
+                before = all(b[idx-k-1] == 0 for k in range(4))
+                after = all(b[idx+7+k] == 0 for k in range(4))
                 if before or after:
                     occurrences += 1
                 idx += 1
