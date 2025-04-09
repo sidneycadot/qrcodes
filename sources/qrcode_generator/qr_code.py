@@ -316,23 +316,28 @@ class QRCodeDrawer:
                 self.set_module_value(i, j, value)
 
     def score(self):
-        """Determine a qr-code's score; lower is better.
+        """Determine a QR code's score; lower is better.
 
-        The score as implemented here is not yet compliant to the Standard.
+        The score is used to select a data masking pattern.
 
-        TODO: Fix score calculation.
+        The description of the score algorithm in the standard is hard to interpret;
+        the implementation below reflects our best understanding of it.
+          However, the data mask pattern choice made based on this score do not
+        currently reproduce the choice that we see in the seven QR code examples given
+        in the standard, so something is not right (either in the algorithm implemented
+        here, or in the standard).
         """
 
-        # Contribution 1: consecutive same-color blocks, hor/ver.
+        # Contribution 1: consecutive same-color runs, horizontally and vertically.
 
         points = 0
 
         for i in range(self.height):
-            prev_value = None
+            previous_value = None
             consecutive = 0
             for j in range(self.width):
                 value = self.get_module_value(i, j) % 10 % 9
-                if value == prev_value:
+                if value == previous_value:
                     consecutive += 1
                     if consecutive == 5:
                         points += 3
@@ -340,14 +345,14 @@ class QRCodeDrawer:
                         points += 1
                 else:
                     consecutive = 1
-                    prev_value = value
+                    previous_value = value
 
         for j in range(self.width):
-            prev_value = None
+            previous_value = None
             consecutive = 0
             for i in range(self.height):
                 value = self.get_module_value(i, j) % 10 % 9
-                if value == prev_value:
+                if value == previous_value:
                     consecutive += 1
                     if consecutive == 5:
                         points += 3
@@ -355,9 +360,9 @@ class QRCodeDrawer:
                         points += 1
                 else:
                     consecutive = 1
-                    prev_value = value
+                    previous_value = value
 
-        contribution_1 = points  # ??? x3???
+        contribution_1 = points
 
         # Contribution 2: 2x2 blocks of the same color.
 
@@ -448,12 +453,13 @@ class QRCodeDrawer:
         # 0..5: 0
         # 5..10: 10
         # 10..15: 20
+        # etc.
         deviation_percentage = abs(count_ones / (self.height * self.width) * 100.0 - 50.0)
         k = round(deviation_percentage // 5.0)
 
         contribution_4 = 10 * k
 
-        #print(contribution_1, contribution_2, contribution_3, contribution_4)
+        # print(contribution_1, contribution_2, contribution_3, contribution_4)
         return contribution_1 + contribution_2 + contribution_3 + contribution_4
 
 
