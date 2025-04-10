@@ -28,8 +28,6 @@ class EncodingBlock:
 
 class EncodingBlockNumeric(EncodingBlock):
 
-    encoding = CharacterEncodingType.NUMERIC
-
     def __init__(self, variant: EncodingVariant, initial_payload: Optional[str] = None):
         self.variant = variant
         self.payload = "" if initial_payload is None else initial_payload
@@ -48,7 +46,7 @@ class EncodingBlockNumeric(EncodingBlock):
 
     def bitcount(self) -> int:
         n = len(self.payload)
-        count_bits = count_bits_table[self.variant][self.encoding]
+        count_bits = count_bits_table[self.variant][CharacterEncodingType.NUMERIC]
         if n % 3 == 0:
             return 4 + count_bits + (n // 3) * 10
         if n % 3 == 1:
@@ -58,8 +56,6 @@ class EncodingBlockNumeric(EncodingBlock):
 
 
 class EncodingBlockAlphanumeric(EncodingBlock):
-
-    encoding = CharacterEncodingType.ALPHANUMERIC
 
     def __init__(self, variant: EncodingVariant, initial_payload: Optional[str] = None):
         if not isinstance(variant, EncodingVariant):
@@ -81,7 +77,7 @@ class EncodingBlockAlphanumeric(EncodingBlock):
 
     def bitcount(self) -> int:
         n = len(self.payload)
-        count_bits = count_bits_table[self.variant][self.encoding]
+        count_bits = count_bits_table[self.variant][CharacterEncodingType.ALPHANUMERIC]
         if n % 2 == 0:
             return 4 + count_bits + (n // 2) * 11
         if n % 2 == 1:
@@ -89,8 +85,6 @@ class EncodingBlockAlphanumeric(EncodingBlock):
 
 
 class EncodingBlockBytes(EncodingBlock):
-
-    encoding = CharacterEncodingType.BYTES
 
     def __init__(self, variant: EncodingVariant, initial_payload: Optional[bytes] = None):
         self.variant = variant
@@ -110,13 +104,11 @@ class EncodingBlockBytes(EncodingBlock):
 
     def bitcount(self) -> int:
         n = len(self.payload)
-        count_bits = count_bits_table[self.variant][self.encoding]
+        count_bits = count_bits_table[self.variant][CharacterEncodingType.BYTES]
         return 4 + count_bits + n * 8
 
 
 class EncodingBlockKanji(EncodingBlock):
-
-    encoding = CharacterEncodingType.KANJI
 
     def __init__(self, variant: EncodingVariant, initial_payload: Optional[str] = None):
         self.variant = variant
@@ -136,7 +128,7 @@ class EncodingBlockKanji(EncodingBlock):
 
     def bitcount(self) -> int:
         n = len(self.payload)
-        count_bits = count_bits_table[self.variant][self.encoding]
+        count_bits = count_bits_table[self.variant][CharacterEncodingType.KANJI]
         return 4 + count_bits + n * 13
 
 
@@ -158,23 +150,47 @@ class EncodingSolution:
         for block in self.blocks:
             block.render(data_encoder)
 
-    def append_block(self, block: EncodingBlock) -> None:
-        self.blocks.append(block)
+    def append_numeric_character(self, c: str) -> None:
+        """Append a numeric character to the solution, in the last block or as a new block if needed."""
+        last_block = self.last_block()
+        if isinstance(last_block, EncodingBlockNumeric):
+            last_block.append_character(c)
+        else:
+            self.blocks.append(EncodingBlockNumeric(self.variant, c))
 
-    def pop_block(self) -> EncodingBlock:
-        return self.blocks.pop()
+    def append_alphanumeric_character(self, c: str) -> None:
+        """Append an alphanumeric character to the solution, in the last block or as a new block if needed."""
+        last_block = self.last_block()
+        if isinstance(last_block, EncodingBlockAlphanumeric):
+            last_block.append_character(c)
+        else:
+            self.blocks.append(EncodingBlockAlphanumeric(self.variant, c))
 
-    def active_encoding(self) -> Optional[CharacterEncodingType]:
-        if len(self.blocks) == 0:
-            return None
-        return self.blocks[-1].encoding
+    def append_bytes_block(self, encoded_character_bytes: bytes) -> None:
+        """Append bytes to the solution, in the last block or as a new block if needed."""
+        last_block = self.last_block()
+        if isinstance(last_block, EncodingBlockBytes):
+            last_block.append_bytes(encoded_character_bytes)
+        else:
+            self.blocks.append(EncodingBlockBytes(self.variant, encoded_character_bytes))
+
+    def append_kanji_character(self, c: str) -> None:
+        """Append a kanji character to the solution, in the last block or as a new block if needed."""
+        last_block = self.last_block()
+        if isinstance(last_block, EncodingBlockKanji):
+            last_block.append_character(c)
+        else:
+            self.blocks.append(EncodingBlockKanji(self.variant, c))
+
+    def last_block(self) -> Optional[EncodingBlock]:
+        return self.blocks[-1] if self.blocks else None
 
     def bitcount(self) -> int:
         # Note that we DO NOT add 4 bits for the terminator.
         return sum(block.bitcount() for block in self.blocks)
 
     def strictly_better(self, other: EncodingSolution) -> bool:
-        return (self.active_encoding() == other.active_encoding()) and self.better(other)
+        return (type(self.last_block()) == type(other.last_block())) and self.better(other)
 
     def better(self, other: EncodingSolution) -> bool:
 
@@ -205,6 +221,34 @@ def find_optimal_string_encoding(
 
     For most modern applications, UTF-8 is a good default; byte mode blocks are interpreted as UTF-8 on
     all modern widely available QR-code readers that were tried.
+
+    How it works
+    ------------
+
+    This algorithm works by starting with a single empty solution that encodes a zero-character string;
+    and then iterating over each character to be added.
+      For each character, the set of partial solutions that were found without this new character are considered
+    one by one; in particular, each of them is extended with an encoding of the currently visited character.
+      Extending a solution can be done either by extending the last encoding block of the currently considered partial
+    solution; or by introducing a new coding block that encodes the single character currently under consideration.
+      Each character may or may not be encodable in any of the four block modes (numeric, alphanumeric, byte, or kanji).
+
+    After a new set of partial solutions is produced that generate all characters up to and including the currently
+    visited character, a pruning step is performed: partial solutions that are "strictly worse" than another
+    partial solution also generated are discarded. Strictly worse here means that the partial solution can never
+    lead to an optimal solution for the entire string.
+
+    Once all characters are visited, the set of partial solutions is pruned a last time with a stronger criterion;
+    all solutions that are suboptimal are now discarded.
+
+    The end result is a set (represented as a list) of EncodingSolution instances that are optimal. Each of these
+    solutions will have (1) minimal bitcount; and (2) a minimal number of mode blocks.
+
+    Note that pathological inputs exist that lead to many 'equally optimal' solutions. In fact, inputs can be
+    constructed that give rise to an exponential number of solutions as the input length grows linearly.
+
+    This is, however, rare enough that (for now) we have decided to ignore it. A future version of this code will
+    probably prune more aggressively on partial solutions, making this impossible.
     """
 
     if byte_mode_encoding is None:
@@ -221,70 +265,37 @@ def find_optimal_string_encoding(
 
         for partial_solution in partial_solutions:
 
-            active_encoding = partial_solution.active_encoding()
-
             # Consider NUMERIC encoding for this character.
 
             if c in numeric_character_map:
                 partial_solution_candidate = partial_solution.copy()
-                if active_encoding == CharacterEncodingType.NUMERIC:
-                    # Append the character to the last block.
-                    block = partial_solution_candidate.pop_block()
-                    block.append_character(c)
-                else:
-                    # Add a new numeric encoding block.
-                    block = EncodingBlockNumeric(variant, c)
-
-                partial_solution_candidate.append_block(block)
+                partial_solution_candidate.append_numeric_character(c)
                 partial_solution_candidates.append(partial_solution_candidate)
 
             # Consider ALPHANUMERIC encoding for this character.
 
             if c in alphanumeric_character_map:
                 partial_solution_candidate = partial_solution.copy()
-                if active_encoding == CharacterEncodingType.ALPHANUMERIC:
-                    # Append the character to the last encoding block.
-                    block = partial_solution_candidate.pop_block()
-                    block.append_character(c)
-                else:
-                    # Add a new alphanumeric encoding block.
-                    block = EncodingBlockAlphanumeric(variant, c)
-
-                partial_solution_candidate.append_block(block)
+                partial_solution_candidate.append_alphanumeric_character(c)
                 partial_solution_candidates.append(partial_solution_candidate)
 
             # Consider BYTE encoding for this character.
 
             try:
+                # Try to encode the characters using the byte_mode_encoding.
                 encoded_character_bytes = c.encode(encoding=byte_mode_encoding, errors='strict')
             except UnicodeEncodeError:
                 pass
             else:
                 partial_solution_candidate = partial_solution.copy()
-                if active_encoding == CharacterEncodingType.BYTES:
-                    # Append the character to the last encoding block.
-                    block = partial_solution_candidate.pop_block()
-                    block.append_bytes(encoded_character_bytes)
-                else:
-                    # Add a new bytes block.
-                    block = EncodingBlockBytes(variant, encoded_character_bytes)
-
-                partial_solution_candidate.append_block(block)
+                partial_solution_candidate.append_bytes_block(encoded_character_bytes)
                 partial_solution_candidates.append(partial_solution_candidate)
 
             # Consider KANJI encoding for this character.
 
             if kanji_character_value(c) is not None:
                 partial_solution_candidate = partial_solution.copy()
-                if active_encoding == CharacterEncodingType.KANJI:
-                    # Append the character to the last encoding block.
-                    block = partial_solution_candidate.pop_block()
-                    block.append_character(c)
-                else:
-                    # Add a new kanji encoding block.
-                    block = EncodingBlockKanji(variant, c)
-
-                partial_solution_candidate.append_block(block)
+                partial_solution_candidate.append_kanji_character(c)
                 partial_solution_candidates.append(partial_solution_candidate)
 
         partial_solutions.clear()

@@ -6,7 +6,7 @@ from enum import Enum, IntEnum
 
 
 class CharacterEncodingType(Enum):
-    """The four encodings of characters in data blocks."""
+    """The four types of encoding of characters in data blocks."""
     NUMERIC = 1
     ALPHANUMERIC = 2
     BYTES = 3

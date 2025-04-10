@@ -13,7 +13,7 @@ def kanji_character_value(c: str) -> Optional[int]:
         raise ValueError("Expected a single character.")
 
     try:
-        encoded_character = c.encode('shift-jis')
+        encoded_character = c.encode('shift-jis', errors='strict')
     except UnicodeEncodeError:
         # The given character is unrepresentable in the shift-jis encoding.
         return None
