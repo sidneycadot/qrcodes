@@ -23,10 +23,17 @@ from .lookup_tables import count_bits_table
 
 class EncodingBlock:
     """Abstract base class for data encoding blocks in QR codes."""
-    pass
+
+    def append_character(self, c: str) -> None:
+        raise NotImplementedError()
+
+    def append_bytes(self, b: bytes):
+        raise NotImplementedError()
 
 
 class EncodingBlockNumeric(EncodingBlock):
+
+    encoding = CharacterEncodingType.NUMERIC
 
     def __init__(self, variant: EncodingVariant, initial_payload: Optional[str] = None):
         self.variant = variant
@@ -46,7 +53,7 @@ class EncodingBlockNumeric(EncodingBlock):
 
     def bitcount(self) -> int:
         n = len(self.payload)
-        count_bits = count_bits_table[self.variant][CharacterEncodingType.NUMERIC]
+        count_bits = count_bits_table[self.variant][self.encoding]
         if n % 3 == 0:
             return 4 + count_bits + (n // 3) * 10
         if n % 3 == 1:
@@ -56,6 +63,8 @@ class EncodingBlockNumeric(EncodingBlock):
 
 
 class EncodingBlockAlphanumeric(EncodingBlock):
+
+    encoding = CharacterEncodingType.ALPHANUMERIC
 
     def __init__(self, variant: EncodingVariant, initial_payload: Optional[str] = None):
         if not isinstance(variant, EncodingVariant):
@@ -77,7 +86,7 @@ class EncodingBlockAlphanumeric(EncodingBlock):
 
     def bitcount(self) -> int:
         n = len(self.payload)
-        count_bits = count_bits_table[self.variant][CharacterEncodingType.ALPHANUMERIC]
+        count_bits = count_bits_table[self.variant][self.encoding]
         if n % 2 == 0:
             return 4 + count_bits + (n // 2) * 11
         if n % 2 == 1:
@@ -85,6 +94,8 @@ class EncodingBlockAlphanumeric(EncodingBlock):
 
 
 class EncodingBlockBytes(EncodingBlock):
+
+    encoding = CharacterEncodingType.BYTES
 
     def __init__(self, variant: EncodingVariant, initial_payload: Optional[bytes] = None):
         self.variant = variant
@@ -104,11 +115,13 @@ class EncodingBlockBytes(EncodingBlock):
 
     def bitcount(self) -> int:
         n = len(self.payload)
-        count_bits = count_bits_table[self.variant][CharacterEncodingType.BYTES]
+        count_bits = count_bits_table[self.variant][self.encoding]
         return 4 + count_bits + n * 8
 
 
 class EncodingBlockKanji(EncodingBlock):
+
+    encoding = CharacterEncodingType.KANJI
 
     def __init__(self, variant: EncodingVariant, initial_payload: Optional[str] = None):
         self.variant = variant
@@ -128,7 +141,7 @@ class EncodingBlockKanji(EncodingBlock):
 
     def bitcount(self) -> int:
         n = len(self.payload)
-        count_bits = count_bits_table[self.variant][CharacterEncodingType.KANJI]
+        count_bits = count_bits_table[self.variant][self.encoding]
         return 4 + count_bits + n * 13
 
 
@@ -152,45 +165,41 @@ class EncodingSolution:
 
     def append_numeric_character(self, c: str) -> None:
         """Append a numeric character to the solution, in the last block or as a new block if needed."""
-        last_block = self.last_block()
-        if isinstance(last_block, EncodingBlockNumeric):
-            last_block.append_character(c)
+        if self.active_encoding() == CharacterEncodingType.NUMERIC:
+            self.blocks[-1].append_character(c)
         else:
             self.blocks.append(EncodingBlockNumeric(self.variant, c))
 
     def append_alphanumeric_character(self, c: str) -> None:
         """Append an alphanumeric character to the solution, in the last block or as a new block if needed."""
-        last_block = self.last_block()
-        if isinstance(last_block, EncodingBlockAlphanumeric):
-            last_block.append_character(c)
+        if self.active_encoding() == CharacterEncodingType.ALPHANUMERIC:
+            self.blocks[-1].append_character(c)
         else:
             self.blocks.append(EncodingBlockAlphanumeric(self.variant, c))
 
     def append_bytes_block(self, encoded_character_bytes: bytes) -> None:
         """Append bytes to the solution, in the last block or as a new block if needed."""
-        last_block = self.last_block()
-        if isinstance(last_block, EncodingBlockBytes):
-            last_block.append_bytes(encoded_character_bytes)
+        if self.active_encoding() == CharacterEncodingType.BYTES:
+            self.blocks[-1].append_bytes(encoded_character_bytes)
         else:
             self.blocks.append(EncodingBlockBytes(self.variant, encoded_character_bytes))
 
     def append_kanji_character(self, c: str) -> None:
         """Append a kanji character to the solution, in the last block or as a new block if needed."""
-        last_block = self.last_block()
-        if isinstance(last_block, EncodingBlockKanji):
-            last_block.append_character(c)
+        if self.active_encoding() == CharacterEncodingType.KANJI:
+            self.blocks[-1].append_character(c)
         else:
             self.blocks.append(EncodingBlockKanji(self.variant, c))
 
-    def last_block(self) -> Optional[EncodingBlock]:
-        return self.blocks[-1] if self.blocks else None
+    def active_encoding(self) -> Optional[EncodingBlock]:
+        return self.blocks[-1].encoding if self.blocks else None
 
     def bitcount(self) -> int:
         # Note that we DO NOT add 4 bits for the terminator.
         return sum(block.bitcount() for block in self.blocks)
 
     def strictly_better(self, other: EncodingSolution) -> bool:
-        return (type(self.last_block()) == type(other.last_block())) and self.better(other)
+        return (self.active_encoding() == other.active_encoding()) and self.better(other)
 
     def better(self, other: EncodingSolution) -> bool:
 
