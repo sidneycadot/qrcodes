@@ -92,8 +92,8 @@ def main():
     de.append_alphanumeric_mode_block("KLMNOPQRSTUVWXYZ")
     run_testcase("fig_29-5_page_60", de, 1, ErrorCorrectionLevel.M, DataMaskingPattern.PATTERN3)
 
-    # Note: the 2000 version of the standard selects PATTERN3 here, while the 2015 version
-    # of the standard selects PATTERN2.
+    # Note: the 2000 version of the standard uses PATTERN3 here, while the 2015 version
+    # of the standard uses PATTERN2.
     de = DataEncoder(EncodingVariant.SMALL)
     de.append_numeric_mode_block("01234567")
     run_testcase("fig_i2_page_96", de, 1, ErrorCorrectionLevel.M, DataMaskingPattern.PATTERN2)

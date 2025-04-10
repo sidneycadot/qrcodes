@@ -58,11 +58,17 @@ colormap_color = {
 }
 
 
-def render_qrcode_as_pil_image(qr_canvas: QRCodeCanvas, *, mode=None, colormap=None, magnification: Optional[int] = None) -> Image.Image:
+def render_qrcode_as_pil_image(
+        qr_canvas: QRCodeCanvas, *,
+        mode: Optional[str] = None,
+        colormap: Optional[str|dict] = None,
+        magnification: Optional[int] = None
+    ) -> Image.Image:
+
     """Render QRCodeCanvas as a PIL image."""
 
     if not pil_imported_succesfully:
-        raise RuntimeError("PIL package not available.")
+        raise RuntimeError("The PIL package not available.")
 
     if mode is None:
         mode = "RGB"

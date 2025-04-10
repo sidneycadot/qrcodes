@@ -54,7 +54,7 @@ def make_optimal_qrcode(
 
         if version_specification.number_of_data_codewords() * 8 >= solution.bitcount():
             print(f"Selected code: {version}-{level.name}")
-            print(solution)
+            # print(solution)
             break
 
     else:
@@ -73,8 +73,8 @@ def write_optimal_qrcode(
             pattern: Optional[DataMaskingPattern] = None,
             version_preference_list: Optional[list[tuple[int, ErrorCorrectionLevel]]] = None,
             byte_mode_encoding: Optional[str] = None,
-            mode=None,
-            colormap=None,
+            mode: Optional[str]=None,
+            colormap: Optional[str|dict]=None,
             magnification: Optional[int] = None,
             post_optimize: Optional[bool] = None
         ) -> None:

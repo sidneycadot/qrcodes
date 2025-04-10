@@ -98,6 +98,7 @@ class DataEncoder:
             self.append_integer_value(0xc00000 | value, 24)
 
     def append_numeric_mode_block(self, s: str) -> None:
+        """Append Numeric mode block."""
 
         # Verify that all characters in the string can be represented as numeric characters.
         if not all(c in numeric_character_map for c in s):
@@ -131,6 +132,7 @@ class DataEncoder:
             self.append_integer_value(chunk_value, numbits)
 
     def append_alphanumeric_mode_block(self, s: str) -> None:
+        """Append Alphanumeric mode block."""
 
         # Verify that all characters in the string can be represented as alphanumeric characters.
         if not all(c in alphanumeric_character_map for c in s):
@@ -164,6 +166,7 @@ class DataEncoder:
             self.append_integer_value(chunk_value, numbits)
 
     def append_byte_mode_block(self, b: bytes) -> None:
+        """Append Byte mode block."""
 
         count_bits = count_bits_table[self.variant][CharacterEncodingType.BYTES]
 
@@ -182,6 +185,7 @@ class DataEncoder:
             self.append_integer_value(value, 8)
 
     def append_kanji_mode_block(self, s: str) -> None:
+        """Append Kanji mode block."""
 
         values = []
         for c in s:
@@ -227,7 +231,7 @@ class DataEncoder:
         number_of_data_bits_available = number_of_data_codewords * 8
 
         if number_of_data_encoding_bits > number_of_data_bits_available:
-            return None  # The data cannot fit, even without a terminator.
+            return None  # The data will not fit, even without a terminator.
 
         # The Standard prescribes a terminator pattern consisting of four zero-bits,
         # followed by padding zero-bits to bring the number of bits to a multiple of 8.
@@ -249,7 +253,6 @@ class DataEncoder:
         for bit in self.bits + bytes(zero_padding_bits):
             if bit != 0:
                 value |= mask
-
             if mask == 0b00000001:
                 words.append(value)
                 value = 0
@@ -279,36 +282,37 @@ class DataEncoder:
 
         version_specification = version_specification_table[(version, level)]
 
-        # Check if the data will fit in the selected QR code version / level.
+        # Convert data to the version-specific number of GF8 codewords.
+        # If the data doesn't fit, return None.
 
         number_of_data_codewords = version_specification.number_of_data_codewords()
-
         data = self.get_words(number_of_data_codewords)
 
         if data is None:
-            return None
+            return None  # Data does not fit in the requested (version, llevel) QR code symbol.
 
         # The data will fit, we can proceed.
         # Split up data in data-blocks, and calculate the corresponding error correction blocks.
 
-        dblocks = []
-        eblocks = []
+        d_blocks = []
+        e_blocks = []
 
         idx = 0
         for (count, (code_c, code_k, code_r)) in version_specification.block_specification:
             # Calculate the Reed-Solomon polynomial corresponding to the number of error correction words.
             poly = calculate_reed_solomon_polynomial(code_c - code_k, strip=True)
             for k in range(count):
-                dblock = data[idx:idx + code_k]
-                dblocks.append(dblock)
-
-                eblock = reed_solomon_code_remainder(dblock, poly)
-                eblocks.append(eblock)
+                # Select data block according to the code specification.
+                d_block = data[idx:idx + code_k]
+                d_blocks.append(d_block)
+                # Calculate the corresponding error correction block.
+                e_block = reed_solomon_code_remainder(d_block, poly)
+                e_blocks.append(e_block)
 
                 idx += code_k
 
-        assert idx == version_specification.total_number_of_codewords - version_specification.number_of_error_correcting_codewords
-        assert sum(map(len, dblocks)) + sum(map(len, eblocks)) == version_specification.total_number_of_codewords
+        assert idx == version_specification.number_of_data_codewords()
+        assert sum(map(len, d_blocks)) + sum(map(len, e_blocks)) == version_specification.total_number_of_codewords
 
         # Interleave the data words and error correction words.
         # All data words will precede all error correction words.
@@ -316,22 +320,22 @@ class DataEncoder:
         channel_words = []
 
         k = 0
-        while sum(map(len, dblocks)) != 0:
-            if len(dblocks[k]) != 0:
-                channel_words.append(dblocks[k].pop(0))
-            k = (k + 1) % len(dblocks)
+        while sum(map(len, d_blocks)) != 0:
+            if len(d_blocks[k]) != 0:
+                channel_words.append(d_blocks[k].pop(0))
+            k = (k + 1) % len(d_blocks)
 
         k = 0
-        while sum(map(len, eblocks)) != 0:
-            if len(eblocks[k]) != 0:
-                channel_words.append(eblocks[k].pop(0))
-            k = (k + 1) % len(eblocks)
+        while sum(map(len, e_blocks)) != 0:
+            if len(e_blocks[k]) != 0:
+                channel_words.append(e_blocks[k].pop(0))
+            k = (k + 1) % len(e_blocks)
 
         # Convert data-words to data-bits.
 
         channel_bits = [channel_bit for word in channel_words for channel_bit in enumerate_bits(word, 8)]
 
-        # Add padding bits if needed.
+        # Add padding bits if the channel bits don't fully fill the QR code capacity.
 
         channel_bits_available = calculate_qrcode_capacity(version)
 

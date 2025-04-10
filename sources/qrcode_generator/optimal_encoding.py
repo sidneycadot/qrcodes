@@ -186,15 +186,25 @@ class EncodingSolution:
         return (self_bitcount == other_bitcount) and (len(self.blocks) < len(other.blocks))
 
 
-def find_optimal_string_encoding(s: str, variant: EncodingVariant, byte_mode_encoding: Optional[str] = None) -> list[EncodingSolution]:
+def find_optimal_string_encoding(
+            s: str,
+            variant: EncodingVariant,
+            byte_mode_encoding: Optional[str] = None
+        ) -> list[EncodingSolution]:
     """Find the optimal (shortest) encoding of a given string.
 
     There are three variants of the encoding, that differ only in the number of bits used to represent
     character counts in each of the four data block types (numeric, alphanumeric, bytes, and Kanji).
     Larger versions of the QR code symbols allow more bits for those counts.
 
-    The byte mode encoding specifies which encoding should be assumed for 'byte' mode blocks. For most modern
-    applications, UTF-8 is a good default.
+    The byte mode encoding specifies which encoding should be assumed for 'byte' mode blocks.
+
+    The 2000 version of the standard prescribes JIS8 as a default encoding for byte-mode block.
+    The 2015 version of the standard prescribes ISO-8859-1 as a default encoding for byte-mode block.
+    (It is not currently known what the 2024 version of the standard prescribes.)
+
+    For most modern applications, UTF-8 is a good default; byte mode blocks are interpreted as UTF-8 on
+    all modern widely available QR-code readers that were tried.
     """
 
     if byte_mode_encoding is None:
@@ -204,7 +214,7 @@ def find_optimal_string_encoding(s: str, variant: EncodingVariant, byte_mode_enc
         EncodingSolution(variant)  # An empty encoding solution.
     ]
 
-    # Walk all characters in the string.
+    # Traverse all characters in the string.
     for c in s:
 
         partial_solution_candidates = []

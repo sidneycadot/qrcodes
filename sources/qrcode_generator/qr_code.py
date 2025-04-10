@@ -15,7 +15,19 @@ class QRCodeCapacityError(Exception):
 
 
 class ModuleValue(IntEnum):
-    """Values for the modules (pixels) that make up the content of the QRCodeCanvas."""
+    """Values for the modules (pixels) that make up the content of the QRCodeCanvas.
+
+    These are hex values with the high nibble denoting the function of the module,
+    and the low nibble denoting the value:
+
+    0x0 == 0b0000   value 0 (light)
+    0x1 == 0b0001   value 1 (dark)
+    0xe == 0b1110   indeterminate (rendered as 0, light).
+
+    Bit 0 is useful to see if a module is light (0) or dark (1).
+    Bit 7 is useful to see if a module will hold data / error correction information.
+    """
+    INDETERMINATE                     = 0x0e  # Module/pixel unset; defaults to 0 (light).
     QUIET_ZONE_0                      = 0x10
     FINDER_PATTERN_0                  = 0x20
     FINDER_PATTERN_1                  = 0x21
@@ -26,14 +38,13 @@ class ModuleValue(IntEnum):
     ALIGNMENT_PATTERN_1               = 0x51
     FORMAT_INFORMATION_0              = 0x60
     FORMAT_INFORMATION_1              = 0x61
-    FORMAT_INFORMATION_INDETERMINATE  = 0x6E  # Placeholder, to be filled in later. Defaults to 0.
+    FORMAT_INFORMATION_INDETERMINATE  = 0x6e  # Placeholder, to be filled in later. Defaults to 0 (light).
     VERSION_INFORMATION_0             = 0x70
     VERSION_INFORMATION_1             = 0x71
-    VERSION_INFORMATION_INDETERMINATE = 0x7E  # Placeholder, to be filled in later. Defaults to 0.
+    VERSION_INFORMATION_INDETERMINATE = 0x7e  # Placeholder, to be filled in later. Defaults to 0 (light).
     DATA_ERC_0                        = 0x80
     DATA_ERC_1                        = 0x81
-    DATA_ERC_INDETERMINATE            = 0x8E  # Placeholder, to be filled in later. Defaults to 0.
-    INDETERMINATE                     = 0x9E  # Defaults to 0.
+    DATA_ERC_INDETERMINATE            = 0x8e  # Placeholder, to be filled in later. Defaults to 0 (light).
 
 
 class QRCodeCanvas:
@@ -68,6 +79,7 @@ class QRCodeDrawer:
             raise ValueError(f"Bad QR code version: {version}.")
 
         if include_quiet_zone is None:
+            # By default, the quite zone border is enabled.
             include_quiet_zone = True
 
         self.version = version
@@ -310,7 +322,7 @@ class QRCodeDrawer:
         for (i, j) in self.data_and_error_correction_positions:
             value = self.get_module_value(i, j)
             assert value in (ModuleValue.DATA_ERC_0, ModuleValue.DATA_ERC_1)
-            # Invert if the pattern condition is True
+            # Invert if the pattern condition is True.
             if pattern_function(i, j):
                 value = ModuleValue.DATA_ERC_1 if value == ModuleValue.DATA_ERC_0 else ModuleValue.DATA_ERC_0
                 self.set_module_value(i, j, value)
@@ -474,7 +486,7 @@ def make_qr_code(
 
     qr = QRCodeDrawer(version, include_quiet_zone=include_quiet_zone)
 
-    # This may raise a QRCodeCapacityError.
+    # Note: this may raise a QRCodeCapacityError.
     qr.place_data_and_error_correction_bits(de, level)
 
     # Handle data pattern masking.
@@ -495,8 +507,9 @@ def make_qr_code(
                 qr.place_version_information_placeholders()
                 qr.place_format_information_placeholders()
             else:
-                # A more sensible, but not standards-compliant approach is to fill the
-                # version and format information, since it is all known at this point.
+                # A more sensible, but not standard-compliant approach is to fill the
+                # version and format information before scoring, since it is all known at
+                # this point.
                 qr.place_version_information_patterns()
                 qr.place_format_information_patterns(level, test_pattern)
 
@@ -510,14 +523,14 @@ def make_qr_code(
             # Un-apply the data mask test pattern.
             qr.apply_data_masking_pattern(test_pattern)
 
-        # Sort test patterns by score.
+        # Sort the test patterns by score.
         score_pattern_tuple_list.sort(key=lambda score_pattern_tuple: score_pattern_tuple[0])
 
         # As a debugging aid, print the scores for the different test patterns.
         for (score, test_pattern) in score_pattern_tuple_list:
             print(f"{score:3d} {test_pattern.name}")
 
-        # Select test pattern that yields the lowest score.
+        # Select the test pattern that yields the lowest score.
         pattern = score_pattern_tuple_list[0][1]
 
     # Apply the selected data masking pattern.
