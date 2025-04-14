@@ -55,10 +55,10 @@ def multiply_polynomial(pa: list[int], pb: list[int]) -> list[int]:
 
     for ia in range(na):
         for ib in range(nb):
-            m = GF8.multiply_elements(pa[ia], pb[ib])
-            z[ia + ib] ^= m
+            z[ia + ib] ^= GF8.multiply_elements(pa[ia], pb[ib])
 
-    while z[0] == 0:
+    # Pop leading zeroes.
+    while z and z[0] == 0:
         z.pop(0)
 
     return z
@@ -79,9 +79,9 @@ def calculate_reed_solomon_polynomial(n: int, *, strip: bool) -> list[int]:
             element ^= 0b100011101
 
     if strip:
-        # Strip the first element from the polynomial.
-        # The algorithm we use for the remainder calculation assumes the highest
-        # power is not present.
+        # Strip the first high-order coefficient from the polynomial.
+        # The algorithm we use for the remainder calculation assumes that
+        # the highest power coefficient is not present.
         popped_coefficient = poly.pop(0)
         if popped_coefficient != 1:
             raise RuntimeError()

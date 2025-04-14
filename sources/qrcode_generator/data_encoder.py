@@ -1,8 +1,8 @@
 """QR code data encoder.
 
-The data payload of QR codes consists of a bitstream containing typed blocks as described in the standard.
+The data payload of QR codes consists of a bitstream containing encoding blocks as described in the standard.
 
-Each block starts with a 4-bit indicator.
+Each encoding block starts with a 4-bit indicator of its type.
 
 Four block types encode string data; they are followed by a character count, and finally the character data:
 
@@ -12,7 +12,7 @@ Four block types encode string data; they are followed by a character count, and
                         encoding that can be changed with an ECI block.
 1000 Kanji data;        alphabet is Kanji characters encoded in 13 bits each.
 
-The message is ended by a four-bit terminator, if the QR code symbol has room for it.
+The message is ended by a terminator of four zero bits, if the QR code symbol has room for it.
 """
 
 from typing import Optional
@@ -221,7 +221,7 @@ class DataEncoder:
 
         Next, the bits are converted to 8-bit words.
 
-        Finally, two alternating words (0xec, 0x11) are added as world-level padding, to pad
+        Finally, two alternating words (0xec, 0x11) are added as word-level padding, to pad
         the word list to contain 'number_of_data_codewords' words, if necessary.
 
         The resulting list of 8-bit words is returned.
@@ -233,7 +233,7 @@ class DataEncoder:
         if number_of_data_encoding_bits > number_of_data_bits_available:
             return None  # The data will not fit, even without a terminator.
 
-        # The Standard prescribes a terminator pattern consisting of four zero-bits,
+        # The standard prescribes a terminator pattern consisting of four zero-bits,
         # followed by padding zero-bits to bring the number of bits to a multiple of 8.
         # However, if there is no room for the terminator, the Standard says the
         # terminator pattern can be omitted.
@@ -289,7 +289,7 @@ class DataEncoder:
         data = self.get_words(number_of_data_codewords)
 
         if data is None:
-            return None  # Data does not fit in the requested (version, llevel) QR code symbol.
+            return None  # Data does not fit in the requested (version, level) QR code symbol.
 
         # The data will fit, we can proceed.
         # Split up data in data-blocks, and calculate the corresponding error correction blocks.

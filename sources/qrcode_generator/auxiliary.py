@@ -1,4 +1,4 @@
-"""Auxiliary support functions."""
+"""Auxiliary support functions for QR code generation."""
 
 
 def enumerate_bits(value: int, num_bits: int):

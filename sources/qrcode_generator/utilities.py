@@ -37,14 +37,14 @@ def make_optimal_qrcode(
             solution = variant_cache[variant]
         else:
             solutions = find_optimal_string_encoding(s, variant, byte_mode_encoding)
-            print(f"Number of optimal solutions: {len(solutions)}.")
+            # print(f"Number of optimal solutions: {len(solutions)}.")
             if len(solutions) == 0:
                 solution = None
             else:
-                for solution in solutions:
-                    print("->", solution)
+                # for solution in solutions:
+                #    print("->", solution)
                 solution = solutions[0]
-                print(f"Shortest solution: {solution.bitcount()} bits.")
+                # print(f"Shortest solution: {solution.bitcount()} bits.")
             variant_cache[variant] = solution
         if solution is None:
             continue
@@ -73,8 +73,8 @@ def write_optimal_qrcode(
             pattern: Optional[DataMaskingPattern] = None,
             version_preference_list: Optional[list[tuple[int, ErrorCorrectionLevel]]] = None,
             byte_mode_encoding: Optional[str] = None,
-            mode: Optional[str]=None,
-            colormap: Optional[str|dict]=None,
+            mode: Optional[str] = None,
+            colormap: Optional[str|dict] = None,
             magnification: Optional[int] = None,
             post_optimize: Optional[bool] = None
         ) -> None:

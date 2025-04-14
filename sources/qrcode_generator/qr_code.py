@@ -25,7 +25,7 @@ class ModuleValue(IntEnum):
     0xe == 0b1110   indeterminate (rendered as 0, light).
 
     Bit 0 is useful to see if a module is light (0) or dark (1).
-    Bit 7 is useful to see if a module will hold data / error correction information.
+    Indeterminate modules are rendered as light (0).
     """
     INDETERMINATE                     = 0x0e  # Module/pixel unset; defaults to 0 (light).
     QUIET_ZONE_0                      = 0x10
@@ -79,7 +79,7 @@ class QRCodeDrawer:
             raise ValueError(f"Bad QR code version: {version}.")
 
         if include_quiet_zone is None:
-            # By default, the quite zone border is enabled.
+            # By default, the quiet zone (border) is enabled.
             include_quiet_zone = True
 
         self.version = version
@@ -282,6 +282,11 @@ class QRCodeDrawer:
 
         The order in which the modules are visited (and, hence, the order in which the positions are returned)
         reflects the placement of data and error correction bits in the final QR code.
+
+        The h_outer loop below samples two neighboring columns. Note that a QR code has an odd number of
+        columns; but there is a full column covered by the vertical timing pattern (j==6) which is not usable
+        for data.
+
         """
         positions = []
         assert self.width % 2 == 1
@@ -293,7 +298,7 @@ class QRCodeDrawer:
                 for h_inner in range(2):
                     h = h_outer * 2 + h_inner
                     j = (self.width - 1 - h)
-                    if j <= 6:  # Skip the vertical timing pattern line.
+                    if j <= 6:  # Skip the vertical timing pattern line at j==6.
                         j -= 1
                     value = self.get_module_value(i, j)
                     if value == ModuleValue.INDETERMINATE:
@@ -328,14 +333,14 @@ class QRCodeDrawer:
                 self.set_module_value(i, j, value)
 
     def score(self):
-        """Determine a QR code's score; lower is better.
+        """Determine a QR code's score. A higher score corresponds to more undesirable features.
 
         The score is used to select a data masking pattern.
 
-        The description of the score algorithm in the standard is hard to interpret;
+        The description of the score algorithm in the standard is not very clear;
         the implementation below reflects our best understanding of it.
-          However, the data mask pattern choice made based on this score do not
-        currently reproduce the choice that we see in the seven QR code examples given
+          However, the data mask pattern choice made based on the current score implementation
+        do not currently reproduce the choice that we see in the seven QR code examples given
         in the standard, so something is not right (either in the algorithm implemented
         here, or in the standard).
         """
@@ -471,7 +476,6 @@ class QRCodeDrawer:
 
         contribution_4 = 10 * k
 
-        # print(contribution_1, contribution_2, contribution_3, contribution_4)
         return contribution_1 + contribution_2 + contribution_3 + contribution_4
 
 

@@ -1,9 +1,24 @@
 """Find the optimal data encoding(s) of a given string.
 
+String data can be expressed in any of four modes inside a QR code. Each mode can express
+a different subset of characters, and uses a different number of bits per character. For example,
+numeric mode can only express the characters 0..9, but very efficiently (at 3.33 bits per character),
+whereas byte mode can express the entire set of Unicode characters, but less efficiently (using the
+variable-length UTF-8 encoding, with at least 8 bits per character).
+
+Inside the QR code data encoding, it is possible to switch modes, at the cost of some bits to describe
+the new mode and the number of characters to be encoded in that mode. This can be advantageous, for
+example, if a string consists of mostly generic ASCII characters (that can be encoded in byte mode,
+at 8 bits per character) but also contains a long stretch of decimal digits. In that case, switching
+to numeric mode just prior to the decimal digits may be worthwhile.
+
+The code presented here aims to find the optimal encoding for a given string, if we allow arbitrary
+mode switches.
+
 An encoding solution is optimal if:
 
   (1) its bit-count is minimal;
-  (2) among the encoding solutions with minimal bit-count, the number of blocks is minimal.
+  (2) among the encoding solutions with minimal bit-count, the number of mode blocks is minimal.
 
 Note: pathological input strings exist that lead to many different optimal encoding solutions that are all
       optimal in the sense as defined above.
@@ -235,17 +250,17 @@ def find_optimal_string_encoding(
     ------------
 
     This algorithm works by starting with a single empty solution that encodes a zero-character string;
-    and then iterating over each character to be added.
-      For each character, the set of partial solutions that were found without this new character are considered
-    one by one; in particular, each of them is extended with an encoding of the currently visited character.
-      Extending a solution can be done either by extending the last encoding block of the currently considered partial
-    solution; or by introducing a new coding block that encodes the single character currently under consideration.
-      Each character may or may not be encodable in any of the four block modes (numeric, alphanumeric, byte, or kanji).
-
-    After a new set of partial solutions is produced that generate all characters up to and including the currently
-    visited character, a pruning step is performed: partial solutions that are "strictly worse" than another
-    partial solution also generated are discarded. Strictly worse here means that the partial solution can never
-    lead to an optimal solution for the entire string.
+    and then iterating over each character to be encoded.
+      For each character, the set of partial solutions that were found without this new character are considered.
+    Each of them is extended with an encoding of the currently visited character. The four block modes (numeric,
+    alphanumeric, byte, and kanji) are all considered. If the character can be represented in the mode, we will
+    generate a new (sub)solution that extends the current solution either by extending the last encoding block
+    of the currently considered partial solution, if no mode switch is required; or by introducing a new coding
+    block that encodes the single character currently under consideration.
+      After a new set of partial solutions is produced that generate all characters up to and including the
+    currently visited character, a pruning step is performed: partial solutions that are "strictly worse" than
+    another partial solution also generated are discarded. Strictly worse here means that the partial solution
+    can never lead to an optimal solution for the entire string.
 
     Once all characters are visited, the set of partial solutions is pruned a last time with a stronger criterion;
     all solutions that are suboptimal are now discarded.
@@ -316,11 +331,9 @@ def find_optimal_string_encoding(
                 partial_solutions.append(p1)
 
     # All characters have now been processed. Prune all non-optimal solutions.
-    solution_candidates = partial_solutions
-
     solutions = []
-    for s1 in solution_candidates:
-        if not any(s2.better(s1) for s2 in solution_candidates):
+    for s1 in partial_solutions:
+        if not any(s2.better(s1) for s2 in partial_solutions):
             solutions.append(s1)
 
     # Sort solutions by bitcount.

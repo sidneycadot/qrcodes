@@ -12,15 +12,16 @@ for version_specification in version_specification_table.values():
     number_of_data_codewords = version_specification.total_number_of_codewords - version_specification.number_of_error_correcting_codewords
     data[version_specification.error_correction_level].append((version_specification.version, number_of_data_codewords))
 
+
 plotspecs = [
     (311, None),
     (312, 10),
     (313, 4)
 ]
 
-for (subplotspec, xlim) in plotspecs:
+for (subplot_spec, xlim) in plotspecs:
 
-    plt.subplot(subplotspec)
+    plt.subplot(subplot_spec)
 
     for error_correction_level in ErrorCorrectionLevel:
         xy = data[error_correction_level]
