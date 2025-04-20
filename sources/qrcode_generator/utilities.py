@@ -17,7 +17,6 @@ def make_default_version_preference_list() -> list[tuple[int, ErrorCorrectionLev
         for level in (ErrorCorrectionLevel.H, ErrorCorrectionLevel.Q, ErrorCorrectionLevel.M, ErrorCorrectionLevel.L)
     ]
 
-
 def make_optimal_qrcode(
             s: str, *,
             include_quiet_zone: Optional[bool] = None,
