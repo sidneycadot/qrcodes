@@ -4,6 +4,24 @@ from typing import NamedTuple
 
 from .enum_types import ErrorCorrectionLevel, DataMaskingPattern, EncodingVariant, CharacterEncodingType
 
+error_correction_level_encoding = {
+    ErrorCorrectionLevel.L: 0b01,
+    ErrorCorrectionLevel.M: 0b00,
+    ErrorCorrectionLevel.Q: 0b11,
+    ErrorCorrectionLevel.H: 0b10
+}
+
+data_masking_pattern_encoding = {
+    DataMaskingPattern.PATTERN0: 0,
+    DataMaskingPattern.PATTERN1: 1,
+    DataMaskingPattern.PATTERN2: 2,
+    DataMaskingPattern.PATTERN3: 3,
+    DataMaskingPattern.PATTERN4: 4,
+    DataMaskingPattern.PATTERN5: 5,
+    DataMaskingPattern.PATTERN6: 6,
+    DataMaskingPattern.PATTERN7: 7
+}
+
 # Number of bits in the character count indicator as specified in Table 3 of ISO/IEC 18004:2015(E).
 
 count_bits_table = {

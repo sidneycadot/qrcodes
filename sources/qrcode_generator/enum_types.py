@@ -2,39 +2,37 @@
 
 from __future__ import annotations
 
-from enum import Enum, IntEnum
-
+from enum import Enum
 
 class CharacterEncodingType(Enum):
     """The four types of encoding of characters in data blocks."""
-    NUMERIC = 1
-    ALPHANUMERIC = 2
-    BYTES = 3
-    KANJI = 4
+    NUMERIC      = 101
+    ALPHANUMERIC = 102
+    BYTES        = 103
+    KANJI        = 104
 
 
-class DataMaskingPattern(IntEnum):
-    PATTERN0 = 0b000
-    PATTERN1 = 0b001
-    PATTERN2 = 0b010
-    PATTERN3 = 0b011
-    PATTERN4 = 0b100
-    PATTERN5 = 0b101
-    PATTERN6 = 0b110
-    PATTERN7 = 0b111
+class DataMaskingPattern(Enum):
+    PATTERN0 = 200
+    PATTERN1 = 201
+    PATTERN2 = 202
+    PATTERN3 = 203
+    PATTERN4 = 204
+    PATTERN5 = 205
+    PATTERN6 = 206
+    PATTERN7 = 207
 
-
-class ErrorCorrectionLevel(IntEnum):
-    L = 0b01  # Allows recovery of  7% of bad modules.
-    M = 0b00  # Allows recovery of 15% of bad modules.
-    Q = 0b11  # Allows recovery of 25% of bad modules.
-    H = 0b10  # Allows recovery of 30% of bad modules.
+class ErrorCorrectionLevel(Enum):
+    L = 301  # Allows recovery of  7% of bad modules.
+    M = 302  # Allows recovery of 15% of bad modules.
+    Q = 303  # Allows recovery of 25% of bad modules.
+    H = 304  # Allows recovery of 30% of bad modules.
 
 
 class EncodingVariant(Enum):
-    SMALL = 1   # versions 1 .. 9
-    MEDIUM = 2  # versions 10 .. 26
-    LARGE = 3   # versions 27 .. 40
+    SMALL  = 401  # versions 1 .. 9
+    MEDIUM = 402  # versions 10 .. 26
+    LARGE  = 403  # versions 27 .. 40
 
     @staticmethod
     def from_version(version: int) -> EncodingVariant:

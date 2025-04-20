@@ -6,7 +6,8 @@ from typing import Optional
 from .auxiliary import calculate_qrcode_capacity, enumerate_bits
 from .enum_types import ErrorCorrectionLevel, DataMaskingPattern
 from .binary_codes import format_information_code_remainder, version_information_code_remainder
-from .lookup_tables import alignment_pattern_position_table, data_mask_pattern_function_table
+from .lookup_tables import alignment_pattern_position_table, data_mask_pattern_function_table, error_correction_level_encoding, \
+    data_masking_pattern_encoding
 from .data_encoder import DataEncoder
 
 
@@ -234,7 +235,10 @@ class QRCodeDrawer:
 
     def place_format_information_patterns(self, level: ErrorCorrectionLevel, pattern: DataMaskingPattern):
 
-        format_data_bits = (level << 3) | pattern
+        level_encoding = error_correction_level_encoding[level]
+        pattern_encoding = data_masking_pattern_encoding[pattern]
+
+        format_data_bits = (level_encoding << 3) | pattern_encoding
 
         # Extend the 5-bit formation information with 10 bits of error-correction data.
         format_bits = (format_data_bits << 10) | format_information_code_remainder(format_data_bits)

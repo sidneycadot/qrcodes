@@ -1,6 +1,5 @@
 """High-level utility functions to generate QR codes."""
 
-import subprocess
 from typing import Optional
 
 from .enum_types import ErrorCorrectionLevel, EncodingVariant, DataMaskingPattern
@@ -95,5 +94,5 @@ def write_optimal_qrcode(
     im = render_qrcode_as_pil_image(qr_canvas, mode=mode, colormap=colormap, magnification=magnification)
     print(f"Saving {filename} ...")
     im.save(filename)
-    if post_optimize:
-        subprocess.run(["optipng", filename], stderr=subprocess.DEVNULL, check=False)
+    #if post_optimize:
+    #    subprocess.run(["optipng", filename], stderr=subprocess.DEVNULL, check=False)

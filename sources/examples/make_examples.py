@@ -153,8 +153,8 @@ def write_example_eci_greek(s: str, filename: str, *, colormap: Optional[str|dic
     im = render_qrcode_as_pil_image(qr_canvas, colormap=colormap)
     print(f"Saving {filename} ...")
     im.save(filename)
-    if post_optimize:
-        subprocess.run(["optipng", filename], stderr=subprocess.DEVNULL, check=False)
+    #if post_optimize:
+    #    subprocess.run(["optipng", filename], stderr=subprocess.DEVNULL, check=False)
 
 
 def write_examples_structured_append(*, colormap: Optional[str|dict] = None, post_optimize: bool = False):
@@ -182,8 +182,8 @@ def write_examples_structured_append(*, colormap: Optional[str|dict] = None, pos
         im = render_qrcode_as_pil_image(qr_canvas, colormap=colormap)
         print(f"Saving {filename} ...")
         im.save(filename)
-        if post_optimize:
-            subprocess.run(["optipng", filename], stderr=subprocess.DEVNULL, check=False)
+        #if post_optimize:
+        #    subprocess.run(["optipng", filename], stderr=subprocess.DEVNULL, check=False)
 
 
 def main():
