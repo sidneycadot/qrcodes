@@ -156,7 +156,9 @@ def write_svg_qrcode(
 
     with XmlWriter() as svg:
 
-        with svg.write_container_tag("svg", {"fill": "none", "viewBox": "0 0 5400 5400", "xmlns": "http://www.w3.org/2000/svg"}):
+        with svg.write_container_tag("svg", {"viewBox": "0 0 5400 5400", "xmlns": "http://www.w3.org/2000/svg"}):
+
+            svg.write_leaf_tag("rect", {"width": "100%", "height": "100%", "fill": "white"})
 
             svg.write_leaf_tag("text", {"x": 2700.0, "y": 350.0, "fill": "red", "font-size": "300px", "dominant-baseline": "middle", "text-anchor": "middle"}, content="Decimals of π encoded in QR codes")
 

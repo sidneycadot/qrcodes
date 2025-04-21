@@ -8,7 +8,7 @@ import base64
 from PIL import Image, ImageDraw, ImageFont
 
 
-from sources.qrcode_generator.utilities import write_optimal_qrcode
+from qrcode_generator.utilities import write_optimal_qrcode
 
 
 def write_image_via_reflector(filename: str) -> None:
@@ -21,7 +21,7 @@ def write_image_via_reflector(filename: str) -> None:
 
     temp_filename = "temp.png"
     im.save(temp_filename)
-    #subprocess.run(["optipng", temp_filename], stderr=subprocess.DEVNULL, check=True)
+    subprocess.run(["optipng", temp_filename], stderr=subprocess.DEVNULL, check=True)
     with open(temp_filename, "rb") as fi:
         imagedata = fi.read()
     os.remove(temp_filename)
