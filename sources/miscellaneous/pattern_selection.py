@@ -31,14 +31,14 @@ def run_testcase(testcase_name: str, de: DataEncoder, version: int, level: Error
         if pattern == reference_pattern:
             im = render_qrcode_as_pil_image(qr.canvas)
             im.save(filename)
-            subprocess.run(["optipng", filename], stderr=subprocess.DEVNULL, check=True)
+            #subprocess.run(["optipng", filename], stderr=subprocess.DEVNULL, check=True)
 
     score1_best = min(score1_map.values())
     score2_best = min(score2_map.values())
 
     scores = []
     for pattern in DataMaskingPattern:
-        pattern_str = f"P{pattern.value}"
+        pattern_str = f"P{pattern.name[-1]}"
         score1 = score1_map[pattern]
         score2 = score2_map[pattern]
         score1_str = f"{score1}"

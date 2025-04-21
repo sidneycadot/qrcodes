@@ -134,8 +134,8 @@ def write_example_kanji_encodings(s: str, filename: str, *, colormap: Optional[s
     im = render_qrcode_as_pil_image(qr_canvas, colormap = colormap)
     print(f"Saving {filename} ...")
     im.save(filename)
-    if post_optimize:
-        subprocess.run(["optipng", filename], stderr=subprocess.DEVNULL, check=False)
+    #if post_optimize:
+    #    subprocess.run(["optipng", filename], stderr=subprocess.DEVNULL, check=False)
 
 
 def write_example_eci_greek(s: str, filename: str, *, colormap: Optional[str|dict] = None, post_optimize: bool = False) -> None:
@@ -177,7 +177,7 @@ def write_examples_structured_append(*, colormap: Optional[str|dict] = None, pos
         de = DataEncoder(EncodingVariant.SMALL)
         de.append_structured_append_marker(index, 4, checksum)
         de.append_alphanumeric_mode_block(substring)
-        filename = f"example_standard_fig_29_page_60_1Mp{pattern.value}_index_{index}.png"
+        filename = f"example_standard_fig_29_page_60_1Mp{pattern.name[-1]}_index_{index}.png"
         qr_canvas = make_qr_code(de, 1, ErrorCorrectionLevel.M, pattern=pattern)
         im = render_qrcode_as_pil_image(qr_canvas, colormap=colormap)
         print(f"Saving {filename} ...")
