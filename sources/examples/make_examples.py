@@ -4,7 +4,6 @@
 
 import glob
 import os
-import subprocess
 import textwrap
 from typing import Optional
 
@@ -12,7 +11,8 @@ from qrcode_generator.data_encoder import DataEncoder
 from qrcode_generator.enum_types import ErrorCorrectionLevel, EncodingVariant, DataMaskingPattern
 from qrcode_generator.qr_code import make_qr_code
 from qrcode_generator.render_pil import render_qrcode_as_pil_image
-from qrcode_generator.utilities import write_optimal_qrcode
+from qrcode_generator.utilities import write_optimal_qrcode, optimize_png
+
 
 pi_10k = (
     "3."
@@ -134,8 +134,8 @@ def write_example_kanji_encodings(s: str, filename: str, *, colormap: Optional[s
     im = render_qrcode_as_pil_image(qr_canvas, colormap = colormap)
     print(f"Saving {filename} ...")
     im.save(filename)
-    #if post_optimize:
-    #    subprocess.run(["optipng", filename], stderr=subprocess.DEVNULL, check=False)
+    if post_optimize:
+        optimize_png(filename)
 
 
 def write_example_eci_greek(s: str, filename: str, *, colormap: Optional[str|dict] = None, post_optimize: bool = False) -> None:
@@ -153,8 +153,7 @@ def write_example_eci_greek(s: str, filename: str, *, colormap: Optional[str|dic
     im = render_qrcode_as_pil_image(qr_canvas, colormap=colormap)
     print(f"Saving {filename} ...")
     im.save(filename)
-    #if post_optimize:
-    #    subprocess.run(["optipng", filename], stderr=subprocess.DEVNULL, check=False)
+    optimize_png(filename)
 
 
 def write_examples_structured_append(*, colormap: Optional[str|dict] = None, post_optimize: bool = False):
@@ -182,8 +181,8 @@ def write_examples_structured_append(*, colormap: Optional[str|dict] = None, pos
         im = render_qrcode_as_pil_image(qr_canvas, colormap=colormap)
         print(f"Saving {filename} ...")
         im.save(filename)
-        #if post_optimize:
-        #    subprocess.run(["optipng", filename], stderr=subprocess.DEVNULL, check=False)
+        if post_optimize:
+            optimize_png(filename)
 
 
 def main():

@@ -1,5 +1,7 @@
 """High-level utility functions to generate QR codes."""
 
+import os
+import subprocess
 from typing import Optional
 
 from .enum_types import ErrorCorrectionLevel, EncodingVariant, DataMaskingPattern
@@ -65,6 +67,13 @@ def make_optimal_qrcode(
     return make_qr_code(de, version, level, include_quiet_zone=include_quiet_zone, pattern=pattern)
 
 
+def optimize_png(filename: str) -> None:
+    if os.name == 'posix':
+        # We only know how to optimize on posix systems.
+        # On other systems, do nothing.
+        subprocess.run(["optipng", filename], stderr=subprocess.DEVNULL, check=False)
+
+
 def write_optimal_qrcode(
             s: str, filename: str, *,
             include_quiet_zone: Optional[bool] = None,
@@ -93,5 +102,5 @@ def write_optimal_qrcode(
     im = render_qrcode_as_pil_image(qr_canvas, mode=mode, colormap=colormap, magnification=magnification)
     print(f"Saving {filename} ...")
     im.save(filename)
-    #if post_optimize:
-    #    subprocess.run(["optipng", filename], stderr=subprocess.DEVNULL, check=False)
+    if post_optimize:
+        optimize_png(filename)

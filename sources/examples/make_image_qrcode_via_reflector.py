@@ -1,17 +1,21 @@
 #! /usr/bin/env -S python3 -B
 
-"""Write QR code that contains an image."""
+"""Write QR code that contains an image.
+
+Note: this requires cooperation from an externally configured HTTP server.
+"""
+
 import os
-import subprocess
 import base64
 
 from PIL import Image, ImageDraw, ImageFont
 
-
-from sources.qrcode_generator.utilities import write_optimal_qrcode
+from qrcode_generator.utilities import write_optimal_qrcode, optimize_png
 
 
 def write_image_via_reflector(filename: str) -> None:
+
+    # Make image.
 
     im = Image.new('RGB', (160, 160), color='blue')
     draw = ImageDraw.Draw(im)
@@ -19,19 +23,31 @@ def write_image_via_reflector(filename: str) -> None:
     font = ImageFont.load_default(20)
     draw.text((79.5, 79.5), "Hello, World!", fill='red', anchor='mm', font=font)
 
-    temp_filename = "temp.png"
+    # Save image to temporary file.
+
+    temp_filename = "temp_" + filename
     im.save(temp_filename)
-    #subprocess.run(["optipng", temp_filename], stderr=subprocess.DEVNULL, check=True)
+    optimize_png(temp_filename)
+
+    # Read image file data.
+
     with open(temp_filename, "rb") as fi:
         imagedata = fi.read()
+
+    # Remove temporary image file.
+
     os.remove(temp_filename)
+
+    # Represent image data as URL-safe base64 ASCII text.
 
     base64_imagedata = base64.urlsafe_b64encode(imagedata).decode('ascii')
 
     # Create the reflector URL.
-    url = "http://r.jigsaw.nl?c=image/png&p=" + base64_imagedata
 
+    url = "http://r.jigsaw.nl?c=image/png&p=" + base64_imagedata
     print("URL:", url)
+
+    # Write the example.
 
     write_optimal_qrcode(url, filename, post_optimize=True)
 

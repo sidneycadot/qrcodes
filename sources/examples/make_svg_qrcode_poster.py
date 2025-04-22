@@ -1,20 +1,14 @@
 #! /usr/bin/env -S python3 -B
 
-"""Write QR code as SVG image."""
+"""Write QR code poster as SVG image."""
 
-import os
-import subprocess
-import base64
-import textwrap
 from typing import Optional
-
-from PIL import Image, ImageDraw, ImageFont
 
 from xml_writer import XmlWriter
 from qrcode_generator.enum_types import DataMaskingPattern, ErrorCorrectionLevel, EncodingVariant
 from qrcode_generator.lookup_tables import version_specification_table
-from qrcode_generator.render_pil import colormap_color, colormap_default
-from qrcode_generator.utilities import write_optimal_qrcode, make_optimal_qrcode, find_optimal_string_encoding
+from qrcode_generator.render_pil import colormap_default
+from qrcode_generator.utilities import make_optimal_qrcode, find_optimal_string_encoding
 
 
 pi_10k = (
@@ -202,8 +196,6 @@ def write_svg_qrcode(
 
 
 def main():
-
-    # This produces a QR code with the snowman character (\u2603) from UTF-8, written in a "bytes" block.
     write_svg_qrcode("qrcodes.svg", colormap = colormap_default)
 
 
