@@ -19,8 +19,10 @@ def make_default_version_preference_list() -> list[tuple[int, ErrorCorrectionLev
         for level in (ErrorCorrectionLevel.H, ErrorCorrectionLevel.Q, ErrorCorrectionLevel.M, ErrorCorrectionLevel.L)
     ]
 
+
 def make_optimal_qrcode(
-            s: str, *,
+            payload: str,
+            *,
             include_quiet_zone: Optional[bool] = None,
             pattern: Optional[DataMaskingPattern] = None,
             version_preference_list: Optional[list[tuple[int, ErrorCorrectionLevel]]] = None,
@@ -36,7 +38,7 @@ def make_optimal_qrcode(
         if variant in variant_cache:
             solution = variant_cache[variant]
         else:
-            solutions = find_optimal_string_encoding(s, variant, byte_mode_encoding)
+            solutions = find_optimal_string_encoding(payload, variant, byte_mode_encoding)
             # print(f"Number of optimal solutions: {len(solutions)}.")
             if len(solutions) == 0:
                 solution = None
@@ -75,22 +77,24 @@ def optimize_png(filename: str) -> None:
 
 
 def write_optimal_qrcode(
-            s: str, filename: str, *,
-            include_quiet_zone: Optional[bool] = None,
-            pattern: Optional[DataMaskingPattern] = None,
-            version_preference_list: Optional[list[tuple[int, ErrorCorrectionLevel]]] = None,
-            byte_mode_encoding: Optional[str] = None,
-            mode: Optional[str] = None,
-            colormap: Optional[str|dict] = None,
-            magnification: Optional[int] = None,
-            post_optimize: Optional[bool] = None
-        ) -> None:
+        payload: str,
+        filename: str,
+        *,
+        include_quiet_zone: Optional[bool] = None,
+        pattern: Optional[DataMaskingPattern] = None,
+        version_preference_list: Optional[list[tuple[int, ErrorCorrectionLevel]]] = None,
+        byte_mode_encoding: Optional[str] = None,
+        mode: Optional[str] = None,
+        colormap: Optional[str|dict] = None,
+        magnification: Optional[int] = None,
+        post_optimize: Optional[bool] = None
+    ) -> None:
 
     if post_optimize is None:
         post_optimize = False
 
     qr_canvas = make_optimal_qrcode(
-        s,
+        payload,
         include_quiet_zone=include_quiet_zone,
         pattern=pattern,
         version_preference_list=version_preference_list,

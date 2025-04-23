@@ -227,7 +227,7 @@ class EncodingSolution:
 
 
 def find_optimal_string_encoding(
-            s: str,
+            payload: str,
             variant: EncodingVariant,
             byte_mode_encoding: Optional[str] = None
         ) -> list[EncodingSolution]:
@@ -278,12 +278,13 @@ def find_optimal_string_encoding(
     if byte_mode_encoding is None:
         byte_mode_encoding = 'utf-8'
 
+    # Start with an empty encoding solution.
     partial_solutions = [
-        EncodingSolution(variant)  # An empty encoding solution.
+        EncodingSolution(variant)
     ]
 
-    # Traverse all characters in the string.
-    for c in s:
+    # Loop over all characters in the payload string.
+    for c in payload:
 
         partial_solution_candidates = []
 
@@ -336,9 +337,9 @@ def find_optimal_string_encoding(
         if not any(s2.better(s1) for s2 in partial_solutions):
             solutions.append(s1)
 
-    # Sort solutions by bitcount.
-    solutions_list = [(solution.bitcount(), solution) for solution in solutions]
-    solutions_list.sort(key=lambda x: x[0], reverse=True)
-    solutions = [solution for (bitcount, solution) in solutions_list]
+    # Sort solutions by bitcount and number of blocks. Best solutions will come first.
+    solutions_list = [(solution.bitcount(), len(solution.blocks), solution) for solution in solutions]
+    solutions_list.sort(key=lambda x: (x[0], x[1]), reverse=True)
+    solutions = [solution for (bitcount, block_count, solution) in solutions_list]
 
     return solutions

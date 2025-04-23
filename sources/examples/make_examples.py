@@ -119,33 +119,37 @@ pi_10k = (
 )
 
 
-def write_example_kanji_encodings(s: str, filename: str, *, colormap: Optional[str|dict] = None, post_optimize: bool = False) -> None:
-    """Represent Kanji characters as both UTF-8 and Kanji encoding.
+def write_example_kanji_encodings(
+        payload: str, filename: str, *,
+        colormap: Optional[str | dict] = None,
+        post_optimize: bool = False) -> None:
+    """Write QR code that represents Kanji characters using both UTF-8 and Kanji encoding.
 
-    This routine is a bit verbose because it uses a DataEncoder with hand-picked encoding blocks.
-    Normally we'd depend on the 'find_optimal_string_encoding' function instead (either directly
-    or indirectly).
+    This routine uses a DataEncoder with explicitly specified encoding blocks.
     """
     de = DataEncoder(EncodingVariant.SMALL)
     de.append_byte_mode_block("Kanji characters as Kanji mode block:\n\n".encode())
-    de.append_kanji_mode_block(s)
-    de.append_byte_mode_block(f"\n\nKanji characters as byte mode block with UTF-8 encoding:\n\n{s}".encode())
+    de.append_kanji_mode_block(payload)
+    de.append_byte_mode_block(
+        f"\n\nKanji characters as byte mode block with UTF-8 encoding:\n\n{payload}".encode())
     qr_canvas = make_qr_code(de, 7, ErrorCorrectionLevel.L)
-    im = render_qrcode_as_pil_image(qr_canvas, colormap = colormap)
+    im = render_qrcode_as_pil_image(qr_canvas, colormap=colormap)
     print(f"Saving {filename} ...")
     im.save(filename)
     if post_optimize:
         optimize_png(filename)
 
 
-def write_example_eci_greek(s: str, filename: str, *, colormap: Optional[str|dict] = None, post_optimize: bool = False) -> None:
+def write_example_eci_greek(
+        payload: str, filename: str, *,
+        colormap: Optional[str | dict] = None,
+        post_optimize: bool = False) -> None:
     """Represent Greek characters in ISO-8859-7, which corresponds to ECI designator 9.
 
-    # This is an example in the standard, but the encoding given there is wrong;
-    # ΑΒΓΔΕ encoded is 0xc1..0xc5, not 0xa1..0xa5.
+    This is an example in the standard, but the encoding given there is wrong;
+    The string "ΑΒΓΔΕ" encoded using iso-8859-7 is 0xc1..0xc5, not 0xa1..0xa5.
     """
-
-    octets = s.encode("iso-8859-7")
+    octets = payload.encode("iso-8859-7")
     de = DataEncoder(EncodingVariant.SMALL)
     de.append_eci_designator(9)
     de.append_byte_mode_block(octets)
@@ -153,26 +157,27 @@ def write_example_eci_greek(s: str, filename: str, *, colormap: Optional[str|dic
     im = render_qrcode_as_pil_image(qr_canvas, colormap=colormap)
     print(f"Saving {filename} ...")
     im.save(filename)
-    optimize_png(filename)
+    if post_optimize:
+        optimize_png(filename)
 
 
-def write_examples_structured_append(*, colormap: Optional[str|dict] = None, post_optimize: bool = False):
+def write_examples_structured_append(*, colormap: Optional[str | dict] = None, post_optimize: bool = False):
     """This produces the four "structured append mode" qr-codes from section 8.1."""
 
-    s = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-    checksum = 0
-    for c in s:
-        checksum ^= ord(c)
-    print("checksum:", checksum)
+    combined_payload = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
-    subcode_specs = [
+    checksum = 0
+    for c in combined_payload:
+        checksum ^= ord(c)
+
+    structured_append_qrcode_specs = [
         (0, DataMaskingPattern.PATTERN0, "ABCDEFGHIJKLMN"),
         (1, DataMaskingPattern.PATTERN7, "OPQRSTUVWXYZ0123"),
         (2, DataMaskingPattern.PATTERN7, "456789ABCDEFGHIJ"),
         (3, DataMaskingPattern.PATTERN3, "KLMNOPQRSTUVWXYZ")
     ]
 
-    for (index, pattern, substring) in subcode_specs:
+    for (index, pattern, substring) in structured_append_qrcode_specs:
         de = DataEncoder(EncodingVariant.SMALL)
         de.append_structured_append_marker(index, 4, checksum)
         de.append_alphanumeric_mode_block(substring)
@@ -194,85 +199,203 @@ def main():
         os.remove(filename)
 
     colormap = 'default'
+    post_optimize = True
 
-    #pathological_string = "#" + 184 * (15 * "A" + "#")
-    #pathological_string = "#" + 1 * (5 * "A" + 6 * "0" + "#")
-    #pathological_string = "#" + 5 * (4 * "A" + 5 * "0" + "#")
-    #print(f"String length {len(pathological_string)}.")
-    #write_optimal_qrcode(pathological_string, "example_pathological.png", version_preference_list=[(40, ErrorCorrectionLevel.L)], post_optimize=True)
-    #return
+    # pathological_payload = "#" + 184 * (15 * "A" + "#")
+    # pathological_payload = "#" + 1 * (5 * "A" + 6 * "0" + "#")
+    # pathological_payload = "#" + 5 * (4 * "A" + 5 * "0" + "#")
+    # print(f"String length {len(pathological_payload)}.")
+    # write_optimal_qrcode(
+    #     pathological_payload,
+    #     "example_pathological_payload.png",
+    #     version_preference_list=[(40, ErrorCorrectionLevel.L)],
+    #     colormap=colormap,
+    #     post_optimize=post_optimize
+    # )
+    # return
 
     # This produces a QR code with an empty string.
-    write_optimal_qrcode("", "example_empty.png", colormap=colormap, post_optimize=True)
+    write_optimal_qrcode(
+        "",
+        "example_empty.png",
+        colormap=colormap,
+        post_optimize=post_optimize
+    )
 
     # This produces a QR code with the snowman character (\u2603) from UTF-8, written in a "bytes" block.
-    write_optimal_qrcode("☃", "example_utf8_snowman.png", colormap=colormap, post_optimize=True)
+    write_optimal_qrcode(
+        "☃",
+        "example_utf8_snowman.png",
+        colormap=colormap,
+        post_optimize=post_optimize
+    )
 
     # This produces a QR code with the Greek characters "ΑΒΓΔΕ" encoded in ISO-8859-7, using ECI designator 9.
-    write_example_eci_greek("ΑΒΓΔΕ", "example_eci_greek.png", colormap=colormap, post_optimize=True)
+    write_example_eci_greek(
+        "ΑΒΓΔΕ",
+        "example_eci_greek.png",
+        colormap=colormap,
+        post_optimize=post_optimize
+    )
 
     # A simple example that uses a single Kanji block.
     # The Kanji text says: "I don't understand Japanese."
-    write_optimal_qrcode("日本語はわかりません。", "example_kanji.png", colormap=colormap, post_optimize=True)
+    write_optimal_qrcode(
+        "日本語はわかりません。", "example_kanji.png",
+        colormap=colormap,
+        post_optimize=post_optimize
+    )
 
     # An example where the same Kanji text is first rendered in Kanji mode, then later on in UTF-8 mode.
     # The Kanji text says: "I don't understand Japanese."
-    write_example_kanji_encodings("日本語はわかりません。", "example_kanji_encodings.png", colormap=colormap, post_optimize=True)
+    write_example_kanji_encodings(
+        "日本語はわかりません。",
+        "example_kanji_encodings.png",
+        colormap=colormap,
+        post_optimize=post_optimize
+    )
 
     # This example reproduces the example QR code of Figure 1 (Section 6.2; page 7) of the standard.
 
-    write_optimal_qrcode("QR Code Symbol", f"example_standard_fig_1_page_7_1Mp5.png",
-                         pattern=DataMaskingPattern.PATTERN5,
-                         version_preference_list=[(1, ErrorCorrectionLevel.M)], colormap=colormap, post_optimize=True)
+    write_optimal_qrcode(
+        "QR Code Symbol",
+        f"example_standard_fig_1_page_7_1Mp5.png",
+        pattern=DataMaskingPattern.PATTERN5,
+        version_preference_list=[(1, ErrorCorrectionLevel.M)],
+        colormap=colormap,
+        post_optimize=post_optimize
+    )
 
     # This example reproduces the example QR code of Figure 29 (Section 8.1; page 60) of the standard.
-    write_optimal_qrcode("ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ",
-                         f"example_standard_fig_29_page_60_4Mp4.png",
-                         pattern=DataMaskingPattern.PATTERN4,
-                         version_preference_list=[(4, ErrorCorrectionLevel.M)], colormap=colormap, post_optimize=True)
+    write_optimal_qrcode(
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+        f"example_standard_fig_29_page_60_4Mp4.png",
+        pattern=DataMaskingPattern.PATTERN4,
+        version_preference_list=[(4, ErrorCorrectionLevel.M)],
+        colormap=colormap,
+        post_optimize=post_optimize
+    )
 
     # Reproduce the four "structured append" examples, where the information in the previous
     # example is split over four QR codes.
-    write_examples_structured_append(colormap=colormap, post_optimize=True)
+    write_examples_structured_append(
+        colormap=colormap,
+        post_optimize=True
+    )
 
     # This example reproduces the example QR code of Figure I.2 (Appendix I; page 96) of the standard.
     # Note: the 2000 version of the standard selects PATTERN3 here, while the 2015 version
     # of the standard selects PATTERN2.
-    write_optimal_qrcode("01234567", "example_standard_fig_i2_page_96_1Mp2.png",
-                         pattern=DataMaskingPattern.PATTERN2,
-                         version_preference_list=[(1, ErrorCorrectionLevel.M)], colormap=colormap, post_optimize=True)
+    write_optimal_qrcode(
+        "01234567",
+        "example_standard_fig_i2_page_96_1Mp2.png",
+        pattern=DataMaskingPattern.PATTERN2,
+        version_preference_list=[(1, ErrorCorrectionLevel.M)],
+        colormap=colormap,
+        post_optimize=post_optimize
+    )
 
     # The most digits of Pi that can be stored into a QR code:
     # "3." followed by 7080 digits after the decimal point.
-    write_optimal_qrcode(pi_10k[:7082], "example_pi_digits.png",
-                         version_preference_list=[(40, ErrorCorrectionLevel.L)], colormap=colormap, post_optimize=True)
+    write_optimal_qrcode(
+        pi_10k[:7082],
+        "example_pi_digits.png",
+        version_preference_list=[(40, ErrorCorrectionLevel.L)],
+        colormap=colormap,
+        post_optimize=post_optimize
+    )
 
     # Simple URLs to HTTP/HTTPS.
-    write_optimal_qrcode("http://www.example.com/", "example_http_url.png", colormap=colormap, post_optimize=True)
-    write_optimal_qrcode("https://www.example.com/", "example_https_url.png", colormap=colormap, post_optimize=True)
+    write_optimal_qrcode(
+        "http://www.example.com/",
+        "example_http_url.png",
+        colormap=colormap,
+        post_optimize=post_optimize
+    )
+
+    write_optimal_qrcode(
+        "https://www.example.com/",
+        "example_https_url.png",
+        colormap=colormap,
+        post_optimize=post_optimize
+    )
 
     # A mailto URL (RFC 6068).
-    write_optimal_qrcode("mailto:john.doe@example.com?subject=This%20is%20the%20subject.&body=Hi%20there.", "example_mailto.png", colormap=colormap, post_optimize=True)
+    write_optimal_qrcode(
+        "mailto:john.doe@example.com?subject=This%20is%20the%20subject.&body=Hi%20there.",
+        "example_mailto.png",
+        colormap=colormap,
+        post_optimize=post_optimize
+    )
 
-    # A geolocation URL (RFC 5870). This one points to the Big Ben clock tower in London, UK.
-    write_optimal_qrcode("geo:51.5007,-0.1245", "example_geolocation.png", colormap=colormap, post_optimize=True)
+    # A geolocation URL (RFC 5870). The location given points to the Big Ben clock tower in London, UK.
+    write_optimal_qrcode(
+        "geo:51.5007,-0.1245",
+        "example_geolocation.png",
+        colormap=colormap,
+        post_optimize=post_optimize
+    )
 
     # A Wi-Fi network specification.
-    write_optimal_qrcode("WIFI:S:MyNetworkName;T:WPA;P:MyPassword", "example_wifi.png", colormap=colormap, post_optimize=True)
+    write_optimal_qrcode(
+        "WIFI:S:MyNetworkName;T:WPA;P:MyPassword",
+        "example_wifi.png",
+        colormap=colormap,
+        post_optimize=post_optimize
+    )
 
     # A telephone number.
-    write_optimal_qrcode("tel:+123456789", "example_telephone.png", colormap=colormap, post_optimize=True)
+    write_optimal_qrcode(
+        "tel:+123456789",
+        "example_telephone.png",
+        colormap=colormap,
+        post_optimize=post_optimize
+    )
 
     # This produces QR codes with an SMS address and (optionally) a body.
     # Both "sms:" and "smsto:" prefixes appear to work.
     # The iPhone app, at least, ignores the body part.
-    write_optimal_qrcode("sms:+123456789", "example_sms_1.png", colormap=colormap, post_optimize=True)
-    write_optimal_qrcode("sms:+123456789:Example Body", "example_sms_2.png", colormap=colormap, post_optimize=True)
-    write_optimal_qrcode("sms:+123456789?body=Example%20Body", "example_sms_3.png", colormap=colormap, post_optimize=True)
+    write_optimal_qrcode(
+        "sms:+123456789",
+        "example_sms_1.png",
+        colormap=colormap,
+        post_optimize=post_optimize
+    )
 
-    write_optimal_qrcode("smsto:+123456789", "example_smsto_1.png", colormap=colormap, post_optimize=True)
-    write_optimal_qrcode("smsto:+123456789:Example Body", "example_smsto_2.png", colormap=colormap, post_optimize=True)
-    write_optimal_qrcode("smsto:+123456789?body=Example%20Body", "example_smsto_3.png", colormap=colormap, post_optimize=True)
+    write_optimal_qrcode(
+        "sms:+123456789:Example Body",
+        "example_sms_2.png",
+        colormap=colormap,
+        post_optimize=post_optimize
+    )
+
+    write_optimal_qrcode(
+        "sms:+123456789?body=Example%20Body",
+        "example_sms_3.png",
+        colormap=colormap,
+        post_optimize=post_optimize
+    )
+
+    write_optimal_qrcode(
+        "smsto:+123456789",
+        "example_smsto_1.png",
+        colormap=colormap,
+        post_optimize=post_optimize
+    )
+
+    write_optimal_qrcode(
+        "smsto:+123456789:Example Body",
+        "example_smsto_2.png",
+        colormap=colormap,
+        post_optimize=post_optimize
+    )
+
+    write_optimal_qrcode(
+        "smsto:+123456789?body=Example%20Body",
+        "example_smsto_3.png",
+        colormap=colormap,
+        post_optimize=post_optimize
+    )
 
     # An event (for calendar applications).
 
@@ -284,7 +407,12 @@ def main():
     END:VEVENT 
     """).strip()
 
-    write_optimal_qrcode(vevent_descriptor, "example_vevent.png", colormap=colormap, post_optimize=True)
+    write_optimal_qrcode(
+        vevent_descriptor,
+        "example_vevent.png",
+        colormap=colormap,
+        post_optimize=True
+    )
 
     # A vcard (for contact applications).
 
@@ -298,7 +426,12 @@ def main():
     END:VCARD
     """).strip()
 
-    write_optimal_qrcode(vcard_descriptor, "example_vcard.png", colormap=colormap, post_optimize=True)
+    write_optimal_qrcode(
+        vcard_descriptor,
+        "example_vcard.png",
+        colormap=colormap,
+        post_optimize=True
+    )
 
     # Some more examples may be added:
     # - embedded HTML (even though it's not supported by standard QR code reader apps).
