@@ -1,6 +1,14 @@
 #! /usr/bin/env -S python3 -B
 
-"""Write QR codes discussed in the standard as PNG image files."""
+"""Write QR codes discussed in the standard as PNG image files.
+
+There are currently four editions of the standard:
+
+ISO/IEC 18004:2000(E)
+ISO/IEC 18004:2006(E)
+ISO/IEC 18004:2015(E)
+ISO/IEC 18004:2024(en)
+"""
 
 import glob
 import os
@@ -16,16 +24,17 @@ from qrcode_generator.utilities import write_optimal_qrcode, optimize_png
 def write_introduction_example(
         colormap: Optional[str | dict] = None,
         post_optimize: bool = False) -> None:
-    """Write the first example of a QR code found in the standard, from the 2015 edition onwards.
+    """Write the first example of a QR code found in the standard, from the 2006 edition onwards.
 
     References:
     - ISO/IEC 18004:2000(E)   Not included in this version of the standard.
+    - ISO/IEC 18004:2006(E)   Figure 1, Section 5.2, page 7.
     - ISO/IEC 18004:2015(E)   Figure 1, Section 6.2, page 7.
     - ISO/IEC 18004:2024(en)  <not yet available>
     """
     write_optimal_qrcode(
         "QR Code Symbol",
-        "qrcode_iso18004_2015_QRCodeSymbol_1Mp5.png",
+        "qrcode_iso18004_2006_2015_QRCodeSymbol_1Mp5.png",
         pattern=DataMaskingPattern.PATTERN5,
         version_preference_list=[(1, ErrorCorrectionLevel.M)],
         colormap=colormap,
