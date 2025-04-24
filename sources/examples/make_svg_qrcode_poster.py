@@ -2,13 +2,10 @@
 
 """Write QR code poster with encodings of pi as an SVG image."""
 
-from typing import Optional
-
 from qrcode_generator.render_svg import render_qr_canvas_as_svg_path
 from qrcode_generator.xml_writer import XmlWriter
 from qrcode_generator.enum_types import DataMaskingPattern, ErrorCorrectionLevel, EncodingVariant
 from qrcode_generator.lookup_tables import version_specification_table
-from qrcode_generator.render_pil import colormap_default
 from qrcode_generator.utilities import make_optimal_qrcode, find_optimal_string_encoding
 
 
