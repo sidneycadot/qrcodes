@@ -20,12 +20,13 @@ def write_introduction_example(
 
     References:
     - ISO/IEC 18004:2000(E)   Not included in this version of the standard.
+    - ISO/IEC 18004:2006(E)   Figure 1, Section 5.2, page 7.
     - ISO/IEC 18004:2015(E)   Figure 1, Section 6.2, page 7.
     - ISO/IEC 18004:2024(en)  <not yet available>
     """
     write_optimal_qrcode(
         "QR Code Symbol",
-        "qrcode_iso18004_2015_QRCodeSymbol_1Mp5.png",
+        "qrcode_iso18004_2006_2015_QRCodeSymbol_1Mp5.png",
         pattern=DataMaskingPattern.PATTERN5,
         version_preference_list=[(1, ErrorCorrectionLevel.M)],
         colormap=colormap,
@@ -46,12 +47,13 @@ def write_explicit_eci_designator_example(
 
     References:
     - ISO/IEC 18004:2000(E)   Section 8.4.1.1, page 19.
+    - ISO/IEC 18004:2006(E)   Section 6.4.2.1, page 24.
     - ISO/IEC 18004:2015(E)   Section 7.4.2.2, page 24.
     - ISO/IEC 18004:2024(en)  <not yet available>
     """
 
     payload = "ΑΒΓΔΕ"
-    filename = "qrcode_iso18004_2000_2015_ExplicitEciDesignator_1H.png"
+    filename = "qrcode_iso18004_2000_2006_2015_ExplicitEciDesignator_1H.png"
 
     octets = payload.encode("iso-8859-7")
     de = DataEncoder(EncodingVariant.SMALL)
@@ -72,6 +74,7 @@ def write_structured_append_mode_examples(
 
     References:
     - ISO/IEC 18004:2000(E)   Section 9.1, Figure 22, page 56.
+    - ISO/IEC 18004:2006(E)   Section 7.1, Figure 29, page 59.
     - ISO/IEC 18004:2015(E)   Section 8.1, Figure 28, page 60.
     - ISO/IEC 18004:2024(en)  <not yet available>
     """
@@ -81,7 +84,7 @@ def write_structured_append_mode_examples(
     # Reproduces the example where the payload is encoded in a single QR code.
     write_optimal_qrcode(
         combined_payload,
-        "qrcode_iso18004_2000_2015_StructuredAppendMode_combined_4Mp4.png",
+        "qrcode_iso18004_2000_2006_2015_StructuredAppendMode_combined_4Mp4.png",
         pattern=DataMaskingPattern.PATTERN4,
         version_preference_list=[(4, ErrorCorrectionLevel.M)],
         colormap=colormap,
@@ -105,7 +108,7 @@ def write_structured_append_mode_examples(
         de.append_alphanumeric_mode_block(substring)
         qr_canvas = make_qr_code(de, 1, ErrorCorrectionLevel.M, pattern=pattern)
         im = render_qrcode_as_pil_image(qr_canvas, colormap=colormap)
-        filename = f"qrcode_iso18004_2000_2015_StructuredAppendMode_split{index}_1Mp{pattern.name[-1]}.png"
+        filename = f"qrcode_iso18004_2000_2006_2015_StructuredAppendMode_split{index}_1Mp{pattern.name[-1]}.png"
         print(f"Saving {filename} ...")
         im.save(filename)
         if post_optimize:
@@ -121,6 +124,7 @@ def write_annex_examples(
 
     References:
     - ISO/IEC 18004:2000(E)   Figure G.2, Annex G, pages 84--85.
+    - ISO/IEC 18004:2006(E)   Figure I.2, Annex I, pages 94--96.
     - ISO/IEC 18004:2015(E)   Figure I.2, Annex I, pages 94--96.
     - ISO/IEC 18004:2024(en)  <not yet available>
     """
@@ -136,7 +140,7 @@ def write_annex_examples(
 
     write_optimal_qrcode(
         "01234567",
-        "qrcode_iso18004_2015_AnnexI_1Mp2.png",
+        "qrcode_iso18004_2006_2015_AnnexI_1Mp2.png",
         pattern=DataMaskingPattern.PATTERN2,
         version_preference_list=[(1, ErrorCorrectionLevel.M)],
         colormap=colormap,
