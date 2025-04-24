@@ -142,7 +142,7 @@ def write_example_kanji_encodings(
 
 def main():
 
-    # Remove stale image files.
+    # Remove stale QR code example files.
 
     for filename in glob.glob("qrcode_miscellaneous_*.png"):
         print("Removing", filename, "...")

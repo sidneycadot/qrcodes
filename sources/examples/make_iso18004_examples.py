@@ -155,7 +155,7 @@ def write_annex_examples(
 
 def main():
 
-    # Remove stale image files.
+    # Remove stale QR code example files.
 
     for filename in glob.glob("qrcode_iso18004_*.png"):
         print("Removing", filename, "...")
