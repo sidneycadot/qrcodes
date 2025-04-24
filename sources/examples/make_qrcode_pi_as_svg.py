@@ -2,6 +2,8 @@
 
 """Write QR code poster with encodings of pi as an SVG image."""
 
+import subprocess
+
 from qrcode_generator.render_svg import render_qr_canvas_as_svg_path
 from qrcode_generator.xml_writer import XmlWriter
 from qrcode_generator.enum_types import DataMaskingPattern, ErrorCorrectionLevel
@@ -115,23 +117,23 @@ pi_10k = (
 
 def write_qrcode_pi_as_svg(filename: str) -> None:
 
+    version = 40
+    level = ErrorCorrectionLevel.L
+    pattern = DataMaskingPattern.PATTERN0
+    include_quiet_zone=True
+
+    s = pi_10k[:7082]
+    qr_canvas = make_optimal_qrcode(s, pattern=pattern, version_preference_list=[(version, level)], include_quiet_zone=include_quiet_zone)
+
     with XmlWriter() as svg:
 
-        with svg.write_container_tag("svg", {"viewBox": "0 0 177 177", "xmlns": "http://www.w3.org/2000/svg"}):
+        with svg.write_container_tag("svg", {"viewBox": f"0 0 {qr_canvas.width} {qr_canvas.height}", "xmlns": "http://www.w3.org/2000/svg"}):
 
+            # Write white background.
             svg.write_leaf_tag("rect", {"width": "100%", "height": "100%", "fill": "white"})
 
-            version = 40
-            level = ErrorCorrectionLevel.L
-            pattern = DataMaskingPattern.PATTERN0
-
-            s = pi_10k[:7082]
-
-            qr_canvas = make_optimal_qrcode(s, pattern=pattern, version_preference_list=[(version, level)], include_quiet_zone=False)
-
-            render_qr_canvas_as_svg_path(svg, qr_canvas, {
-                "fill": "black"
-            })
+            # Write black modules.
+            render_qr_canvas_as_svg_path(svg, qr_canvas, { "fill": "black" })
 
     content = svg.get_content()
     with open(filename, "w", encoding="utf-8") as fo:
@@ -140,7 +142,12 @@ def write_qrcode_pi_as_svg(filename: str) -> None:
 
 def main():
     write_qrcode_pi_as_svg("qrcode_pi.svg")
-
+    try:
+        subprocess.run(["rsvg-convert", "--format", "pdf", "--output", "qrcode_pi.pdf", "qrcode_pi.svg"], check=False)
+    except FileNotFoundError:
+        pass
+    else:
+        print("Wrote PDF file.")
 
 if __name__ == "__main__":
     main()
