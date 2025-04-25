@@ -205,10 +205,13 @@ def write_qrcode_pi_as_svg(version: int, level: ErrorCorrectionLevel, pattern: D
 
 
 def main():
-    write_qrcode_pi_as_svg(1, ErrorCorrectionLevel.H, DataMaskingPattern.PATTERN0, True)
-    write_qrcode_pi_as_svg(1, ErrorCorrectionLevel.L, DataMaskingPattern.PATTERN0, True)
-    write_qrcode_pi_as_svg(40, ErrorCorrectionLevel.H, DataMaskingPattern.PATTERN0, True)
-    write_qrcode_pi_as_svg(40, ErrorCorrectionLevel.L, DataMaskingPattern.PATTERN0, True)
+
+    include_quiet_zone = False
+
+    write_qrcode_pi_as_svg(1, ErrorCorrectionLevel.H, DataMaskingPattern.PATTERN0, include_quiet_zone)
+    write_qrcode_pi_as_svg(1, ErrorCorrectionLevel.L, DataMaskingPattern.PATTERN0, include_quiet_zone)
+    write_qrcode_pi_as_svg(40, ErrorCorrectionLevel.H, DataMaskingPattern.PATTERN0, include_quiet_zone)
+    write_qrcode_pi_as_svg(40, ErrorCorrectionLevel.L, DataMaskingPattern.PATTERN0, include_quiet_zone)
 
 
 if __name__ == "__main__":
