@@ -4,6 +4,7 @@
 
 import subprocess
 
+from qrcode_generator.lookup_tables import version_specification_table
 from qrcode_generator.render_svg import render_qr_canvas_as_svg_path
 from qrcode_generator.xml_writer import XmlWriter
 from qrcode_generator.enum_types import DataMaskingPattern, ErrorCorrectionLevel
@@ -115,39 +116,100 @@ pi_10k = (
 )
 
 
-def write_qrcode_pi_as_svg(filename: str) -> None:
+def number_of_pi_characters_that_can_be_represented(version: int, level: ErrorCorrectionLevel) -> int:
+    """Calculate how many characters of pi can be represented in the (version, level) code.
 
-    version = 40
-    level = ErrorCorrectionLevel.L
-    pattern = DataMaskingPattern.PATTERN0
-    include_quiet_zone=True
+    * The first two characters are "3.1". They are represented using an alphanumeric block.
 
-    s = pi_10k[:7082]
-    qr_canvas = make_optimal_qrcode(s, pattern=pattern, version_preference_list=[(version, level)], include_quiet_zone=include_quiet_zone)
+      For v1 to v9    this takes 4 + 9 + 11 bits.
+      For v10 to v26  this takes 4 + 11 + 11 bits.
+      For v27 to v40  this takes 4 + 13 + 11 bits.
+
+    * Then we switch to a numeric block for the rest of the digits.
+
+      For v1 to v9    this takes 4 + 10 + ThreeDigitBlocks * 10 bits.
+      For v10 to v26  this takes 4 + 12 + ThreeDigitBlocks * 10 bits.
+      For v27 to v40  this takes 4 + 14 + ThreeDigitBlocks * 10 bits.
+
+      We maximize "ThreeDigitBlocks" to fit the available bits.
+
+      If at least 7 bits remain after that, we can place two more digits.
+      If at least 4 bits remain after that, we can place one more digit.
+    """
+
+    version_specification = version_specification_table[(version, level)]
+
+    bits_available = version_specification.number_of_data_codewords() * 8
+
+    if 1 <= version <= 9:
+        first_two_character_bits = 4 + 9 + 11
+        rest_of_digits_intro_bits = 4 + 10
+    elif 10 <= version <= 26:
+        first_two_character_bits = 4 + 11 + 11
+        rest_of_digits_intro_bits = 4 + 12
+    else:
+        first_two_character_bits = 4 + 13 + 11
+        rest_of_digits_intro_bits = 4 + 14
+
+    bits_remaining = bits_available - first_two_character_bits - rest_of_digits_intro_bits
+
+    three_digit_blocks = bits_remaining // 10
+
+    bits_remaining = bits_remaining - 10 * three_digit_blocks
+
+    if bits_remaining >= 7:
+        trailing_digits = 2
+    elif bits_remaining >= 4:
+        trailing_digits = 1
+    else:
+        trailing_digits = 0
+
+    total_characters = 2 + 3 * three_digit_blocks + trailing_digits
+
+    return total_characters
+
+
+def write_qrcode_pi_as_svg(version: int, level: ErrorCorrectionLevel, pattern: DataMaskingPattern, include_quiet_zone: bool) -> None:
+
+    number_of_pi_characters = number_of_pi_characters_that_can_be_represented(version, level)
+
+    pi_characters = pi_10k[:number_of_pi_characters]
+
+    qr_canvas = make_optimal_qrcode(pi_characters, pattern=pattern, version_preference_list=[(version, level)], include_quiet_zone=include_quiet_zone)
+
+    print(f"Writing code {version}-{level.name} with {number_of_pi_characters} characters of pi ...")
 
     with XmlWriter() as svg:
 
         with svg.write_container_tag("svg", {"viewBox": f"0 0 {qr_canvas.width} {qr_canvas.height}", "xmlns": "http://www.w3.org/2000/svg"}):
 
-            # Write white background.
+            # Render a white background.
             svg.write_leaf_tag("rect", {"width": "100%", "height": "100%", "fill": "white"})
 
-            # Write black modules.
+            # Render the black modules.
             render_qr_canvas_as_svg_path(svg, qr_canvas, { "fill": "black" })
 
+    filename_prefix = f"qrcode_pi_{version}{level.name}p{pattern.name[-1]}_{number_of_pi_characters}_digits"
+    filename_svg = filename_prefix + ".svg"
+    filename_pdf = filename_prefix + ".pdf"
+
     content = svg.get_content()
-    with open(filename, "w", encoding="utf-8") as fo:
+    with open(filename_svg, "w", encoding="utf-8") as fo:
         fo.write(content)
+
+    # Try to write a PDF file. If rsvg-convert is not available, this is a no-op.
+    try:
+        subprocess.run(["rsvg-convert", "--format", "pdf", "--output", filename_pdf, filename_svg], check=False)
+    except FileNotFoundError:
+        pass
 
 
 def main():
-    write_qrcode_pi_as_svg("qrcode_pi.svg")
-    try:
-        subprocess.run(["rsvg-convert", "--format", "pdf", "--output", "qrcode_pi.pdf", "qrcode_pi.svg"], check=False)
-    except FileNotFoundError:
-        pass
-    else:
-        print("Wrote PDF file.")
+    write_qrcode_pi_as_svg(1, ErrorCorrectionLevel.H, DataMaskingPattern.PATTERN0, True)
+    write_qrcode_pi_as_svg(1, ErrorCorrectionLevel.L, DataMaskingPattern.PATTERN0, True)
+    write_qrcode_pi_as_svg(40, ErrorCorrectionLevel.H, DataMaskingPattern.PATTERN0, True)
+    write_qrcode_pi_as_svg(40, ErrorCorrectionLevel.L, DataMaskingPattern.PATTERN0, True)
+
 
 if __name__ == "__main__":
     main()
