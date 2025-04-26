@@ -20,7 +20,7 @@ from qrcode_generator.utilities import write_optimal_qrcode, optimize_png
 
 def main():
 
-    # Remove stale application axample files.
+    # Remove stale QR code example files.
 
     for filename in glob.glob("qrcode_application_*.png"):
         print("Removing", filename, "...")

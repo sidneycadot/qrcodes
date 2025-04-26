@@ -1,13 +1,11 @@
 #! /usr/bin/env -S python3 -B
 
-"""Write QR code poster as SVG image."""
+"""Write QR code poster with encodings of pi as an SVG image."""
 
-from typing import Optional
-
-from xml_writer import XmlWriter
+from qrcode_generator.render_svg import render_qr_canvas_as_svg_path
+from qrcode_generator.xml_writer import XmlWriter
 from qrcode_generator.enum_types import DataMaskingPattern, ErrorCorrectionLevel, EncodingVariant
 from qrcode_generator.lookup_tables import version_specification_table
-from qrcode_generator.render_pil import colormap_default
 from qrcode_generator.utilities import make_optimal_qrcode, find_optimal_string_encoding
 
 
@@ -115,6 +113,7 @@ pi_10k = (
     "2645600162374288021092764579310657922955249887275846101264836999892256959688159205600101655256375678"
 )
 
+
 def maxlength(version, level):
 
     variant = EncodingVariant.from_version(version)
@@ -137,16 +136,7 @@ def maxlength(version, level):
     return lo
 
 
-def write_svg_qrcode(
-            filename: str, *,
-            include_quiet_zone: Optional[bool] = None,
-            pattern: Optional[DataMaskingPattern] = None,
-            version_preference_list: Optional[list[tuple[int, ErrorCorrectionLevel]]] = None,
-            byte_mode_encoding: Optional[str] = None,
-            # mode: Optional[str] = None,
-            colormap: Optional[str|dict] = None
-            # magnification: Optional[int] = None
-        ) -> None:
+def write_svg_qrcode_poster(filename: str) -> None:
 
     with XmlWriter() as svg:
 
@@ -160,7 +150,7 @@ def write_svg_qrcode(
 
                 for version in range(1, 41):
 
-                    # if version not in (1, 40): continue
+                    if version not in (1, 40): continue
 
                     with svg.write_container_tag("g", {"transform": f"translate(0 {(version - 1) * 1.2:.9f})"}):
                         for level in reversed(ErrorCorrectionLevel):
@@ -182,23 +172,18 @@ def write_svg_qrcode(
 
                                         qr_canvas = make_optimal_qrcode(s, pattern=pattern, version_preference_list=[(version, level)], include_quiet_zone=False)
 
-                                        rectangles = []
-                                        for i in range(qr_canvas.height):
-                                            for j in range(qr_canvas.width):
-                                                value = qr_canvas.get_module_value(i, j)
-                                                if value % 2 != 0:
-                                                    rectangle = f"M {j} {i} h 1 v 1 h -1 Z"
-                                                    rectangles.append(rectangle)
-                                        path = " ".join(rectangles)
-                                        svg.write_leaf_tag("path", {"d": path, "fill": "black", "transform": f"translate({(pattern.value - DataMaskingPattern.PATTERN0.value) * 1.2:.9f} 0) scale({1.0 / qr_canvas.width:.9f})"})
+                                        render_qr_canvas_as_svg_path(svg, qr_canvas, {
+                                            "fill": "black",
+                                            "transform": f"translate({(pattern.value - DataMaskingPattern.PATTERN0.value) * 1.2:.9f} 0) scale({1.0 / qr_canvas.width:.9f})"
+                                        })
 
     content = svg.get_content()
-    with open(filename, "w") as fo:
+    with open(filename, "w", encoding="utf-8") as fo:
         fo.write(content)
 
 
 def main():
-    write_svg_qrcode("qrcodes.svg", colormap = colormap_default)
+    write_svg_qrcode_poster("qrcodes_poster.svg")
 
 
 if __name__ == "__main__":

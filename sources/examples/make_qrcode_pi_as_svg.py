@@ -1,17 +1,13 @@
 #! /usr/bin/env -S python3 -B
 
-"""Write example QR codes as PNG image files."""
+"""Write QR code poster with encodings of pi as an SVG image."""
 
-import glob
-import os
-import textwrap
-from typing import Optional
+import subprocess
 
-from qrcode_generator.data_encoder import DataEncoder
-from qrcode_generator.enum_types import ErrorCorrectionLevel, EncodingVariant, DataMaskingPattern
-from qrcode_generator.qr_code import make_qr_code
-from qrcode_generator.render_pil import render_qrcode_as_pil_image
-from qrcode_generator.utilities import write_optimal_qrcode, optimize_png
+from qrcode_generator.render_svg import render_qr_canvas_as_svg_path
+from qrcode_generator.xml_writer import XmlWriter
+from qrcode_generator.enum_types import DataMaskingPattern, ErrorCorrectionLevel
+from qrcode_generator.utilities import make_optimal_qrcode
 
 
 pi_10k = (
@@ -119,127 +115,39 @@ pi_10k = (
 )
 
 
-def write_example_kanji_encodings(
-        payload: str, filename: str, *,
-        colormap: Optional[str | dict] = None,
-        post_optimize: bool = False) -> None:
-    """Write QR code that represents Kanji characters using both UTF-8 and Kanji encoding.
+def write_qrcode_pi_as_svg(filename: str) -> None:
 
-    This routine uses a DataEncoder with explicitly specified encoding blocks.
-    """
-    de = DataEncoder(EncodingVariant.SMALL)
-    de.append_byte_mode_block("Kanji characters as Kanji mode block:\n\n".encode())
-    de.append_kanji_mode_block(payload)
-    de.append_byte_mode_block(
-        f"\n\nKanji characters as byte mode block with UTF-8 encoding:\n\n{payload}".encode())
-    qr_canvas = make_qr_code(de, 7, ErrorCorrectionLevel.L)
-    im = render_qrcode_as_pil_image(qr_canvas, colormap=colormap)
-    print(f"Saving {filename} ...")
-    im.save(filename)
-    if post_optimize:
-        optimize_png(filename)
+    version = 40
+    level = ErrorCorrectionLevel.L
+    pattern = DataMaskingPattern.PATTERN0
+    include_quiet_zone=True
 
+    s = pi_10k[:7082]
+    qr_canvas = make_optimal_qrcode(s, pattern=pattern, version_preference_list=[(version, level)], include_quiet_zone=include_quiet_zone)
 
-def write_bytemode_default_encoding_test(
-        filename: str, *,
-        colormap: Optional[str | dict] = None,
-        post_optimize: bool = False) -> None:
-    """Write QR code that represents Kanji characters using both UTF-8 and Kanji encoding.
+    with XmlWriter() as svg:
 
-    This routine uses a DataEncoder with explicitly specified encoding blocks.
-    """
-    de = DataEncoder(EncodingVariant.MEDIUM)
-    de.append_byte_mode_block(
-        b"The two-byte sequence {0xc2, 0xa9} is rendered by your decoder software like this: "
-        b"'\xc2\xa9'. "
-        b"If it renders as the two Japanese kana characters Tsu and U, JIS-8 is the default encoding, as prescribed by the 2000 edition of the standard. "
-        b"If it renders as two characters: A-circumflex followed by a copyright sign, ISO-8859-1 is the default encoding, as prescribed by the 2006, 2015, and 2024 editions of the standard. "
-        b"If it renders as a single copyright sign, UTF-8 is the default encoding, which is not compliant to any edition of the standard, but in practice it is what most modern decoders do."
-    )
+        with svg.write_container_tag("svg", {"viewBox": f"0 0 {qr_canvas.width} {qr_canvas.height}", "xmlns": "http://www.w3.org/2000/svg"}):
 
-    qr_canvas = make_qr_code(de, 17, ErrorCorrectionLevel.L)
-    im = render_qrcode_as_pil_image(qr_canvas, colormap=colormap)
-    print(f"Saving {filename} ...")
-    im.save(filename)
-    if post_optimize:
-        optimize_png(filename)
+            # Write white background.
+            svg.write_leaf_tag("rect", {"width": "100%", "height": "100%", "fill": "white"})
+
+            # Write black modules.
+            render_qr_canvas_as_svg_path(svg, qr_canvas, { "fill": "black" })
+
+    content = svg.get_content()
+    with open(filename, "w", encoding="utf-8") as fo:
+        fo.write(content)
 
 
 def main():
-
-    # Remove stale QR code example files.
-
-    for filename in glob.glob("qrcode_miscellaneous_*.png"):
-        print("Removing", filename, "...")
-        os.remove(filename)
-
-    colormap = 'default'
-    post_optimize = True
-
-    # pathological_payload = "#" + 184 * (15 * "A" + "#")
-    # pathological_payload = "#" + 1 * (5 * "A" + 6 * "0" + "#")
-    # pathological_payload = "#" + 5 * (4 * "A" + 5 * "0" + "#")
-    # print(f"String length {len(pathological_payload)}.")
-    # write_optimal_qrcode(
-    #     pathological_payload,
-    #     "example_pathological_payload.png",
-    #     version_preference_list=[(40, ErrorCorrectionLevel.L)],
-    #     colormap=colormap,
-    #     post_optimize=post_optimize
-    # )
-    # return
-
-    # This produces a QR code with an empty string.
-    write_optimal_qrcode(
-        "",
-        "qrcode_miscellaneous_empty.png",
-        colormap=colormap,
-        post_optimize=post_optimize
-    )
-
-    # This produces a QR code with the snowman character (\u2603) from UTF-8, written in a "bytes" block.
-    write_optimal_qrcode(
-        "☃",
-        "qrcode_miscellaneous_utf8_snowman.png",
-        colormap=colormap,
-        post_optimize=post_optimize
-    )
-
-    # A test to determine which interpretation is in effect.
-    write_bytemode_default_encoding_test(
-        "qrcode_miscellaneous_bytemode_default_encoding_test.png",
-        colormap=colormap,
-        post_optimize=post_optimize
-    )
-
-    # A simple example that uses a single Kanji block.
-    # The Kanji text says: "I don't understand Japanese."
-    write_optimal_qrcode(
-        "日本語はわかりません。",
-        "qrcode_miscellaneous_kanji.png",
-        colormap=colormap,
-        post_optimize=post_optimize
-    )
-
-    # An example where the same Kanji text is first rendered in Kanji mode, then later on in UTF-8 mode.
-    # The Kanji text says: "I don't understand Japanese."
-    write_example_kanji_encodings(
-        "日本語はわかりません。",
-        "qrcode_miscellaneous_kanji_encodings.png",
-        colormap=colormap,
-        post_optimize=post_optimize
-    )
-
-    # The most digits of Pi that can be stored into a QR code:
-    # "3." followed by 7080 digits after the decimal point.
-    write_optimal_qrcode(
-        pi_10k[:7082],
-        "qrcode_miscellaneous_pi_digits.png",
-        version_preference_list=[(40, ErrorCorrectionLevel.L)],
-        colormap=colormap,
-        post_optimize=post_optimize
-    )
-
+    write_qrcode_pi_as_svg("qrcode_pi.svg")
+    try:
+        subprocess.run(["rsvg-convert", "--format", "pdf", "--output", "qrcode_pi.pdf", "qrcode_pi.svg"], check=False)
+    except FileNotFoundError:
+        pass
+    else:
+        print("Wrote PDF file.")
 
 if __name__ == "__main__":
     main()
