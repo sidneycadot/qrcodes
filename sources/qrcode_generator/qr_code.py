@@ -314,6 +314,11 @@ class QRCodeDrawer:
 
         return positions
 
+    def erase_data_and_error_correction_bits(self) -> None:
+        """Useful for some low-level tests."""
+        for (i, j) in self.data_and_error_correction_positions:
+            self.set_module_value(i, j, ModuleValue.DATA_ERC_0)
+
     def place_data_and_error_correction_bits(self, de: DataEncoder, level: ErrorCorrectionLevel) -> None:
 
         channel_bits = de.get_channel_bits(self.version, level)
