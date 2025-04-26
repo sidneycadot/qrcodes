@@ -139,6 +139,31 @@ def write_example_kanji_encodings(
         optimize_png(filename)
 
 
+def write_bytemode_default_encoding_test(
+        filename: str, *,
+        colormap: Optional[str | dict] = None,
+        post_optimize: bool = False) -> None:
+    """Write QR code that represents Kanji characters using both UTF-8 and Kanji encoding.
+
+    This routine uses a DataEncoder with explicitly specified encoding blocks.
+    """
+    de = DataEncoder(EncodingVariant.MEDIUM)
+    de.append_byte_mode_block(
+        b"The two-byte sequence {0xc2, 0xa9} is rendered by your decoder software like this: "
+        b"'\xc2\xa9'. "
+        b"If it renders as the two Japanese kana characters Tsu and U, JIS-8 is the default encoding, as prescribed by the 2000 edition of the standard. "
+        b"If it renders as two characters: A-circumflex followed by a copyright sign, ISO-8859-1 is the default encoding, as prescribed by the 2006, 2015, and 2024 editions of the standard. "
+        b"If it renders as a single copyright sign, UTF-8 is the default encoding, which is not compliant to any edition of the standard, but in practice it is what most modern decoders do."
+    )
+
+    qr_canvas = make_qr_code(de, 17, ErrorCorrectionLevel.L)
+    im = render_qrcode_as_pil_image(qr_canvas, colormap=colormap)
+    print(f"Saving {filename} ...")
+    im.save(filename)
+    if post_optimize:
+        optimize_png(filename)
+
+
 def main():
 
     # Remove stale QR code example files.
@@ -175,6 +200,13 @@ def main():
     write_optimal_qrcode(
         "☃",
         "qrcode_miscellaneous_utf8_snowman.png",
+        colormap=colormap,
+        post_optimize=post_optimize
+    )
+
+    # A test to determine which interpretation is in effect.
+    write_bytemode_default_encoding_test(
+        "qrcode_miscellaneous_bytemode_default_encoding_test.png",
         colormap=colormap,
         post_optimize=post_optimize
     )
