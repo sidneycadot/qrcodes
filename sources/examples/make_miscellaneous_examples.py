@@ -4,11 +4,10 @@
 
 import glob
 import os
-import textwrap
 from typing import Optional
 
 from qrcode_generator.data_encoder import DataEncoder
-from qrcode_generator.enum_types import ErrorCorrectionLevel, EncodingVariant, DataMaskingPattern
+from qrcode_generator.enum_types import ErrorCorrectionLevel, EncodingVariant
 from qrcode_generator.qr_code import make_qr_code
 from qrcode_generator.render_pil import render_qrcode_as_pil_image
 from qrcode_generator.utilities import write_optimal_qrcode, optimize_png
