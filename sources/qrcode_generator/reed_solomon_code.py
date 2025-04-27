@@ -3,21 +3,21 @@
 
 def make_gf8_multiplication_tables():
 
-    exptable = 255 * [0]
-    logtable = 255 * [0]
+    exponents_table = 255 * [0]
+    logarithm_table = 255 * [0]
 
     element = 1
     exponent = 0
 
     while exponent < 255:
-        exptable[exponent] = element
-        logtable[element - 1] = exponent
+        exponents_table[exponent] = element
+        logarithm_table[element - 1] = exponent
         element <<= 1
         if element & 0b100000000:
             element ^= 0b100011101
         exponent += 1
 
-    return exptable, logtable
+    return exponents_table, logarithm_table
 
 
 class GF8:
@@ -31,17 +31,17 @@ class GF8:
     Multiplication is implemented by the 'multiply_elements' method.
     """
 
-    exptable, logtable = make_gf8_multiplication_tables()
+    exponents_table, logarithm_table = make_gf8_multiplication_tables()
 
     @staticmethod
     def multiply_elements(a, b):
         if (a == 0) or (b == 0):
             return 0
-        log_a = GF8.logtable[a - 1]
-        log_b = GF8.logtable[b - 1]
+        log_a = GF8.logarithm_table[a - 1]
+        log_b = GF8.logarithm_table[b - 1]
         log_ab = (log_a + log_b) % 255
 
-        return GF8.exptable[log_ab]
+        return GF8.exponents_table[log_ab]
 
 
 def multiply_polynomial(pa: list[int], pb: list[int]) -> list[int]:
@@ -117,7 +117,7 @@ def poly_string(poly: list[int], prepend_prefix_term: bool) -> str:
 
     for (k, c) in enumerate(poly):
         if c != 0:
-            term = (GF8.logtable[c - 1], n - k - 1)
+            term = (GF8.logarithm_table[c - 1], n - k - 1)
             terms.append(term)
 
     term_strings = []
