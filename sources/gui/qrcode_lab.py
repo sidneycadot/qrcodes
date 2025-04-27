@@ -4,7 +4,10 @@ from typing import NamedTuple
 
 from PySide6.QtCore import QRectF, Qt
 from PySide6.QtGui import QPixmap, QPainter, QColorConstants, QPen, QBrush, QFont
-from PySide6.QtWidgets import QApplication, QMainWindow, QGraphicsView, QGraphicsScene, QGraphicsItem, QHBoxLayout, QWidget, QVBoxLayout, QSpinBox
+from PySide6.QtWidgets import QApplication, QMainWindow, QGraphicsView, QGraphicsScene, QGraphicsItem, QHBoxLayout, QWidget, QVBoxLayout, QSpinBox, \
+    QGroupBox, QGridLayout, QLabel
+
+from gui.layout_utilities import hbox_layout, vbox_layout, grid_layout, groupbox
 
 
 class PointXY(NamedTuple):
@@ -86,7 +89,7 @@ class MyGrid(QGraphicsItem):
         o_to_h = PointXY(self.active_parameters.h.x - origin.x, self.active_parameters.h.y - origin.y)
         o_to_v = PointXY(self.active_parameters.v.x - origin.x, self.active_parameters.v.y - origin.y)
 
-        radius = 4.0
+        radius = 3
         diameter = 2.0 * radius
 
         for i in range(n):
@@ -106,12 +109,12 @@ class MyGrid(QGraphicsItem):
         self.active_parameters = parameters
         self.update()
 
+
 class MyCentralWidget(QWidget):
 
     def __init__(self):
         super().__init__()
 
-        hlayout = QHBoxLayout()
 
         pixmap = QPixmap()
         pixmap.load("example_qrcode_oralb.jpg")
@@ -143,29 +146,40 @@ class MyCentralWidget(QWidget):
         self.v_grabber = v_grabber
         self.grid = grid
 
-        scene.changed.connect(self.handle_scene_change)
+        scene.changed.connect(self.handle_change)
 
         scene_view_widget = QGraphicsView()
         scene_view_widget.setScene(scene)
 
-        hlayout.addWidget(scene_view_widget)
-
-        vlayout = QVBoxLayout()
-
         version_spinbox = QSpinBox()
         version_spinbox.setRange(1, 40)
+        version_spinbox.valueChanged.connect(self.handle_change)
 
         self.version_spinbox = version_spinbox
 
-        vlayout.addWidget(version_spinbox)
+        toplevel_layout = vbox_layout(
+            '*stretch*',
+            hbox_layout(
+                '*stretch*',
+                scene_view_widget,
+                '*stretch*',
+                vbox_layout(
+                    groupbox(
+                        "Settings",
+                        grid_layout(
+                            ["version", version_spinbox]
+                        )
+                    ),
+                    '*stretch*'
+                ),
+            '*stretch*'
+            ),
+            '*stretch*'
+        )
 
-        hlayout.addLayout(vlayout)
+        self.setLayout(toplevel_layout)
 
-        self.setLayout(hlayout)
-
-    def handle_scene_change(self):
-        print("scene changed!!!")
-        version = self.version_spinbox.value()
+    def handle_change(self):
 
         parameters = GridParameters(
             origin=PointXY(self.o_grabber.x(), self.o_grabber.y()),
@@ -173,10 +187,9 @@ class MyCentralWidget(QWidget):
             v=PointXY(self.v_grabber.x(), self.v_grabber.y()),
             version=self.version_spinbox.value()
         )
+
         print(parameters)
-
         self.grid.set_grid_parameters(parameters)
-
 
 
 class MainWindow(QMainWindow):
