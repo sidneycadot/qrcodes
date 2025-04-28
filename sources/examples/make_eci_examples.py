@@ -1,6 +1,6 @@
 #! /usr/bin/env -S python3 -B
 
-"""Write example QR codes as PNG image files."""
+"""Write example QR codes with explicit ECI designators as PNG image files."""
 
 import glob
 import os
@@ -10,7 +10,7 @@ from qrcode_generator.data_encoder import DataEncoder
 from qrcode_generator.enum_types import ErrorCorrectionLevel, EncodingVariant
 from qrcode_generator.qr_code import make_qr_code
 from qrcode_generator.render_pil import render_qrcode_as_pil_image
-from qrcode_generator.utilities import write_optimal_qrcode, optimize_png
+from qrcode_generator.utilities import optimize_png
 
 
 def write_eci_test(
@@ -56,7 +56,7 @@ def main():
         payload="This is a 'codepage 437' encoded text, using ECI designator value 0. Here's a greek lowercase sigma: 'σ'.",
         encoding="cp437",
         eci_designator_value = 0,
-        version=version,
+        version=10,
         level=level,
         colormap=colormap,
         post_optimize=post_optimize
@@ -67,7 +67,7 @@ def main():
         payload="This is an ISO-6659-1 encoded text, using ECI designator value 1. Here's a copyright sign: '©'.",
         encoding="iso-8859-1",
         eci_designator_value = 1,
-        version=version,
+        version=9,
         level=level,
         colormap=colormap,
         post_optimize=post_optimize
@@ -78,7 +78,7 @@ def main():
         payload="This is a 'codepage 437' encoded text, using ECI designator value 2. Here's a greek lowercase sigma: 'σ'.",
         encoding="cp437",
         eci_designator_value = 2,
-        version=version,
+        version=10,
         level=level,
         colormap=colormap,
         post_optimize=post_optimize
@@ -89,18 +89,18 @@ def main():
         payload="This is an ISO-6659-1 encoded text, using ECI designator value 3. Here's a copyright sign: '©'.",
         encoding="iso-8859-1",
         eci_designator_value = 3,
-        version=version,
+        version=9,
         level=level,
         colormap=colormap,
         post_optimize=post_optimize
     )
 
     write_eci_test(
-        filename="qrcode_eci_utf18_eci_26.png",
+        filename="qrcode_eci_utf8_eci_26.png",
         payload="This is a UTF-8 encoded text, using ECI designator value 26.",
         encoding="utf_8",
         eci_designator_value = 26,
-        version=version,
+        version=7,
         level=level,
         colormap=colormap,
         post_optimize=post_optimize
@@ -109,22 +109,20 @@ def main():
     write_eci_test(
         filename="qrcode_eci_ascii_eci_27.png",
         payload="This is an ASCII encoded text, using ECI designator value 27.",
-        encoding="utf_8",
+        encoding="ascii",
         eci_designator_value = 27,
-        version=version,
+        version=7,
         level=level,
         colormap=colormap,
         post_optimize=post_optimize
     )
-
-    version = 12
 
     write_eci_test(
         filename="qrcode_eci_utf16be_eci_25.png",
         payload="This is a UTF-16 (big endian) encoded text, using ECI designator value 25.",
         encoding="utf_16_be",
         eci_designator_value = 25,
-        version=version,
+        version=12,
         level=level,
         colormap=colormap,
         post_optimize=post_optimize
@@ -135,20 +133,18 @@ def main():
         payload="This is a UTF-16 (little endian) encoded text, using ECI designator value 33.",
         encoding="utf_16_le",
         eci_designator_value = 33,
-        version=version,
+        version=12,
         level=level,
         colormap=colormap,
         post_optimize=post_optimize
     )
-
-    version = 18
 
     write_eci_test(
         filename="qrcode_eci_utf32be_eci_34.png",
         payload="This is a UTF-32 (big endian) encoded text, using ECI designator value 34.",
         encoding="utf_32_be",
         eci_designator_value=34,
-        version=version,
+        version=18,
         level=level,
         colormap=colormap,
         post_optimize=post_optimize
@@ -159,7 +155,7 @@ def main():
         payload="This is a UTF-32 (little endian) encoded text, using ECI designator value 35.",
         encoding="utf_32_le",
         eci_designator_value=35,
-        version=version,
+        version=18,
         level=level,
         colormap=colormap,
         post_optimize=post_optimize
