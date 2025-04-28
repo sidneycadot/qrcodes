@@ -6,13 +6,13 @@ from typing import Optional
 
 from .qr_code import QRCodeCanvas, ModuleValue
 
-pil_imported_succesfully = False
+pil_imported_successfully = False
 try:
     from PIL import Image, ImageDraw
 except ModuleNotFoundError:
     pass
 else:
-    pil_imported_succesfully = True
+    pil_imported_successfully = True
 
 
 colormap_default = {
@@ -37,10 +37,10 @@ colormap_default = {
 }
 
 colormap_color = {
-    ModuleValue.QUIET_ZONE_0: '#ffffff',
+    ModuleValue.QUIET_ZONE_0: '#fff0f0',
     ModuleValue.FINDER_PATTERN_0: '#ffcccc',
     ModuleValue.FINDER_PATTERN_1: '#ff0000',
-    ModuleValue.SEPARATOR_0: '#ffffff',
+    ModuleValue.SEPARATOR_0: '#ffcccc',
     ModuleValue.TIMING_PATTERN_0: '#ffcccc',
     ModuleValue.TIMING_PATTERN_1: '#ff0000',
     ModuleValue.ALIGNMENT_PATTERN_0: '#ffcccc',
@@ -67,7 +67,7 @@ def render_qrcode_as_pil_image(
 
     """Render QRCodeCanvas as a PIL image."""
 
-    if not pil_imported_succesfully:
+    if not pil_imported_successfully:
         raise RuntimeError("The PIL package not available.")
 
     if mode is None:
