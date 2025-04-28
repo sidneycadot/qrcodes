@@ -149,11 +149,10 @@ def write_bytemode_default_encoding_test(
     """
     de = DataEncoder(EncodingVariant.MEDIUM)
     de.append_byte_mode_block(
-        b"The two-byte sequence {0xc2, 0xa9} is rendered by your decoder software like this: "
-        b"'\xc2\xa9'. "
-        b"If it renders as the two Japanese kana characters Tsu and U, JIS-8 is the default encoding, as prescribed by the 2000 edition of the standard. "
-        b"If it renders as two characters: A-circumflex followed by a copyright sign, ISO-8859-1 is the default encoding, as prescribed by the 2006, 2015, and 2024 editions of the standard. "
-        b"If it renders as a single copyright sign, UTF-8 is the default encoding, which is not compliant to any edition of the standard, but in practice it is what most modern decoders do."
+        b"The two-byte sequence {0xc2, 0xa9} is rendered by your decoder software like this: '\xc2\xa9'.\n\n"
+        b"If it renders as the two Japanese kana characters Tsu and U, the default encoding is JIS-8, as prescribed by the 2000 edition of the standard.\n\n"
+        b"If it renders as two characters: an A-circumflex followed by a copyright sign, the default encoding is ISO-8859-1, as prescribed by the 2006, 2015, and 2024 editions of the standard.\n\n"
+        b"If it renders as a single copyright sign,  the default encoding is UTF-8, which is not compliant with any edition of the standard. However, in practice, this is what most modern decoders do."
     )
 
     qr_canvas = make_qr_code(de, 17, ErrorCorrectionLevel.L)
@@ -172,7 +171,7 @@ def main():
         print("Removing", filename, "...")
         os.remove(filename)
 
-    colormap = 'default'
+    colormap = 'color'
     post_optimize = True
 
     # pathological_payload = "#" + 184 * (15 * "A" + "#")
