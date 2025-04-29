@@ -1,6 +1,6 @@
 #! /usr/bin/env -S python3 -B
 
-"""Write example QR codes as PNG image files."""
+"""Write QR code reproducing the QR code as found on a commercial blister as a PNG image file."""
 
 import glob
 import os
