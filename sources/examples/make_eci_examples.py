@@ -65,10 +65,11 @@ def write_extended_ascii_test(
         except UnicodeDecodeError:
             pass
         else:
-            s = f"'{c}'"
+            assert len(c) == 1
+            s = f"{octet_value}: '{c}'\n"
             slist.append(s)
 
-    payload = f"{encoding_description} is encoded using ECI designator value {eci_designator_value}, and can represent the following {len(slist)} non-ascii characters: " + ", ".join(slist) + "."
+    payload = f"{encoding_description} is encoded using ECI designator value {eci_designator_value}, and can represent the following {len(slist)} non-ascii characters:\n\n" + "".join(slist) + "."
     payload_octets = payload.encode(encoding)
 
     # Find the smallest QR code that can encode the octets.
@@ -83,7 +84,7 @@ def write_extended_ascii_test(
     else:
         raise RuntimeError()
 
-    filename = f"qrcode_eci_{eci_designator_value}_{encoding}.png"
+    filename = f"qrcode_eci_{eci_designator_value}_{encoding}_{version}{level.name}.png"
 
     write_eci_test(
         filename = filename,
@@ -97,14 +98,29 @@ def write_extended_ascii_test(
 
 def main():
 
-    # Remove stale QR code example files.
+    # Remove stale QR code ECI example files.
 
     for filename in glob.glob("qrcode_eci_*.png"):
         print("Removing", filename, "...")
         os.remove(filename)
 
-    colormap = 'color'
+    # Parameters.
+
+    colormap = 'default'
     post_optimize = True
+
+    # Explicit ASCII encoding.
+
+    write_eci_test(
+        filename="qrcode_eci_27_ascii.png",
+        payload="This is an ASCII encoded text, using ECI designator value 27.",
+        encoding="ascii",
+        eci_designator_value = 27,
+        colormap=colormap,
+        post_optimize=post_optimize
+    )
+
+    # Extended-ASCII encodings.
 
     extended_ascii_table = [
         ("cp437"       , "Codepage-437", 0),
@@ -136,16 +152,7 @@ def main():
             post_optimize
         )
 
-    level = ErrorCorrectionLevel.H
-
-    write_eci_test(
-        filename="qrcode_eci_25_utf16be.png",
-        payload="This is a UTF-16 (big endian) encoded text, using ECI designator value 25.",
-        encoding="utf_16_be",
-        eci_designator_value = 25,
-        colormap=colormap,
-        post_optimize=post_optimize
-    )
+    # Unicode encodings.
 
     write_eci_test(
         filename="qrcode_eci_26_utf8.png",
@@ -157,10 +164,10 @@ def main():
     )
 
     write_eci_test(
-        filename="qrcode_eci_27_ascii.png",
-        payload="This is an ASCII encoded text, using ECI designator value 27.",
-        encoding="ascii",
-        eci_designator_value = 27,
+        filename="qrcode_eci_25_utf16be.png",
+        payload="This is a UTF-16 (big endian) encoded text, using ECI designator value 25.",
+        encoding="utf_16_be",
+        eci_designator_value = 25,
         colormap=colormap,
         post_optimize=post_optimize
     )
