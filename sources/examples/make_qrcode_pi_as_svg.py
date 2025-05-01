@@ -179,7 +179,11 @@ def write_qrcode_pi_as_svg(version: int, level: ErrorCorrectionLevel, pattern: D
 
     print(f"Writing code {version}-{level.name} with {number_of_pi_characters} characters of pi ...")
 
-    with XmlWriter() as svg:
+    filename_prefix = f"qrcode_pi_{version}{level.name}p{pattern.name[-1]}_{number_of_pi_characters}_digits"
+    filename_svg = filename_prefix + ".svg"
+    filename_pdf = filename_prefix + ".pdf"
+
+    with XmlWriter(filename_svg) as svg:
 
         with svg.write_container_tag("svg", {"viewBox": f"0 0 {qr_canvas.width} {qr_canvas.height}", "xmlns": "http://www.w3.org/2000/svg"}):
 
@@ -188,14 +192,6 @@ def write_qrcode_pi_as_svg(version: int, level: ErrorCorrectionLevel, pattern: D
 
             # Render the black modules.
             render_qr_canvas_as_svg_path(svg, qr_canvas, { "fill": "black" })
-
-    filename_prefix = f"qrcode_pi_{version}{level.name}p{pattern.name[-1]}_{number_of_pi_characters}_digits"
-    filename_svg = filename_prefix + ".svg"
-    filename_pdf = filename_prefix + ".pdf"
-
-    content = svg.get_content()
-    with open(filename_svg, "w", encoding="utf-8") as fo:
-        fo.write(content)
 
     # Try to write a PDF file. If rsvg-convert is not available, this is a no-op.
     try:

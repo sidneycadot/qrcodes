@@ -13,7 +13,7 @@ from examples.make_qrcode_pi_as_svg import number_of_pi_characters_that_can_be_r
 
 def write_svg_qrcode_poster(filename: str) -> None:
 
-    with XmlWriter() as svg:
+    with XmlWriter(filename) as svg:
 
         with svg.write_container_tag("svg", {"viewBox": "0 0 5400 5400", "xmlns": "http://www.w3.org/2000/svg"}):
 
@@ -61,10 +61,6 @@ def write_svg_qrcode_poster(filename: str) -> None:
                                             "fill": "black",
                                             "transform": f"translate({(pattern.value - DataMaskingPattern.PATTERN0.value) * 1.2:.9f} 0) scale({1.0 / qr_canvas.width:.9f})"
                                         })
-
-    content = svg.get_content()
-    with open(filename, "w", encoding="utf-8") as fo:
-        fo.write(content)
 
 
 def main():
