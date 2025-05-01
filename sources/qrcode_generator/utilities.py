@@ -21,8 +21,8 @@ def make_default_version_preference_list() -> list[tuple[int, ErrorCorrectionLev
 
 
 def make_optimal_qrcode(
-            payload: str,
             *,
+            payload: str,
             include_quiet_zone: Optional[bool] = None,
             pattern: Optional[DataMaskingPattern] = None,
             version_preference_list: Optional[list[tuple[int, ErrorCorrectionLevel]]] = None,
@@ -77,9 +77,9 @@ def optimize_png(filename: str) -> None:
 
 
 def write_optimal_qrcode(
+        *,
         payload: str,
         filename: str,
-        *,
         include_quiet_zone: Optional[bool] = None,
         pattern: Optional[DataMaskingPattern] = None,
         version_preference_list: Optional[list[tuple[int, ErrorCorrectionLevel]]] = None,
@@ -94,7 +94,7 @@ def write_optimal_qrcode(
         post_optimize = False
 
     qr_canvas = make_optimal_qrcode(
-        payload,
+        payload=payload,
         include_quiet_zone=include_quiet_zone,
         pattern=pattern,
         version_preference_list=version_preference_list,

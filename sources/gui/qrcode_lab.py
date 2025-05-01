@@ -4,8 +4,7 @@ from typing import NamedTuple
 
 from PySide6.QtCore import QRectF, Qt
 from PySide6.QtGui import QPixmap, QPainter, QColorConstants, QPen, QBrush, QFont
-from PySide6.QtWidgets import QApplication, QMainWindow, QGraphicsView, QGraphicsScene, QGraphicsItem, QHBoxLayout, QWidget, QVBoxLayout, QSpinBox, \
-    QGroupBox, QGridLayout, QLabel
+from PySide6.QtWidgets import QApplication, QMainWindow, QGraphicsView, QGraphicsScene, QGraphicsItem, QWidget, QSpinBox
 
 from gui.layout_utilities import hbox_layout, vbox_layout, grid_layout, groupbox
 
@@ -33,12 +32,8 @@ class MyGrabber(QGraphicsItem):
     def paint(self, painter: QPainter, option, widget):
 
         pen1 = QPen(Qt.NoPen)
-        #pen1.setColor(QColorConstants.Red)
-        #pen1.setWidthF(5.0)
-
-        brush1 = QBrush()
+        brush1 = QBrush(Qt.SolidPattern)
         brush1.setColor(QColorConstants.Yellow)
-        brush1.setStyle(Qt.SolidPattern)
 
         painter.setPen(pen1)
         painter.setBrush(brush1)
@@ -81,11 +76,9 @@ class MyGrid(QGraphicsItem):
         painter.setPen(pen)
         painter.setBrush(brush)
 
-        print("Drawing...")
-
         n = 17 + 4 * self.active_parameters.version
 
-        origin =  self.active_parameters.origin
+        origin = self.active_parameters.origin
         o_to_h = PointXY(self.active_parameters.h.x - origin.x, self.active_parameters.h.y - origin.y)
         o_to_v = PointXY(self.active_parameters.v.x - origin.x, self.active_parameters.v.y - origin.y)
 
@@ -114,7 +107,6 @@ class MyCentralWidget(QWidget):
 
     def __init__(self):
         super().__init__()
-
 
         pixmap = QPixmap()
         pixmap.load("example_qrcode_oralb.jpg")
@@ -209,10 +201,12 @@ class Application(QApplication):
         main_window.show()
         self._main_window = main_window
 
+
 def main():
     app = Application()
     exitcode = app.exec()
     print(exitcode)
+
 
 if __name__ == "__main__":
     main()

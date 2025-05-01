@@ -63,9 +63,11 @@ def run_testcase(testcase_name: str, de: DataEncoder, version: int, level: Error
 
 def main():
 
+    # Note: the 2006 and 2015 editions of the standard uses PATTERN5 here, while the 2024 version
+    # of the standard uses PATTERN6.
     de = DataEncoder(EncodingVariant.SMALL)
     de.append_byte_mode_block(b"QR Code Symbol")
-    run_testcase("fig_1_page_7", de, 1, ErrorCorrectionLevel.M, DataMaskingPattern.PATTERN5)
+    run_testcase("fig_1_page_7", de, 1, ErrorCorrectionLevel.M, DataMaskingPattern.PATTERN6)
 
     de = DataEncoder(EncodingVariant.SMALL)
     de.append_alphanumeric_mode_block("ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ")
