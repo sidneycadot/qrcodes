@@ -1,6 +1,6 @@
 """Generate all examples."""
+
 import base64
-import glob
 from typing import NamedTuple
 
 import make_iso18004_examples
@@ -23,17 +23,21 @@ def main():
     include_quiet_zone=False
 
     example_collections = [
-        #make_iso18004_examples.main()
-        #make_eci_examples.main()
         ExampleCollection(
             description = "Application Examples",
             filenames = make_application_examples.render(include_quiet_zone, colormap, post_optimize)
         ),
         ExampleCollection(
-            description = "Miscellaneous Examples",
-            filenames = make_miscellaneous_examples.render(include_quiet_zone, colormap, post_optimize)
+            description="Miscellaneous Examples",
+            filenames=make_miscellaneous_examples.render(include_quiet_zone, colormap, post_optimize)
+        ),
+        ExampleCollection(
+            description="ISO-18004 Examples",
+            filenames=make_iso18004_examples.render(include_quiet_zone, colormap, post_optimize)
         )
     ]
+
+    # Generate HTML file.
 
     with XmlWriter("examples.html") as html:
         with html.write_container_tag("html"):
