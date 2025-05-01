@@ -22,7 +22,7 @@ data_masking_pattern_encoding = {
     DataMaskingPattern.PATTERN7: 7
 }
 
-# Number of bits in the character count indicator as specified in Table 3 of ISO/IEC 18004:2015(E).
+# The umber of bits in the character count that follows the 4-bit mode indicator as specified in Table 3 of ISO/IEC 18004:2015(E).
 
 count_bits_table = {
     EncodingVariant.SMALL: {

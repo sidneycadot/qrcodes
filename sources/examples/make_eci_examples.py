@@ -15,7 +15,7 @@ from qrcode_generator.render_pil import render_qrcode_as_pil_image
 from qrcode_generator.utilities import optimize_png
 
 
-def write_eci_test(
+def write_eci_test(*,
         filename: str,
         payload: str,
         encoding: str,
@@ -35,7 +35,7 @@ def write_eci_test(
         if 8 * len(payload_octets) <= bits_available:
             break
     else:
-        raise RuntimeError("Cannot encode the string with an ECI prefix (too big).")
+        raise RuntimeError("Cannot encode the string with an ECI designator prefix (too big).")
 
     de = DataEncoder(EncodingVariant.from_version(version))
     de.append_eci_designator(eci_designator_value),
@@ -49,12 +49,13 @@ def write_eci_test(
         optimize_png(filename)
 
 
-def write_extended_ascii_test(
+def write_extended_ascii_test(*,
         encoding: str,
         encoding_description: str,
         eci_designator_value: int,
         colormap: Optional[str | dict] = None,
         post_optimize: bool = False) -> None:
+    """Write QR code using an ECI code for an extended ASCII encoding."""
 
     slist = []
 
@@ -69,7 +70,7 @@ def write_extended_ascii_test(
             s = f"{octet_value}: '{c}'\n"
             slist.append(s)
 
-    payload = f"{encoding_description} is encoded using ECI designator value {eci_designator_value}, and can represent the following {len(slist)} non-ascii characters:\n\n" + "".join(slist) + "."
+    payload = f"{encoding_description} is encoded using ECI designator value {eci_designator_value}, and can represent the following {len(slist)} non-ascii characters:\n\n{''.join(slist)}."
     payload_octets = payload.encode(encoding)
 
     # Find the smallest QR code that can encode the octets.
@@ -145,11 +146,11 @@ def main():
 
     for (encoding, encoding_description, eci_designator_value) in extended_ascii_table:
         write_extended_ascii_test(
-            encoding,
-            encoding_description,
-            eci_designator_value,
-            colormap,
-            post_optimize
+            encoding=encoding,
+            encoding_description=encoding_description,
+            eci_designator_value=eci_designator_value,
+            colormap=colormap,
+            post_optimize=post_optimize
         )
 
     # Unicode encodings.
