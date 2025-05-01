@@ -413,48 +413,56 @@ class QRCodeDrawer:
 
         for i in range(self.height):
             b.clear()
-            #b.append(0)
-            #b.append(0)
-            #b.append(0)
-            #b.append(0)
+            b.append(0)
+            b.append(0)
+            b.append(0)
+            b.append(0)
             for j in range(self.width):
                 value = self.get_module_value(i, j) % 2
                 b.append(value)
-            #b.append(0)
-            #b.append(0)
-            #b.append(0)
-            #b.append(0)
+            b.append(0)
+            b.append(0)
+            b.append(0)
+            b.append(0)
 
-            #assert len(b) == self.width + 8
+            assert len(b) == self.width + 8
 
             idx = 0
             while True:
                 idx = b.find(pattern, idx)
                 if idx == -1:
                     break
-                #before = all(b[idx-k-1] == 0 for k in range(4))
-                #after = all(b[idx+7+k] == 0 for k in range(4))
-                #if before or after:
-                occurrences += 1
+                before = all(b[idx-k-1] == 0 for k in range(4))
+                after = all(b[idx+7+k] == 0 for k in range(4))
+                if before or after:
+                    occurrences += 1
                 idx += 1
 
         for j in range(self.width):
             b.clear()
+            b.append(0)
+            b.append(0)
+            b.append(0)
+            b.append(0)
             for i in range(self.height):
                 value = self.get_module_value(i, j) % 2
                 b.append(value)
+            b.append(0)
+            b.append(0)
+            b.append(0)
+            b.append(0)
 
-            #assert len(b) == self.height + 8
+            assert len(b) == self.height + 8
 
             idx = 0
             while True:
                 idx = b.find(pattern, idx)
                 if idx == -1:
                     break
-                # before = all(b[idx-k-1] == 0 for k in range(4))
-                # after = all(b[idx+7+k] == 0 for k in range(4))
-                # if before or after:
-                occurrences += 1
+                before = all(b[idx-k-1] == 0 for k in range(4))
+                after = all(b[idx+7+k] == 0 for k in range(4))
+                if before or after:
+                    occurrences += 1
                 idx += 1
 
         contribution_3 = 40 * occurrences
