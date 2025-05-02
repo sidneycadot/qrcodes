@@ -12,14 +12,14 @@ from qrcode_generator.enum_types import ErrorCorrectionLevel, EncodingVariant, C
 from qrcode_generator.lookup_tables import version_specification_table, count_bits_table
 from qrcode_generator.qr_code import make_qr_code
 from qrcode_generator.render_pil import render_qrcode_as_pil_image
-from qrcode_generator.utilities import optimize_png
+from qrcode_generator.utilities import optimize_png, save_qrcode_as_png_file, QRCodePngFileDescriptor
 
 
 def write_eci_data_test(*,
         filename: str,
         payload: bytes,
         colormap: Optional[str | dict] = None,
-        post_optimize: bool = False) -> None:
+        post_optimize: bool = False) -> QRCodePngFileDescriptor:
     """Write QR code using an ECI designator combined with a specific encoding."""
 
     for version, level in itertools.product(range(1, 41), reversed(ErrorCorrectionLevel)):
@@ -41,11 +41,13 @@ def write_eci_data_test(*,
     de.append_byte_mode_block(payload)
 
     qr_canvas = make_qr_code(de, version, level)
-    im = render_qrcode_as_pil_image(qr_canvas, colormap=colormap)
-    print(f"Saving {filename} ...")
-    im.save(filename)
-    if post_optimize:
-        optimize_png(filename)
+
+    return save_qrcode_as_png_file(
+        filename=filename,
+        canvas=qr_canvas,
+        colormap=colormap,
+        post_optimize=post_optimize
+    )
 
 
 def main():

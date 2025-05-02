@@ -55,6 +55,9 @@ class QRCodeCanvas:
     """
 
     def __init__(self, width: int, height: int):
+        self.version: Optional[int] = None
+        self.level: Optional[ErrorCorrectionLevel] = None
+        self.pattern: Optional[DataMaskingPattern] = None
         self.width = width
         self.height = height
         self.modules = bytearray([ModuleValue.INDETERMINATE]) * (width * height)
@@ -553,5 +556,9 @@ def make_qr_code(
     # Fill in the definitive version and format information.
     qr.place_version_information_patterns()
     qr.place_format_information_patterns(level, pattern)
+
+    qr.canvas.version = version
+    qr.canvas.level = level
+    qr.canvas.pattern = pattern
 
     return qr.canvas

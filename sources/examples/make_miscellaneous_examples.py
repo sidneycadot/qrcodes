@@ -9,9 +9,9 @@ from typing import Optional
 from qrcode_generator.data_encoder import DataEncoder
 from qrcode_generator.enum_types import ErrorCorrectionLevel, EncodingVariant
 from qrcode_generator.qr_code import make_qr_code
-from qrcode_generator.render_pil import render_qrcode_as_pil_image
-from qrcode_generator.utilities import write_optimal_qrcode, optimize_png
+from qrcode_generator.utilities import write_optimal_qrcode, QRCodePngFileDescriptor, save_qrcode_as_png_file
 
+from rendered_example import RenderedExample
 
 pi_10k = (
     "3."
@@ -129,10 +129,10 @@ def remove_stale_files() -> None:
 def write_example_kanji_encodings(
         *,
         payload: str,
-        filename: str,
+        png_filename: str,
         include_quiet_zone: Optional[bool] = None,
         colormap: Optional[str | dict] = None,
-        post_optimize: bool = False) -> None:
+        post_optimize: bool = False) -> QRCodePngFileDescriptor:
     """Write QR code that represents Kanji characters using both UTF-8 and Kanji encoding.
 
     This routine uses a DataEncoder with explicitly specified encoding blocks.
@@ -143,19 +143,21 @@ def write_example_kanji_encodings(
     de.append_byte_mode_block(
         f"\n\nKanji characters as byte mode block with UTF-8 encoding:\n\n{payload}".encode())
     qr_canvas = make_qr_code(de, 7, ErrorCorrectionLevel.L, include_quiet_zone=include_quiet_zone)
-    im = render_qrcode_as_pil_image(qr_canvas, colormap=colormap)
-    print(f"Saving {filename} ...")
-    im.save(filename)
-    if post_optimize:
-        optimize_png(filename)
+
+    return save_qrcode_as_png_file(
+        png_filename=png_filename,
+        canvas=qr_canvas,
+        colormap=colormap,
+        post_optimize=post_optimize
+    )
 
 
 def write_bytemode_default_encoding_test(
         *,
-        filename: str,
+        png_filename: str,
         include_quiet_zone: Optional[bool] = None,
         colormap: Optional[str | dict] = None,
-        post_optimize: bool = False) -> None:
+        post_optimize: bool = False) -> QRCodePngFileDescriptor:
     """Write QR code that represents Kanji characters using both UTF-8 and Kanji encoding.
 
     This routine uses a DataEncoder with explicitly specified encoding blocks.
@@ -169,101 +171,95 @@ def write_bytemode_default_encoding_test(
     )
 
     qr_canvas = make_qr_code(de, 17, ErrorCorrectionLevel.L, include_quiet_zone=include_quiet_zone)
-    im = render_qrcode_as_pil_image(qr_canvas, colormap=colormap)
-    print(f"Saving {filename} ...")
-    im.save(filename)
-    if post_optimize:
-        optimize_png(filename)
 
-
-def render(include_quiet_zone: bool, colormap: str, post_optimize: bool) -> list[str]:
-    # Remove stale QR code example files.
-
-    # pathological_payload = "#" + 184 * (15 * "A" + "#")
-    # pathological_payload = "#" + 1 * (5 * "A" + 6 * "0" + "#")
-    # pathological_payload = "#" + 5 * (4 * "A" + 5 * "0" + "#")
-    # print(f"String length {len(pathological_payload)}.")
-    # write_optimal_qrcode(
-    #     pathological_payload,
-    #     "example_pathological_payload.png",
-    #     version_preference_list=[(40, ErrorCorrectionLevel.L)],
-    #     colormap=colormap,
-    #     post_optimize=post_optimize
-    # )
-    # return
-
-    filenames = []
-
-    # This produces a QR code with an empty string.
-    filename = "qrcode_miscellaneous_empty.png"
-    write_optimal_qrcode(
-        payload="",
-        filename=filename,
-        include_quiet_zone=include_quiet_zone,
+    return save_qrcode_as_png_file(
+        png_filename=png_filename,
+        canvas=qr_canvas,
         colormap=colormap,
         post_optimize=post_optimize
     )
-    filenames.append(filename)
 
-    # This produces a QR code with the snowman character (\u2603) from UTF-8, written in a "bytes" block.
-    filename = "qrcode_miscellaneous_utf8_snowman.png"
-    write_optimal_qrcode(
-        payload="☃",
-        filename = filename,
-        include_quiet_zone=include_quiet_zone,
-        colormap=colormap,
-        post_optimize=post_optimize
-    )
-    filenames.append(filename)
 
-    # A test to determine which interpretation is in effect.
-    filename = "qrcode_miscellaneous_bytemode_default_encoding_test.png"
-    write_bytemode_default_encoding_test(
-        filename=filename,
-        include_quiet_zone=include_quiet_zone,
-        colormap=colormap,
-        post_optimize=post_optimize
-    )
-    filenames.append(filename)
+def render(include_quiet_zone: bool, colormap: str, post_optimize: bool) -> list[RenderedExample]:
+    """Render miscellaneous QR code examples."""
 
-    # A simple example that uses a single Kanji block.
-    # The Kanji text says: "I don't understand Japanese."
-    filename = "qrcode_miscellaneous_kanji.png"
-    write_optimal_qrcode(
-        payload="日本語はわかりません。",
-        filename=filename,
-        include_quiet_zone=include_quiet_zone,
-        colormap=colormap,
-        post_optimize=post_optimize
-    )
-    filenames.append(filename)
+    return [
 
-    # An example where the same Kanji text is first rendered in Kanji mode, then later on in UTF-8 mode.
-    # The Kanji text says: "I don't understand Japanese."
-    filename = "qrcode_miscellaneous_kanji_encodings.png"
-    write_example_kanji_encodings(
-        payload="日本語はわかりません。",
-        filename=filename,
-        include_quiet_zone=include_quiet_zone,
-        colormap=colormap,
-        post_optimize=post_optimize
-    )
-    filenames.append(filename)
+        # This produces a QR code with an empty string.
+        RenderedExample(
+            description="Empty QR code",
+            descriptor=write_optimal_qrcode(
+                payload="",
+                png_filename="qrcode_miscellaneous_empty_{VERSION}{LEVEL}p{PATTERN}.png",
+                include_quiet_zone=include_quiet_zone,
+                colormap=colormap,
+                post_optimize=post_optimize
+            )
+        ),
 
-    # The most digits of Pi that can be stored into a QR code:
-    # "3." followed by 7080 digits after the decimal point.
-    filename = "qrcode_miscellaneous_pi_digits.png"
-    write_optimal_qrcode(
-        payload=pi_10k[:7082],
-        filename=filename,
-        include_quiet_zone=include_quiet_zone,
-        version_preference_list=[(40, ErrorCorrectionLevel.L)],
-        colormap=colormap,
-        post_optimize=post_optimize
-    )
-    filenames.append(filename)
+        # This produces a QR code with the Unicode snowman character (\u2603), written in a "bytes" block.
+        RenderedExample(
+            description="UTF-8 Snowman (☃) character",
+            descriptor=write_optimal_qrcode(
+                payload="☃",
+                png_filename="qrcode_miscellaneous_utf8_snowman_{VERSION}{LEVEL}p{PATTERN}.png",
+                include_quiet_zone=include_quiet_zone,
+                colormap=colormap,
+                post_optimize=post_optimize
+            )
+        ),
 
-    return filenames
+        # A test to determine which interpretation is in effect.
+        RenderedExample(
+            description="Default byte-mode encoding test",
+            descriptor=write_bytemode_default_encoding_test(
+                png_filename="qrcode_miscellaneous_bytemode_default_encoding_test_{VERSION}{LEVEL}p{PATTERN}.png",
+                include_quiet_zone=include_quiet_zone,
+                colormap=colormap,
+                post_optimize=post_optimize
+            )
+        ),
+
+        # A simple example that uses a single Kanji block.
+        # The Kanji text says: "I don't understand Japanese."
+        RenderedExample(
+            description="Kanji mode encoding test",
+            descriptor = write_optimal_qrcode(
+                payload="日本語はわかりません。",
+                png_filename="qrcode_miscellaneous_kanji_{VERSION}{LEVEL}p{PATTERN}.png",
+                include_quiet_zone=include_quiet_zone,
+                colormap=colormap,
+                post_optimize=post_optimize
+            )
+        ),
+
+        # An example where the same Kanji text is first rendered in Kanji mode, then later on in UTF-8 mode.
+        # The Kanji text says: "I don't understand Japanese."
+        RenderedExample(
+            description="Kanji mode encoding test",
+            descriptor = write_example_kanji_encodings(
+                payload="日本語はわかりません。",
+                png_filename="qrcode_miscellaneous_kanji_encodings_{VERSION}{LEVEL}p{PATTERN}.png",
+                include_quiet_zone=include_quiet_zone,
+                colormap=colormap,
+                post_optimize=post_optimize
+            )
+        ),
+
+        # The most digits of Pi that can be stored into a QR code:
+        # "3." followed by 7080 digits after the decimal point.
+        RenderedExample(
+            description="7082 characters of π",
+            descriptor=write_optimal_qrcode(
+                payload=pi_10k[:7082],
+                png_filename="qrcode_miscellaneous_pi_digits_{VERSION}{LEVEL}p{PATTERN}.png",
+                include_quiet_zone=include_quiet_zone,
+                version_preference_list=[(40, ErrorCorrectionLevel.L)],
+                colormap=colormap,
+                post_optimize=post_optimize
+            )
+        )
+    ]
 
 
 def main():
