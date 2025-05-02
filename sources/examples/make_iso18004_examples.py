@@ -19,7 +19,7 @@ from qrcode_generator.enum_types import ErrorCorrectionLevel, EncodingVariant, D
 from qrcode_generator.qr_code import make_qr_code
 from qrcode_generator.utilities import write_optimal_qrcode, save_qrcode_as_png_file
 
-from rendered_example import RenderedExample
+from render_html_examples import RenderableExample
 
 def remove_stale_files() -> None:
     """Remove stale QR code files."""
@@ -33,7 +33,7 @@ def write_introduction_examples(
         *,
         include_quiet_zone: bool,
         colormap: Optional[str | dict],
-        post_optimize: bool) -> list[RenderedExample]:
+        optimize_png: bool) -> list[RenderableExample]:
     """Write the first example of a QR code found in the standard, from the 2006 edition onwards.
 
     Note that the data masking pattern selected differs between the standard versions:
@@ -51,7 +51,7 @@ def write_introduction_examples(
     payload = "QR Code Symbol"
 
     return [
-        RenderedExample(
+        RenderableExample(
             description=f"Introductory example\n{payload!r}\nISO/IEC 18004:{{2006,2015}}",
             descriptor=write_optimal_qrcode(
                 payload=payload,
@@ -60,10 +60,10 @@ def write_introduction_examples(
                 pattern=DataMaskingPattern.PATTERN5,
                 version_preference_list=[(1, ErrorCorrectionLevel.M)],
                 colormap=colormap,
-                post_optimize=post_optimize
+                optimize_png=optimize_png
             )
         ),
-        RenderedExample(
+        RenderableExample(
             description=f"Introductory example\n{payload!r}\nISO/IEC 18004:2024",
             descriptor=write_optimal_qrcode(
                 payload=payload,
@@ -72,7 +72,7 @@ def write_introduction_examples(
                 pattern=DataMaskingPattern.PATTERN6,
                 version_preference_list=[(1, ErrorCorrectionLevel.M)],
                 colormap=colormap,
-                post_optimize=post_optimize
+                optimize_png=optimize_png
             )
         )
     ]
@@ -82,7 +82,7 @@ def write_explicit_eci_designator_example(
         *,
         include_quiet_zone: bool,
         colormap: Optional[str | dict],
-        post_optimize: bool) -> list[RenderedExample]:
+        optimize_png: bool) -> list[RenderableExample]:
     """Represent Greek characters in ISO-8859-7, which corresponds to ECI designator 9.
 
     This is an example from the standard. The standard just discusses the encoding using
@@ -102,19 +102,19 @@ def write_explicit_eci_designator_example(
     png_filename = "qrcode_iso18004_2000_2006_2015_ExplicitEciDesignator_{VERSION}{LEVEL}p{PATTERN}.png"
 
     octets = payload.encode("iso-8859-7")
-    de = DataEncoder(EncodingVariant.SMALL)
-    de.append_eci_designator(9)
-    de.append_byte_mode_block(octets)
-    qr_canvas = make_qr_code(de, 1, ErrorCorrectionLevel.H, include_quiet_zone=include_quiet_zone)
+
+    de = DataEncoder(EncodingVariant.SMALL).append_eci_designator(9).append_byte_mode_block(octets)
+
+    qr_canvas = make_qr_code(de, version=1, level=ErrorCorrectionLevel.H, include_quiet_zone=include_quiet_zone)
 
     return [
-        RenderedExample(
+        RenderableExample(
             description=f"Explicit ECI designator\n{payload!r}\nISO/IEC 18004:{{2000,2006,2015}}",
             descriptor=save_qrcode_as_png_file(
                 png_filename=png_filename,
                 canvas=qr_canvas,
                 colormap=colormap,
-                post_optimize=post_optimize
+                optimize_png=optimize_png
             )
         )
     ]
@@ -124,7 +124,7 @@ def write_structured_append_mode_examples(
         *,
         include_quiet_zone: bool,
         colormap: Optional[str | dict],
-        post_optimize: bool) -> list[RenderedExample]:
+        optimize_png: bool) -> list[RenderableExample]:
     """This reproduces the structured append mode example as given in the standard.
 
     References:
@@ -136,13 +136,11 @@ def write_structured_append_mode_examples(
 
     payload = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
-    examples = []
 
-    # Reproduces the example where the payload is encoded in a single QR code.
-    # The 62 characters are encoded in a single alphanumeric block.
-
-    examples.append(
-        RenderedExample(
+    examples = [
+        # Reproduces the example where the full payload is encoded in a single QR code.
+        # The 62 characters are encoded in a single alphanumeric block.
+        RenderableExample(
             description=f"Structured Append Mode example (all data)\n{payload!r}\nISO/IEC 18004:{{2000,2006,2015}}",
             descriptor = write_optimal_qrcode(
                 payload=payload,
@@ -151,11 +149,12 @@ def write_structured_append_mode_examples(
                 version_preference_list=[(4, ErrorCorrectionLevel.M)],
                 pattern=DataMaskingPattern.PATTERN4,
                 colormap=colormap,
-                post_optimize=post_optimize
+                optimize_png=optimize_png
             )
         )
-    )
+    ]
 
+    # Calculate the checksum of the full payload.
     checksum = 0
     for c in payload:
         checksum ^= ord(c)
@@ -169,22 +168,20 @@ def write_structured_append_mode_examples(
 
     for (index, pattern, sub_payload) in structured_append_qrcode_specs:
 
-        de = DataEncoder(EncodingVariant.SMALL)
-        de.append_structured_append_marker(index, 4, checksum)
-        de.append_alphanumeric_mode_block(sub_payload)
+        de = DataEncoder(EncodingVariant.SMALL).append_structured_append_marker(index, 4, checksum).append_alphanumeric_mode_block(sub_payload)
 
-        qr_canvas = make_qr_code(de, 1, ErrorCorrectionLevel.M, pattern=pattern, include_quiet_zone=include_quiet_zone)
+        qr_canvas = make_qr_code(de, version=1, level=ErrorCorrectionLevel.M, pattern=pattern, include_quiet_zone=include_quiet_zone)
 
         png_filename = f"qrcode_iso18004_2000_2006_2015_StructuredAppendMode_split{index}_{{VERSION}}{{LEVEL}}p{{PATTERN}}.png"
 
         examples.append(
-            RenderedExample(
+            RenderableExample(
                 description=f"Structured Append Mode example (part {index + 1} of 4)\n{sub_payload!r}\nISO/IEC 18004:{{2000,2006,2015}}",
                 descriptor=save_qrcode_as_png_file(
                     png_filename=png_filename,
                     canvas=qr_canvas,
                     colormap=colormap,
-                    post_optimize=post_optimize
+                    optimize_png=optimize_png
                 )
             )
         )
@@ -196,7 +193,7 @@ def write_annex_examples(
         *,
         include_quiet_zone: bool,
         colormap: Optional[str | dict],
-        post_optimize: bool) -> list[RenderedExample]:
+        optimize_png: bool) -> list[RenderableExample]:
     """Write the appendix example of a QR code found in the standard.
 
     Note that the data masking pattern selected differs between the standard versions:
@@ -214,7 +211,7 @@ def write_annex_examples(
     payload = "01234567"
 
     return [
-        RenderedExample(
+        RenderableExample(
             description=f"Annex G example\n{payload!r}\nISO/IEC 18004:2000",
             descriptor = write_optimal_qrcode(
                 payload=payload,
@@ -223,10 +220,10 @@ def write_annex_examples(
                 pattern=DataMaskingPattern.PATTERN3,
                 version_preference_list=[(1, ErrorCorrectionLevel.M)],
                 colormap=colormap,
-                post_optimize=post_optimize
+                optimize_png=optimize_png
             )
         ),
-        RenderedExample(
+        RenderableExample(
             description=f"Annex I example\n{payload!r}\nISO/IEC 18004:{{2006,2015}}",
             descriptor=write_optimal_qrcode(
                 payload=payload,
@@ -235,39 +232,39 @@ def write_annex_examples(
                 pattern=DataMaskingPattern.PATTERN2,
                 version_preference_list=[(1, ErrorCorrectionLevel.M)],
                 colormap=colormap,
-                post_optimize=post_optimize
+                optimize_png=optimize_png
             )
         )
     ]
 
 
-def render(include_quiet_zone: bool, colormap: str, post_optimize: bool) -> list[RenderedExample]:
+def render(include_quiet_zone: bool, colormap: str, optimize_png: bool) -> list[RenderableExample]:
     """Render QR-codes from the standard."""
     return [
         # Reproduces the example QR code of Figure 1 of the 2015 version of the standard.
         *write_introduction_examples(
             include_quiet_zone=include_quiet_zone,
             colormap=colormap,
-            post_optimize=post_optimize
+            optimize_png=optimize_png
         ),
         # This produces a QR code with the Greek characters "ΑΒΓΔΕ" encoded in ISO-8859-7,
         # using ECI designator 9, as discussed in the standard.
         *write_explicit_eci_designator_example(
             include_quiet_zone=include_quiet_zone,
             colormap=colormap,
-            post_optimize=post_optimize
+            optimize_png=optimize_png
         ),
         # Reproduce the "structured append" examples.
         *write_structured_append_mode_examples(
             include_quiet_zone=include_quiet_zone,
             colormap=colormap,
-            post_optimize=post_optimize
+            optimize_png=optimize_png
         ),
         # Reproduces the example QR code discussed in the appendix of the standard.
         *write_annex_examples(
             include_quiet_zone=include_quiet_zone,
             colormap=colormap,
-            post_optimize=post_optimize
+            optimize_png=optimize_png
         )
     ]
 
@@ -278,10 +275,10 @@ def main():
 
     include_quiet_zone=True
     colormap = 'default'
-    post_optimize = True
+    optimize_png = True
 
     remove_stale_files()
-    render(include_quiet_zone, colormap, post_optimize)
+    render(include_quiet_zone, colormap, optimize_png)
 
 
 if __name__ == "__main__":

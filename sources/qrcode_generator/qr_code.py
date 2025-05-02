@@ -492,8 +492,10 @@ class QRCodeDrawer:
 
 
 def make_qr_code(
-            de: DataEncoder, version: int, level: ErrorCorrectionLevel,
+            de: DataEncoder,
             *,
+            version: int,
+            level: ErrorCorrectionLevel,
             include_quiet_zone: Optional[bool] = None,
             pattern: Optional[DataMaskingPattern] = None
         ) -> QRCodeCanvas:

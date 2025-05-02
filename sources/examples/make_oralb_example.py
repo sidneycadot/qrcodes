@@ -5,8 +5,7 @@
 from qrcode_generator.data_encoder import DataEncoder
 from qrcode_generator.enum_types import ErrorCorrectionLevel, EncodingVariant, DataMaskingPattern
 from qrcode_generator.qr_code import make_qr_code
-from qrcode_generator.render_pil import render_qrcode_as_pil_image
-from qrcode_generator.utilities import optimize_png
+from qrcode_generator.utilities import save_qrcode_as_png_file
 
 
 def main():
@@ -19,20 +18,15 @@ def main():
 
     mode = 'RGB'
     colormap = 'color'
-    post_optimize = True
+    optimize_png = True
 
-    filename = "qrcode_oralb.png"
+    png_filename = "qrcode_oralb.png"
 
-    de = DataEncoder(EncodingVariant.from_version(version))
-    de.append_eci_designator(26)  # Declare UTF-8 encoding.
-    de.append_byte_mode_block(b"https://qrco.de/bb8b9t")
+    de = DataEncoder(EncodingVariant.from_version(version)).append_eci_designator(26).append_byte_mode_block("https://qrco.de/bb8b9t".encode('utf_8'))
 
-    qr_canvas = make_qr_code(de, version, level, include_quiet_zone=include_quiet_zone, pattern=pattern)
+    canvas = make_qr_code(de, version=version, level=level, include_quiet_zone=include_quiet_zone, pattern=pattern)
 
-    im = render_qrcode_as_pil_image(qr_canvas, mode=mode, colormap=colormap)
-    im.save(filename)
-    if post_optimize:
-        optimize_png(filename)
+    save_qrcode_as_png_file(png_filename=png_filename, canvas=canvas, mode=mode, colormap=colormap, optimize_png=optimize_png)
 
 
 if __name__ == "__main__":

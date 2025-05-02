@@ -10,10 +10,10 @@ import base64
 
 from PIL import Image, ImageDraw, ImageFont
 
-from qrcode_generator.utilities import write_optimal_qrcode, optimize_png
+from qrcode_generator.utilities import write_optimal_qrcode
 
 
-def write_image_via_reflector(filename: str) -> None:
+def write_image_via_reflector(png_filename: str) -> None:
 
     # Make image.
 
@@ -25,9 +25,9 @@ def write_image_via_reflector(filename: str) -> None:
 
     # Save image to temporary file.
 
-    temp_filename = "temp_" + filename
+    temp_filename = "temp_" + png_filename
     im.save(temp_filename)
-    optimize_png(temp_filename)
+    # optimize_png(temp_filename)
 
     # Read image file data.
 
@@ -44,12 +44,12 @@ def write_image_via_reflector(filename: str) -> None:
 
     # Create the reflector URL.
 
-    url = "http://r.jigsaw.nl?c=image/png&p=" + base64_imagedata
-    print("URL:", url)
+    payload = "http://r.jigsaw.nl?c=image/png&p=" + base64_imagedata
+    print("URL:", payload)
 
     # Write the example.
 
-    write_optimal_qrcode(url, filename, post_optimize=True)
+    write_optimal_qrcode(payload=payload, png_filename=png_filename, optimize_png=True)
 
 
 def main():

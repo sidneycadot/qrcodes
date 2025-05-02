@@ -15,7 +15,7 @@ Four block types encode string data; they are followed by a character count, and
 The message is ended by a terminator of four zero bits, if the QR code symbol has room for it.
 """
 
-from typing import Optional
+from typing import Optional, Self
 
 from .enum_types import EncodingVariant, ErrorCorrectionLevel, CharacterEncodingType
 from .kanji_encode import kanji_character_value
@@ -42,7 +42,7 @@ class DataEncoder:
         self.variant = variant
         self.bits = bytearray()
 
-    def append_integer_value(self, value: int, numbits: int) -> None:
+    def append_integer_value(self, value: int, numbits: int) -> Self:
         """Append unsigned integer value to the encoded bits."""
         if not (numbits > 0):
             raise ValueError("Number of bits must be positive.")
@@ -56,7 +56,9 @@ class DataEncoder:
             self.bits.append(bit)
             mask >>= 1
 
-    def append_structured_append_marker(self, index: int, count: int, parity_data: int) -> None:
+        return self
+
+    def append_structured_append_marker(self, index: int, count: int, parity_data: int) -> Self:
         """Append Structured Append marker."""
 
         if not (0 <= index <= 15):
@@ -80,7 +82,9 @@ class DataEncoder:
         # Append the parity data (content XOR checksum).
         self.append_integer_value(parity_data, 8)
 
-    def append_eci_designator(self, value: int) -> None:
+        return self
+
+    def append_eci_designator(self, value: int) -> Self:
         """Append Extended Channel Interpretation (ECI) block."""
 
         if not (0 <= value <= 999999):
@@ -97,7 +101,9 @@ class DataEncoder:
         else:
             self.append_integer_value(0xc00000 | value, 24)
 
-    def append_numeric_mode_block(self, s: str) -> None:
+        return self
+
+    def append_numeric_mode_block(self, s: str) -> Self:
         """Append Numeric mode block."""
 
         # Verify that all characters in the string can be represented as numeric characters.
@@ -131,7 +137,9 @@ class DataEncoder:
 
             self.append_integer_value(chunk_value, numbits)
 
-    def append_alphanumeric_mode_block(self, s: str) -> None:
+        return self
+
+    def append_alphanumeric_mode_block(self, s: str) -> Self:
         """Append Alphanumeric mode block."""
 
         # Verify that all characters in the string can be represented as alphanumeric characters.
@@ -165,7 +173,9 @@ class DataEncoder:
 
             self.append_integer_value(chunk_value, numbits)
 
-    def append_byte_mode_block(self, b: bytes) -> None:
+        return self
+
+    def append_byte_mode_block(self, b: bytes) -> Self:
         """Append Byte mode block."""
 
         count_bits = count_bits_table[self.variant][CharacterEncodingType.BYTES]
@@ -184,7 +194,9 @@ class DataEncoder:
         for value in b:
             self.append_integer_value(value, 8)
 
-    def append_kanji_mode_block(self, s: str) -> None:
+        return self
+
+    def append_kanji_mode_block(self, s: str) -> Self:
         """Append Kanji mode block."""
 
         values = []
@@ -208,6 +220,8 @@ class DataEncoder:
         # Append the kanji character data.
         for value in values:
             self.append_integer_value(value, 13)
+
+        return self
 
     def get_words(self, number_of_data_codewords: int) -> Optional[list[int]]:
         """Convert the DataEncoder's data bits to a list of 8-bit words for further processing.

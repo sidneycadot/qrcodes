@@ -11,15 +11,15 @@ from qrcode_generator.data_encoder import DataEncoder
 from qrcode_generator.enum_types import ErrorCorrectionLevel, EncodingVariant, CharacterEncodingType
 from qrcode_generator.lookup_tables import version_specification_table, count_bits_table
 from qrcode_generator.qr_code import make_qr_code
-from qrcode_generator.render_pil import render_qrcode_as_pil_image
-from qrcode_generator.utilities import optimize_png, save_qrcode_as_png_file, QRCodePngFileDescriptor
+from qrcode_generator.utilities import save_qrcode_as_png_file, QRCodePngFileDescriptor
 
 
-def write_eci_data_test(*,
-        filename: str,
+def write_eci_data_test(
+        *,
+        png_filename: str,
         payload: bytes,
-        colormap: Optional[str | dict] = None,
-        post_optimize: bool = False) -> QRCodePngFileDescriptor:
+        colormap: Optional[str | dict],
+        optimize_png: bool) -> QRCodePngFileDescriptor:
     """Write QR code using an ECI designator combined with a specific encoding."""
 
     for version, level in itertools.product(range(1, 41), reversed(ErrorCorrectionLevel)):
@@ -40,13 +40,13 @@ def write_eci_data_test(*,
     # de.append_eci_designator(899)
     de.append_byte_mode_block(payload)
 
-    qr_canvas = make_qr_code(de, version, level)
+    qr_canvas = make_qr_code(de, version=version, level=level)
 
     return save_qrcode_as_png_file(
-        filename=filename,
+        png_filename=png_filename,
         canvas=qr_canvas,
         colormap=colormap,
-        post_optimize=post_optimize
+        optimize_png=optimize_png
     )
 
 
@@ -61,17 +61,17 @@ def main():
     # Parameters.
 
     colormap = 'default'
-    post_optimize = True
+    optimize_png = True
 
     for size in (4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 2953):
 
         payload = bytes(size)
 
         write_eci_data_test(
-            filename=f"qrcode_data_{size}.png",
+            png_filename=f"qrcode_data_{size}_{{VERSION}}{{LEVEL}}p{{PATTERN}}.png",
             payload=payload,
             colormap=colormap,
-            post_optimize=post_optimize
+            optimize_png=optimize_png
         )
 
 

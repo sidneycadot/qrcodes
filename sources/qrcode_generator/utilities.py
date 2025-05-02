@@ -71,7 +71,7 @@ def make_optimal_qrcode(
     de = DataEncoder(variant)
     solution.render(de)
 
-    return make_qr_code(de, version, level, include_quiet_zone=include_quiet_zone, pattern=pattern)
+    return make_qr_code(de, version=version, level=level, include_quiet_zone=include_quiet_zone, pattern=pattern)
 
 
 def write_optimal_qrcode(
@@ -85,7 +85,7 @@ def write_optimal_qrcode(
         mode: Optional[str] = None,
         colormap: Optional[str|dict] = None,
         magnification: Optional[int] = None,
-        post_optimize: Optional[bool] = None
+        optimize_png: Optional[bool] = None
     ) -> QRCodePngFileDescriptor:
 
     qr_canvas = make_optimal_qrcode(
@@ -104,7 +104,7 @@ def write_optimal_qrcode(
         mode=mode,
         colormap=colormap,
         magnification=magnification,
-        post_optimize=post_optimize
+        optimize_png=optimize_png
     )
 
 
@@ -115,10 +115,10 @@ def save_qrcode_as_png_file(
         mode: Optional[str] = None,
         colormap: Optional[str | dict] = None,
         magnification: Optional[int] = None,
-        post_optimize: Optional[bool] = None) -> QRCodePngFileDescriptor:
+        optimize_png: Optional[bool] = None) -> QRCodePngFileDescriptor:
 
-    if post_optimize is None:
-        post_optimize = False
+    if optimize_png is None:
+        optimize_png = False
 
     # Apply filename substitutions.
     png_filename = png_filename.replace("{VERSION}" , f"{canvas.version}")
@@ -131,7 +131,7 @@ def save_qrcode_as_png_file(
     im.save(png_filename)
 
     # If requested, attempt PNG optimization.
-    if post_optimize and os.name == 'posix':
+    if optimize_png and os.name == 'posix':
         # We only know how to optimize on posix systems.
         # On other systems, do nothing.
         subprocess.run(["optipng", png_filename], stderr=subprocess.DEVNULL, check=False)
