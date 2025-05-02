@@ -7,21 +7,30 @@ import itertools
 import os
 from typing import Optional
 
+from examples.make_iso18004_examples import RenderedExample
 from qrcode_generator.data_encoder import DataEncoder
 from qrcode_generator.enum_types import ErrorCorrectionLevel, EncodingVariant, CharacterEncodingType
 from qrcode_generator.lookup_tables import version_specification_table, count_bits_table
 from qrcode_generator.qr_code import make_qr_code
-from qrcode_generator.render_pil import render_qrcode_as_pil_image
-from qrcode_generator.utilities import optimize_png
+from qrcode_generator.utilities import QRCodePngFileDescriptor, save_qrcode_as_png_file
 
 
-def write_eci_test(*,
-        filename: str,
+def remove_stale_files() -> None:
+    """Remove stale QR code files."""
+    for filename in glob.glob("qrcode_eci_*.png"):
+        print("Removing", filename, "...")
+        os.remove(filename)
+
+
+def write_eci_test(
+        *,
         payload: str,
         encoding: str,
+        encoding_description: str,
         eci_designator_value: int,
-        colormap: Optional[str | dict] = None,
-        post_optimize: bool = False) -> None:
+        include_quiet_zone: bool,
+        colormap: Optional[str | dict],
+        post_optimize: bool) -> RenderedExample:
     """Write QR code using an ECI designator combined with a specific encoding."""
 
     payload_octets = payload.encode(encoding)
@@ -41,20 +50,29 @@ def write_eci_test(*,
     de.append_eci_designator(eci_designator_value),
     de.append_byte_mode_block(payload_octets)
 
-    qr_canvas = make_qr_code(de, version, level)
-    im = render_qrcode_as_pil_image(qr_canvas, colormap=colormap)
-    print(f"Saving {filename} ...")
-    im.save(filename)
-    if post_optimize:
-        optimize_png(filename)
+    qr_canvas = make_qr_code(de, version, level, include_quiet_zone=include_quiet_zone)
+
+    png_filename = f"qrcode_eci_{eci_designator_value}_{encoding}_{{VERSION}}{{LEVEL}}p{{PATTERN}}.png"
+
+    return RenderedExample(
+        description=f"ECI {eci_designator_value}\n{encoding_description}",
+        descriptor=save_qrcode_as_png_file(
+            png_filename=png_filename,
+            canvas=qr_canvas,
+            colormap=colormap,
+            post_optimize=post_optimize
+        )
+    )
 
 
-def write_extended_ascii_test(*,
+def write_extended_ascii_test(
+        *,
         encoding: str,
         encoding_description: str,
         eci_designator_value: int,
-        colormap: Optional[str | dict] = None,
-        post_optimize: bool = False) -> None:
+        include_quiet_zone: bool,
+        colormap: Optional[str | dict],
+        post_optimize: bool) -> RenderedExample:
     """Write QR code using an ECI code for an extended ASCII encoding."""
 
     slist = []
@@ -85,41 +103,33 @@ def write_extended_ascii_test(*,
     else:
         raise RuntimeError()
 
-    filename = f"qrcode_eci_{eci_designator_value}_{encoding}_{version}{level.name}.png"
-
-    write_eci_test(
-        filename = filename,
-        payload = payload,
-        encoding = encoding,
-        eci_designator_value = eci_designator_value,
-        colormap = colormap,
-        post_optimize = post_optimize
-    )
-
-
-def main():
-
-    # Remove stale QR code ECI example files.
-
-    for filename in glob.glob("qrcode_eci_*.png"):
-        print("Removing", filename, "...")
-        os.remove(filename)
-
-    # Parameters.
-
-    colormap = 'default'
-    post_optimize = True
-
-    # Explicit ASCII encoding.
-
-    write_eci_test(
-        filename="qrcode_eci_27_ascii.png",
-        payload="This is an ASCII encoded text, using ECI designator value 27.",
-        encoding="ascii",
-        eci_designator_value = 27,
+    return write_eci_test(
+        payload=payload,
+        encoding=encoding,
+        encoding_description=encoding_description,
+        eci_designator_value=eci_designator_value,
+        include_quiet_zone=include_quiet_zone,
         colormap=colormap,
         post_optimize=post_optimize
     )
+
+
+def render(include_quiet_zone: bool, colormap: str, post_optimize: bool) -> list[RenderedExample]:
+    """Render ECI examples."""
+
+    examples = []
+
+    # Explicit ASCII encoding.
+
+    examples.append(write_eci_test(
+        payload="This is an ASCII encoded text, using ECI designator value 27.",
+        encoding="ascii",
+        encoding_description="ASCII",
+        eci_designator_value = 27,
+        include_quiet_zone=include_quiet_zone,
+        colormap=colormap,
+        post_optimize=post_optimize
+    ))
 
     # Extended-ASCII encodings.
 
@@ -145,60 +155,78 @@ def main():
     ]
 
     for (encoding, encoding_description, eci_designator_value) in extended_ascii_table:
-        write_extended_ascii_test(
+        examples.append(write_extended_ascii_test(
             encoding=encoding,
             encoding_description=encoding_description,
             eci_designator_value=eci_designator_value,
+            include_quiet_zone=include_quiet_zone,
             colormap=colormap,
             post_optimize=post_optimize
-        )
+        ))
 
     # Unicode encodings.
 
-    write_eci_test(
-        filename="qrcode_eci_26_utf8.png",
+    examples.append(write_eci_test(
         payload="This is a UTF-8 encoded text, using ECI designator value 26.",
         encoding="utf_8",
+        encoding_description="UTF-8",
         eci_designator_value = 26,
+        include_quiet_zone=include_quiet_zone,
         colormap=colormap,
         post_optimize=post_optimize
-    )
+    ))
 
-    write_eci_test(
-        filename="qrcode_eci_25_utf16be.png",
+    examples.append(write_eci_test(
         payload="This is a UTF-16 (big endian) encoded text, using ECI designator value 25.",
         encoding="utf_16_be",
+        encoding_description="UTF-16 (Big Endian)",
         eci_designator_value = 25,
+        include_quiet_zone=include_quiet_zone,
         colormap=colormap,
         post_optimize=post_optimize
-    )
+    ))
 
-    write_eci_test(
-        filename="qrcode_eci_33_utf16le.png",
+    examples.append(write_eci_test(
         payload="This is a UTF-16 (little endian) encoded text, using ECI designator value 33.",
         encoding="utf_16_le",
+        encoding_description="UTF-16 (Little Endian)",
         eci_designator_value = 33,
+        include_quiet_zone=include_quiet_zone,
         colormap=colormap,
         post_optimize=post_optimize
-    )
+    ))
 
-    write_eci_test(
-        filename="qrcode_eci_34_utf32be.png",
+    examples.append(write_eci_test(
         payload="This is a UTF-32 (big endian) encoded text, using ECI designator value 34.",
         encoding="utf_32_be",
+        encoding_description="UTF-32 (Big Endian)",
         eci_designator_value=34,
+        include_quiet_zone=include_quiet_zone,
         colormap=colormap,
         post_optimize=post_optimize
-    )
+    ))
 
-    write_eci_test(
-        filename="qrcode_eci_35_utf32le.png",
+    examples.append(write_eci_test(
         payload="This is a UTF-32 (little endian) encoded text, using ECI designator value 35.",
         encoding="utf_32_le",
+        encoding_description="UTF-32 (Little Endian)",
         eci_designator_value=35,
+        include_quiet_zone=include_quiet_zone,
         colormap=colormap,
         post_optimize=post_optimize
-    )
+    ))
+
+    return examples
+
+
+def main():
+
+    include_quiet_zone=True
+    colormap = 'default'
+    post_optimize = True
+
+    remove_stale_files()
+    render(include_quiet_zone, colormap, post_optimize)
 
 
 if __name__ == "__main__":
