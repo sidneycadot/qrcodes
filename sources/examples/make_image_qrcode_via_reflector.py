@@ -44,12 +44,12 @@ def write_image_via_reflector(png_filename: str) -> None:
 
     # Create the reflector URL.
 
-    payload = "http://r.jigsaw.nl?c=image/png&p=" + base64_imagedata
-    print("URL:", payload)
+    url = f"http://r.jigsaw.nl?c=image/png&p={base64_imagedata}"
+    print("URL:", url)
 
     # Write the example.
 
-    write_optimal_qrcode(payload=payload, png_filename=png_filename, optimize_png=True)
+    write_optimal_qrcode(payload=url, png_filename=png_filename, optimize_png=True)
 
 
 def main():
