@@ -55,7 +55,7 @@ def write_image_via_reflector(png_filename: str) -> None:
 def main():
 
     # This produces a QR code with an image, using a reflector site.
-    write_image_via_reflector("example_image_via_reflector.png")
+    write_image_via_reflector("example_image_via_reflector_{VERSION}{LEVEL}p{PATTERN}.png")
 
 
 if __name__ == "__main__":

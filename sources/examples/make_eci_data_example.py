@@ -65,7 +65,7 @@ def main():
 
     for size in (4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 2953):
 
-        payload = bytes(size)
+        payload = b'U' * size
 
         write_eci_data_test(
             png_filename=f"qrcode_data_{size}_{{VERSION}}{{LEVEL}}p{{PATTERN}}.png",
