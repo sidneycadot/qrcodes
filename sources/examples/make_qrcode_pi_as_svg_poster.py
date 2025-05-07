@@ -55,7 +55,11 @@ def write_svg_qrcode_poster(filename: str) -> None:
 
                                         pi_characters = pi_10k[:number_of_pi_characters]
 
-                                        qr_canvas = make_optimal_qrcode(pi_characters, pattern=pattern, version_preference_list=[(version, level)], include_quiet_zone=False)
+                                        qr_canvas = make_optimal_qrcode(
+                                            payload=pi_characters,
+                                            pattern=pattern,
+                                            version_preference_list=[(version, level)],
+                                            include_quiet_zone=False)
 
                                         render_qr_canvas_as_svg_path(svg, qr_canvas, {
                                             "fill": "black",

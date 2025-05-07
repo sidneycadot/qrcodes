@@ -8,17 +8,24 @@ from qrcode_generator.utilities import QRCodePngFileDescriptor
 from qrcode_generator.xml_writer import XmlWriter
 
 
-class RenderableExample(NamedTuple):
-    description: str
+class RenderHtmlExample(NamedTuple):
+    description: dict[str, str]
     descriptor: QRCodePngFileDescriptor
 
 
-class RenderableExampleCollection(NamedTuple):
+class RenderHtmlExampleCollection(NamedTuple):
+    # Possible fields:
+    # - version/level/pattern
+    # - ISO standard locations
+    # - Short description
+    # - Payload
+    # - ECI designator
+    # - Encoding (character set)
+    #
     description: str
-    examples: list[RenderableExample]
+    examples: list[RenderHtmlExample]
 
-
-def render_html_examples(filename_html: str, example_collections: list[RenderableExampleCollection]) -> None:
+def render_html_examples(filename_html: str, example_collections: list[RenderHtmlExampleCollection]) -> None:
 
     # Generate HTML file.
 

@@ -5,7 +5,7 @@ import make_application_examples
 import make_eci_examples
 import make_miscellaneous_examples
 
-from render_html_examples import render_html_examples, RenderableExampleCollection
+from render_html_examples import render_html_examples, RenderHtmlExampleCollection
 
 
 def main():
@@ -15,19 +15,19 @@ def main():
     include_quiet_zone=False
 
     example_collections = [
-        RenderableExampleCollection(
+        RenderHtmlExampleCollection(
             description="QR codes from the ISO/IEC 18004 Standard",
             examples=make_iso18004_examples.render(include_quiet_zone, colormap, optimize_png)
         ),
-        RenderableExampleCollection(
+        RenderHtmlExampleCollection(
             description="QR codes with explicit ECI designators",
             examples=make_eci_examples.render(include_quiet_zone, colormap, optimize_png)
         ),
-        RenderableExampleCollection(
+        RenderHtmlExampleCollection(
             description = "QR codes for specific applications",
             examples=make_application_examples.render(include_quiet_zone, colormap, optimize_png)
         ),
-        RenderableExampleCollection(
+        RenderHtmlExampleCollection(
             description="Miscellaneous QR code examples",
             examples=make_miscellaneous_examples.render(include_quiet_zone, colormap, optimize_png)
         )
