@@ -274,7 +274,7 @@ def main():
     # Remove stale QR code example files.
 
     include_quiet_zone=True
-    colormap = 'default'
+    colormap = 'color'
     optimize_png = True
 
     remove_stale_files()

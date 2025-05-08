@@ -7,7 +7,7 @@ from .auxiliary import calculate_qrcode_capacity, enumerate_bits
 from .enum_types import ErrorCorrectionLevel, DataMaskingPattern
 from .binary_codes import format_information_code_remainder, version_information_code_remainder
 from .lookup_tables import alignment_pattern_position_table, data_mask_pattern_function_table, error_correction_level_encoding, \
-    data_masking_pattern_encoding
+    data_masking_pattern_encoding, version_specification_table
 from .data_encoder import DataEncoder
 
 
@@ -39,13 +39,18 @@ class ModuleValue(IntEnum):
     ALIGNMENT_PATTERN_1               = 0x51
     FORMAT_INFORMATION_0              = 0x60
     FORMAT_INFORMATION_1              = 0x61
+    FORMAT_INFORMATION_FIXED_1        = 0x63
     FORMAT_INFORMATION_INDETERMINATE  = 0x6e  # Placeholder, to be filled in later. Defaults to 0 (light).
     VERSION_INFORMATION_0             = 0x70
     VERSION_INFORMATION_1             = 0x71
     VERSION_INFORMATION_INDETERMINATE = 0x7e  # Placeholder, to be filled in later. Defaults to 0 (light).
-    DATA_ERC_0                        = 0x80
-    DATA_ERC_1                        = 0x81
-    DATA_ERC_INDETERMINATE            = 0x8e  # Placeholder, to be filled in later. Defaults to 0 (light).
+    DATA_0                            = 0x80
+    DATA_1                            = 0x81
+    ERRC_0                            = 0x82
+    ERRC_1                            = 0x83
+    PAD_0                             = 0x84
+    PAD_1                             = 0x85
+    DATA_ERRC_INDETERMINATE           = 0x8e  # Placeholder, to be filled in later. Defaults to 0 (light).
 
 
 class QRCodeCanvas:
@@ -256,7 +261,7 @@ class QRCodeDrawer:
                 self.set_module_value(i, j, module_value)
 
         # Place the single fixed "dark module" above and to the right of the bottom-left finder pattern (7.9.1).
-        self.set_module_value(self.height-8, 8, ModuleValue.FORMAT_INFORMATION_1)
+        self.set_module_value(self.height-8, 8, ModuleValue.FORMAT_INFORMATION_FIXED_1)
 
     def place_version_information_placeholders(self):
 
@@ -309,18 +314,13 @@ class QRCodeDrawer:
                         j -= 1
                     value = self.get_module_value(i, j)
                     if value == ModuleValue.INDETERMINATE:
-                        self.set_module_value(i, j, ModuleValue.DATA_ERC_INDETERMINATE)
+                        self.set_module_value(i, j, ModuleValue.DATA_ERRC_INDETERMINATE)
                         position = (i, j)
                         positions.append(position)
 
         assert len(positions) == calculate_qrcode_capacity(self.version)
 
         return positions
-
-    def erase_data_and_error_correction_bits(self) -> None:
-        """Useful for some low-level tests."""
-        for (i, j) in self.data_and_error_correction_positions:
-            self.set_module_value(i, j, ModuleValue.DATA_ERC_0)
 
     def place_data_and_error_correction_bits(self, de: DataEncoder, level: ErrorCorrectionLevel) -> None:
 
@@ -330,19 +330,34 @@ class QRCodeDrawer:
 
         assert len(self.data_and_error_correction_positions) == len(channel_bits)
 
+        version_specification = version_specification_table[(self.version, level)]
+
+        number_of_data_bits = 8 * version_specification.number_of_data_codewords()
+        total_number_of_bits = 8 * version_specification.total_number_of_codewords
+
         # Place the channel bits in the QR code symbol.
-        for ((i, j), channel_bit) in zip(self.data_and_error_correction_positions, channel_bits):
-            self.set_module_value(i, j, ModuleValue.DATA_ERC_1 if channel_bit else ModuleValue.DATA_ERC_0)
+        for (index, ((i, j), channel_bit)) in enumerate(zip(self.data_and_error_correction_positions, channel_bits)):
+            if index < number_of_data_bits:
+                self.set_module_value(i, j, ModuleValue.DATA_1 if channel_bit else ModuleValue.DATA_0)
+            elif index < total_number_of_bits:
+                self.set_module_value(i, j, ModuleValue.ERRC_1 if channel_bit else ModuleValue.ERRC_0)
+            else:
+                assert channel_bit == False
+                self.set_module_value(i, j, ModuleValue.PAD_1 if channel_bit else ModuleValue.PAD_0)
 
     def apply_data_masking_pattern(self, pattern: DataMaskingPattern) -> None:
         pattern_function = data_mask_pattern_function_table[pattern]
         for (i, j) in self.data_and_error_correction_positions:
-            value = self.get_module_value(i, j)
-            assert value in (ModuleValue.DATA_ERC_0, ModuleValue.DATA_ERC_1)
+            module_value = self.get_module_value(i, j)
+            assert module_value in (
+                ModuleValue.DATA_0, ModuleValue.DATA_1,
+                ModuleValue.ERRC_0, ModuleValue.ERRC_1,
+                ModuleValue.PAD_0, ModuleValue.PAD_1
+            )
             # Invert if the pattern condition is True.
             if pattern_function(i, j):
-                value = ModuleValue.DATA_ERC_1 if value == ModuleValue.DATA_ERC_0 else ModuleValue.DATA_ERC_0
-                self.set_module_value(i, j, value)
+                module_value = ModuleValue(module_value.value ^ 1)
+                self.set_module_value(i, j, module_value)
 
     def score(self):
         """Determine a QR code's score. A higher score corresponds to more undesirable features.

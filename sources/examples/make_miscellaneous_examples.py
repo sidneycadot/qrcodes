@@ -258,14 +258,27 @@ def render(include_quiet_zone: bool, colormap: str, optimize_png: bool) -> list[
                 colormap=colormap,
                 optimize_png=optimize_png
             )
-        )
+        ),
+
+        # This produces a QR code with many optimal encoding solutions.
+        RenderableExample(
+            description="Many optimal encodings",
+            descriptor=write_optimal_qrcode(
+                payload=("xXXXXXXXXXXXXXXX") * 5,
+                png_filename="qrcode_miscellaneous_many_optimal_encodings_{VERSION}{LEVEL}p{PATTERN}.png",
+                include_quiet_zone=include_quiet_zone,
+                colormap=colormap,
+                optimize_png=optimize_png
+            )
+        ),
+
     ]
 
 
 def main():
 
     include_quiet_zone=True
-    colormap = 'default'
+    colormap = 'color'
     optimize_png = True
 
     remove_stale_files()

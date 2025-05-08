@@ -44,11 +44,11 @@ def make_optimal_qrcode(
             solution = variant_cache[variant]
         else:
             solutions = find_optimal_string_encoding(payload, variant, byte_mode_encoding)
-            # print(f"Number of optimal solutions: {len(solutions)}.")
+            print(f"Number of optimal solutions: {len(solutions)}.")
             if len(solutions) == 0:
                 solution = None
             else:
-                # for solution in solutions:
+                #for solution in solutions:
                 #    print("->", solution)
                 solution = solutions[0]
                 # print(f"Shortest solution: {solution.bitcount()} bits.")
@@ -108,6 +108,13 @@ def write_optimal_qrcode(
     )
 
 
+def optimize_png_file_size(png_filename: str):
+    if os.name == 'posix':
+        # We only know how to optimize on posix systems.
+        # On other systems, do nothing.
+        subprocess.run(["optipng", png_filename], stderr=subprocess.DEVNULL, check=False)
+
+
 def save_qrcode_as_png_file(
         *,
         png_filename: str,
@@ -131,9 +138,7 @@ def save_qrcode_as_png_file(
     im.save(png_filename)
 
     # If requested, attempt PNG optimization.
-    if optimize_png and os.name == 'posix':
-        # We only know how to optimize on posix systems.
-        # On other systems, do nothing.
-        subprocess.run(["optipng", png_filename], stderr=subprocess.DEVNULL, check=False)
+    if optimize_png:
+        optimize_png_file_size(png_filename)
 
     return QRCodePngFileDescriptor(png_filename=png_filename, canvas=canvas)

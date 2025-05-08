@@ -10,7 +10,7 @@ import base64
 
 from PIL import Image, ImageDraw, ImageFont
 
-from qrcode_generator.utilities import write_optimal_qrcode
+from qrcode_generator.utilities import write_optimal_qrcode, optimize_png_file_size
 
 
 def write_image_via_reflector(png_filename: str) -> None:
@@ -27,7 +27,7 @@ def write_image_via_reflector(png_filename: str) -> None:
 
     temp_filename = "temp_" + png_filename
     im.save(temp_filename)
-    # optimize_png(temp_filename)
+    optimize_png_file_size(temp_filename)
 
     # Read image file data.
 

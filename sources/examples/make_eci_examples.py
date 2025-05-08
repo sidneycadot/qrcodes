@@ -217,7 +217,7 @@ def render(include_quiet_zone: bool, colormap: str, optimize_png: bool) -> list[
 def main():
 
     include_quiet_zone=True
-    colormap = 'default'
+    colormap = 'color'
     optimize_png = True
 
     remove_stale_files()

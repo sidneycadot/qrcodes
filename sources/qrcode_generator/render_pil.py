@@ -26,13 +26,18 @@ colormap_default = {
     ModuleValue.ALIGNMENT_PATTERN_1: '#000000',
     ModuleValue.FORMAT_INFORMATION_0: '#ffffff',
     ModuleValue.FORMAT_INFORMATION_1: '#000000',
+    ModuleValue.FORMAT_INFORMATION_FIXED_1: '#000000',
     ModuleValue.FORMAT_INFORMATION_INDETERMINATE: '#ffffff',
     ModuleValue.VERSION_INFORMATION_0: '#ffffff',
     ModuleValue.VERSION_INFORMATION_1: '#000000',
     ModuleValue.VERSION_INFORMATION_INDETERMINATE: '#ffffff',
-    ModuleValue.DATA_ERC_0: '#ffffff',
-    ModuleValue.DATA_ERC_1: '#000000',
-    ModuleValue.DATA_ERC_INDETERMINATE: '#ffffff',
+    ModuleValue.DATA_0: '#ffffff',
+    ModuleValue.DATA_1: '#000000',
+    ModuleValue.ERRC_0: '#ffffff',
+    ModuleValue.ERRC_1: '#000000',
+    ModuleValue.PAD_0: '#ffffff',
+    ModuleValue.PAD_1: '#000000',
+    ModuleValue.DATA_ERRC_INDETERMINATE: '#ffffff',
     ModuleValue.INDETERMINATE: '#ffffff'
 }
 
@@ -47,13 +52,18 @@ colormap_color = {
     ModuleValue.ALIGNMENT_PATTERN_1: '#ff0000',
     ModuleValue.FORMAT_INFORMATION_0: '#ccffcc',
     ModuleValue.FORMAT_INFORMATION_1: '#00bb00',
+    ModuleValue.FORMAT_INFORMATION_FIXED_1: '#00bb00',
     ModuleValue.FORMAT_INFORMATION_INDETERMINATE: '#ccffcc',
     ModuleValue.VERSION_INFORMATION_0: '#ddddff',
     ModuleValue.VERSION_INFORMATION_1: '#0000ff',
     ModuleValue.VERSION_INFORMATION_INDETERMINATE: '#ddddff',
-    ModuleValue.DATA_ERC_0: '#ffffff',
-    ModuleValue.DATA_ERC_1: '#000000',
-    ModuleValue.DATA_ERC_INDETERMINATE: '#777777',
+    ModuleValue.DATA_0: '#eeffee',
+    ModuleValue.DATA_1: '#001100',
+    ModuleValue.ERRC_0: '#ffeeff',
+    ModuleValue.ERRC_1: '#110033',
+    ModuleValue.PAD_0: '#ffffdd',
+    ModuleValue.PAD_1: '#000022',
+    ModuleValue.DATA_ERRC_INDETERMINATE: '#777777',
     ModuleValue.INDETERMINATE: '#ff0000'
 }
 
