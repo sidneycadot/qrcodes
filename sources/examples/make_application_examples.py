@@ -16,7 +16,7 @@ from typing import NamedTuple
 
 from qrcode_generator.utilities import write_optimal_qrcode
 
-from render_html_examples import RenderableExample
+from render_html_examples import RenderHtmlExample
 
 
 def remove_stale_files() -> None:
@@ -31,7 +31,7 @@ class ApplicationExample(NamedTuple):
     payload: str
 
 
-def render(include_quiet_zone: bool, colormap: str, optimize_png: bool) -> list[RenderableExample]:
+def render(include_quiet_zone: bool, colormap: str, optimize_png: bool) -> list[RenderHtmlExample]:
     """Render application examples."""
 
     application_examples = [
@@ -128,7 +128,7 @@ def render(include_quiet_zone: bool, colormap: str, optimize_png: bool) -> list[
     ]
 
     return [
-        RenderableExample(
+        RenderHtmlExample(
             description=f"Application '{application_example.shortname}':",
             descriptor=write_optimal_qrcode(
                 payload=application_example.payload,

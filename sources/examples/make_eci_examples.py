@@ -13,7 +13,7 @@ from qrcode_generator.lookup_tables import version_specification_table, count_bi
 from qrcode_generator.qr_code import make_qr_code
 from qrcode_generator.utilities import save_qrcode_as_png_file
 
-from render_html_examples import RenderableExample
+from render_html_examples import RenderHtmlExample
 
 
 def remove_stale_files() -> None:
@@ -31,7 +31,7 @@ def write_eci_test(
         eci_designator_value: int,
         include_quiet_zone: bool,
         colormap: Optional[str | dict],
-        optimize_png: bool) -> RenderableExample:
+        optimize_png: bool) -> RenderHtmlExample:
     """Write QR code using an ECI designator combined with a specific encoding."""
 
     payload_octets = payload.encode(encoding)
@@ -53,7 +53,7 @@ def write_eci_test(
 
     png_filename = f"qrcode_eci_{eci_designator_value}_{encoding}_{{VERSION}}{{LEVEL}}p{{PATTERN}}.png"
 
-    return RenderableExample(
+    return RenderHtmlExample(
         description=f"ECI {eci_designator_value}\n{encoding_description}",
         descriptor=save_qrcode_as_png_file(
             png_filename=png_filename,
@@ -71,7 +71,7 @@ def write_extended_ascii_test(
         eci_designator_value: int,
         include_quiet_zone: bool,
         colormap: Optional[str | dict],
-        optimize_png: bool) -> RenderableExample:
+        optimize_png: bool) -> RenderHtmlExample:
     """Write QR code using an ECI code for an extended ASCII encoding."""
 
     slist = []
@@ -113,7 +113,7 @@ def write_extended_ascii_test(
     )
 
 
-def render(include_quiet_zone: bool, colormap: str, optimize_png: bool) -> list[RenderableExample]:
+def render(include_quiet_zone: bool, colormap: str, optimize_png: bool) -> list[RenderHtmlExample]:
     """Render ECI examples."""
 
     return [
