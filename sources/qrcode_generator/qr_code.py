@@ -48,8 +48,8 @@ class ModuleValue(IntEnum):
     DATA_1                            = 0x81
     ERRC_0                            = 0x82
     ERRC_1                            = 0x83
-    PAD_0                             = 0x84
-    PAD_1                             = 0x85
+    REMAINDER_BIT_0                   = 0x84
+    REMAINDER_BIT_1                   = 0x85
     DATA_ERRC_INDETERMINATE           = 0x8e  # Placeholder, to be filled in later. Defaults to 0 (light).
 
 
@@ -343,7 +343,7 @@ class QRCodeDrawer:
                 self.set_module_value(i, j, ModuleValue.ERRC_1 if channel_bit else ModuleValue.ERRC_0)
             else:
                 assert channel_bit == False
-                self.set_module_value(i, j, ModuleValue.PAD_1 if channel_bit else ModuleValue.PAD_0)
+                self.set_module_value(i, j, ModuleValue.REMAINDER_BIT_1 if channel_bit else ModuleValue.REMAINDER_BIT_0)
 
     def apply_data_masking_pattern(self, pattern: DataMaskingPattern) -> None:
         pattern_function = data_mask_pattern_function_table[pattern]
@@ -352,7 +352,7 @@ class QRCodeDrawer:
             assert module_value in (
                 ModuleValue.DATA_0, ModuleValue.DATA_1,
                 ModuleValue.ERRC_0, ModuleValue.ERRC_1,
-                ModuleValue.PAD_0, ModuleValue.PAD_1
+                ModuleValue.REMAINDER_BIT_0, ModuleValue.REMAINDER_BIT_1
             )
             # Invert if the pattern condition is True.
             if pattern_function(i, j):

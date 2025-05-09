@@ -9,19 +9,11 @@ from qrcode_generator.render.xml_writer import XmlWriter
 
 
 class RenderHtmlExample(NamedTuple):
-    description: dict[str, str]
+    description: str
     descriptor: QRCodePngFileDescriptor
 
 
 class RenderHtmlExampleCollection(NamedTuple):
-    # Possible fields:
-    # - version/level/pattern
-    # - ISO standard locations
-    # - Short description
-    # - Payload
-    # - ECI designator
-    # - Encoding (character set)
-    #
     description: str
     examples: list[RenderHtmlExample]
 

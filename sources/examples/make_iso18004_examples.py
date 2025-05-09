@@ -96,11 +96,11 @@ def write_explicit_eci_designator_example(
     - ISO/IEC 18004:2000(E)   Section 8.4.1.1, page 19.
     - ISO/IEC 18004:2006(E)   Section 6.4.2.1, page 24.
     - ISO/IEC 18004:2015(E)   Section 7.4.2.2, page 24.
-    - ISO/IEC 18004:2024(en)  <not yet available>
+    - ISO/IEC 18004:2024(en)  Section 7.4.3.2, page 22.
     """
 
     payload = "ΑΒΓΔΕ"
-    png_filename = "qrcode_iso18004_2000_2006_2015_ExplicitEciDesignator_{VERSION}{LEVEL}p{PATTERN}.png"
+    png_filename = "qrcode_iso18004_2000_2006_2015_2024_ExplicitEciDesignator_{VERSION}{LEVEL}p{PATTERN}.png"
 
     octets = payload.encode("iso-8859-7")
 
@@ -132,7 +132,7 @@ def write_structured_append_mode_examples(
     - ISO/IEC 18004:2000(E)   Section 9.1, Figure 22, page 56.
     - ISO/IEC 18004:2006(E)   Section 7.1, Figure 29, page 59.
     - ISO/IEC 18004:2015(E)   Section 8.1, Figure 28, page 60.
-    - ISO/IEC 18004:2024(en)  <not yet available>
+    - ISO/IEC 18004:2024(en)  Section 8.1, Figure 29, page 56.
     """
 
     payload = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"
@@ -145,7 +145,7 @@ def write_structured_append_mode_examples(
             description=f"Structured Append Mode example (all data)\n{payload!r}\nISO/IEC 18004:{{2000,2006,2015}}",
             descriptor = write_optimal_qrcode(
                 payload=payload,
-                png_filename="qrcode_iso18004_2000_2006_2015_StructuredAppendMode_combined_{VERSION}{LEVEL}p{PATTERN}.png",
+                png_filename="qrcode_iso18004_2000_2006_2015_2024_StructuredAppendMode_combined_{VERSION}{LEVEL}p{PATTERN}.png",
                 include_quiet_zone=include_quiet_zone,
                 version_preference_list=[(4, ErrorCorrectionLevel.M)],
                 pattern=DataMaskingPattern.PATTERN4,
@@ -173,7 +173,7 @@ def write_structured_append_mode_examples(
 
         qr_canvas = make_qr_code(de, version=1, level=ErrorCorrectionLevel.M, pattern=pattern, include_quiet_zone=include_quiet_zone)
 
-        png_filename = f"qrcode_iso18004_2000_2006_2015_StructuredAppendMode_split{index}_{{VERSION}}{{LEVEL}}p{{PATTERN}}.png"
+        png_filename = f"qrcode_iso18004_2000_2006_2015_2024_StructuredAppendMode_split{index}_{{VERSION}}{{LEVEL}}p{{PATTERN}}.png"
 
         examples.append(
             RenderHtmlExample(
@@ -206,7 +206,7 @@ def write_annex_examples(
     - ISO/IEC 18004:2000(E)   Figure G.2, Annex G, pages 84--85.
     - ISO/IEC 18004:2006(E)   Figure I.2, Annex I, pages 94--96.
     - ISO/IEC 18004:2015(E)   Figure I.2, Annex I, pages 94--96.
-    - ISO/IEC 18004:2024(en)  <not yet available>
+    - ISO/IEC 18004:2024(en)  Figure I.2, Annex I, pages 89--91.
     """
 
     payload = "01234567"
@@ -225,10 +225,10 @@ def write_annex_examples(
             )
         ),
         RenderHtmlExample(
-            description=f"Annex I example\n{payload!r}\nISO/IEC 18004:{{2006,2015}}",
+            description=f"Annex I example\n{payload!r}\nISO/IEC 18004:{{2006,2015,2024}}",
             descriptor=write_optimal_qrcode(
                 payload=payload,
-                png_filename="qrcode_iso18004_2006_2015_AnnexI_{VERSION}{LEVEL}p{PATTERN}.png",
+                png_filename="qrcode_iso18004_2006_2015_2024_AnnexI_{VERSION}{LEVEL}p{PATTERN}.png",
                 include_quiet_zone=include_quiet_zone,
                 pattern=DataMaskingPattern.PATTERN2,
                 version_preference_list=[(1, ErrorCorrectionLevel.M)],
