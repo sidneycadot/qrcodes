@@ -7,8 +7,8 @@ import textwrap
 
 from examples.make_qrcode_pi_as_svg import number_of_pi_characters_that_can_be_represented, pi_10k
 from qrcode_generator.enum_types import ErrorCorrectionLevel
-from qrcode_generator.utilities import make_optimal_qrcode, save_qrcode_as_png_file
-from qrcode_generator.xml_writer import XmlWriter
+from qrcode_generator.render.utilities import make_optimal_qrcode, save_qrcode_as_png_file
+from qrcode_generator.render.xml_writer import XmlWriter
 
 
 def render_html_pi_poster(filename_html: str) -> None:
@@ -54,8 +54,9 @@ def render_html_pi_poster(filename_html: str) -> None:
                                     with open(descriptor.png_filename, "rb") as fi:
                                         imagedata = fi.read()
                                         source = f"data:image/png;base64,{base64.b64encode(imagedata).decode('ascii')}"
+                                        description=f"{canvas.version}-{canvas.level.name}, pattern {canvas.pattern.name[-1]}\n{number_of_pi_characters} characters of π"
                                         html.write_leaf_tag("img", arguments={"src": source})
-                                        html.write_leaf_tag("p", content=f"{canvas.version}-{canvas.level.name}, pattern {canvas.pattern.name[-1]}\n{number_of_pi_characters} characters of π".replace("\n", "<br/>"))
+                                        html.write_leaf_tag("p", content=description.replace("\n", "<br/>"))
 
 def main():
     render_html_pi_poster("pi_poster.html")

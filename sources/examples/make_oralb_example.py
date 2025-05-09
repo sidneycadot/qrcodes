@@ -5,7 +5,7 @@
 from qrcode_generator.data_encoder import DataEncoder
 from qrcode_generator.enum_types import ErrorCorrectionLevel, EncodingVariant, DataMaskingPattern
 from qrcode_generator.qr_code import make_qr_code
-from qrcode_generator.utilities import save_qrcode_as_png_file
+from qrcode_generator.render.utilities import save_qrcode_as_png_file
 
 
 def main():

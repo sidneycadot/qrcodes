@@ -14,7 +14,7 @@ import os
 import textwrap
 from typing import NamedTuple
 
-from qrcode_generator.utilities import write_optimal_qrcode
+from qrcode_generator.render.utilities import write_optimal_qrcode
 
 from render_html_examples import RenderHtmlExample
 

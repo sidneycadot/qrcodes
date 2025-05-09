@@ -7,8 +7,8 @@ from colorama import Fore, Style
 from qrcode_generator.data_encoder import DataEncoder
 from qrcode_generator.enum_types import ErrorCorrectionLevel, EncodingVariant, DataMaskingPattern
 from qrcode_generator.qr_code import QRCodeDrawer
-from qrcode_generator.render_pil import render_qrcode_as_pil_image
-from qrcode_generator.utilities import optimize_png
+from qrcode_generator.render.render_pil import render_qrcode_as_pil_image
+from qrcode_generator.render.utilities import optimize_png
 
 
 def run_testcase(testcase_name: str, de: DataEncoder, version: int, level: ErrorCorrectionLevel, reference_pattern: DataMaskingPattern):

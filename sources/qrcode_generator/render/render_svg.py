@@ -3,7 +3,7 @@
 from typing import Optional
 
 from qrcode_generator.qr_code import QRCodeCanvas
-from qrcode_generator.xml_writer import XmlWriter
+from qrcode_generator.render.xml_writer import XmlWriter
 
 
 def render_qr_canvas_as_svg_path(svg: XmlWriter, qr_canvas: QRCodeCanvas, extra_path_attributes: Optional[dict]):

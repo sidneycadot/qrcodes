@@ -17,7 +17,7 @@ from typing import Optional
 from qrcode_generator.data_encoder import DataEncoder
 from qrcode_generator.enum_types import ErrorCorrectionLevel, EncodingVariant, DataMaskingPattern
 from qrcode_generator.qr_code import make_qr_code
-from qrcode_generator.utilities import write_optimal_qrcode, save_qrcode_as_png_file
+from qrcode_generator.render.utilities import write_optimal_qrcode, save_qrcode_as_png_file
 
 from render_html_examples import RenderHtmlExample
 
