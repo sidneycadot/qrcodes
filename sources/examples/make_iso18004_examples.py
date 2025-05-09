@@ -110,7 +110,7 @@ def write_explicit_eci_designator_example(
 
     return [
         RenderHtmlExample(
-            description=f"Explicit ECI designator\n{payload!r}\nISO/IEC 18004:{{2000,2006,2015}}",
+            description=f"Explicit ECI designator\n{payload!r}\nISO/IEC 18004:{{2000,2006,2015,2024}}",
             descriptor=save_qrcode_as_png_file(
                 png_filename=png_filename,
                 canvas=qr_canvas,
