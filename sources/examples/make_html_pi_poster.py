@@ -1,4 +1,7 @@
-"""Define the RenderedExample type."""
+#! /usr/bin/env python3
+
+"""Write poster with pi QR codes as HTML file."""
+
 import base64
 import textwrap
 
@@ -18,7 +21,7 @@ def render_html_pi_poster(filename_html: str) -> None:
     
         table,th,td { border: 1px solid black; }
         td { padding-left: 10mm; padding-right: 10mm; }
-        .qr-code img { display: block; width: 40mm; margin-left: auto; margin-right: auto; margin-top: 8mm; margin-bottom: 8mm; image-rendering: pixelated; }
+        .qr-code img { display: block; width: 80mm; margin-left: auto; margin-right: auto; margin-top: 8mm; margin-bottom: 8mm; image-rendering: pixelated; }
         .qr-code p { text-align: center; font-weight: bold; color: blue; }
     """
 
