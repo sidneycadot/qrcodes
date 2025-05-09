@@ -116,6 +116,5 @@ https://go.iso.org/customer-feedback?token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.
 
   Incorrect statement: "the data masking pattern is 011".
 
-  This stems from
-
-* 
+  This stems from the 2000 Edition, where the same example was worked out, except back then,
+  data mask pattern 3 was chosen instead of 2.
