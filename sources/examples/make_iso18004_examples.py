@@ -35,15 +35,21 @@ def write_introduction_examples(
         include_quiet_zone: bool,
         colormap: Optional[str | dict],
         optimize_png: bool) -> list[RenderHtmlExample]:
-    """Write the first example of a QR code found in the standard, from the 2006 edition onwards.
+    """Write the first example of a QR code found in the standard.
 
-    Note that the data masking pattern selected differs between the standard versions:
-    - 2000       ...... : example is not present.
-    - 2006, 2015 ...... : pattern 5
-    - 2024       ...... : pattern 6
+    Note that the data masking pattern selected differs between the standard editions:
+    - 2000, 2006, 2015 ...... : pattern 5
+    - 2024 .................. : pattern 6
+
+    The 2000 edition does not mention what the QR code encodes.
+
+    The 2006 and 2015 editions use this example QR code to showcase the effects of mirroring
+    and inversion, and indicate that the symbol encodes the text "QR Code Symbol".
+
+    The 2024 edition **incorrectly** indicates that the symbol encodes the text "QR code Symbol".
 
     References:
-    - ISO/IEC 18004:2000(E)   Not included in this version of the standard.
+    - ISO/IEC 18004:2000(E)   Figure 1, Section 5.2, page 5.
     - ISO/IEC 18004:2006(E)   Figure 1, Section 5.2, page 7.
     - ISO/IEC 18004:2015(E)   Figure 1, Section 6.2, page 7.
     - ISO/IEC 18004:2024(en)  Figure 1, Section 5.2, page 6.
@@ -53,10 +59,10 @@ def write_introduction_examples(
 
     return [
         RenderHtmlExample(
-            description=f"Introductory example\n{payload!r}\nISO/IEC 18004:{{2006,2015}}",
+            description=f"Introductory example\n{payload!r}\nISO/IEC 18004:{{2000,2006,2015}}",
             descriptor=write_optimal_qrcode(
                 payload=payload,
-                png_filename="qrcode_iso18004_2006_2015_QRCodeSymbol_{VERSION}{LEVEL}p{PATTERN}.png",
+                png_filename="qrcode_iso18004_2000_2006_2015_QRCodeSymbol_{VERSION}{LEVEL}p{PATTERN}.png",
                 include_quiet_zone=include_quiet_zone,
                 pattern=DataMaskingPattern.PATTERN5,
                 version_preference_list=[(1, ErrorCorrectionLevel.M)],
@@ -261,7 +267,7 @@ def render(include_quiet_zone: bool, colormap: str, optimize_png: bool) -> list[
             colormap=colormap,
             optimize_png=optimize_png
         ),
-        # Reproduces the example QR code discussed in the appendix of the standard.
+        # Reproduces the example QR code discussed in the annex of the standard.
         *write_annex_examples(
             include_quiet_zone=include_quiet_zone,
             colormap=colormap,
@@ -275,7 +281,7 @@ def main():
     # Remove stale QR code example files.
 
     include_quiet_zone=True
-    colormap = 'color'
+    colormap = 'default'
     optimize_png = True
 
     remove_stale_files()
