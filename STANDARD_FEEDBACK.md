@@ -279,9 +279,8 @@ This should be changed to:
 This makes this subsection internally consistent, as the explanation describes that data masking pattern 2 is selected.
 
 It seems that this mistake stems from the 2000 edition of the standard, where the same example was
-worked out; except back then, data masking pattern 3 was chosen instead of 2.
+worked out; except back then, data masking pattern 3 was chosen instead of 2.  When updating this
+section to reflect that change for the 2006 edition, it appears that this particular  reference to
+data masking pattern 011 was left by accident, and this wasn't corrected in the 2015 and 2024 editions.
 
 It would be useful to explicitly acknowledge this change, and explain which one is the correct choice. See also Issues 2.5 and 2.15.
-
-When updating this section to reflect that change for the 2006 edition, it appears that this particular
-reference to data masking pattern 011 was left by accident, and this wasn't corrected in the 2015 and 2024 editions.
