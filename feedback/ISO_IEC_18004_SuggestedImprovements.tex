@@ -42,7 +42,7 @@
 %
 \section{Introduction}
 
-The \standard standard describes QR codes. The author of this document recently implemented a QR code
+The \standard{} standard describes QR codes. The author of this document recently implemented a QR code
 encoder library, using the standard for guidance. To this end, the standard was studied in detail with a
 'fresh pair of eyes', and without a lot of a-priori knowledge of how QR codes are supposed to work.
 
@@ -54,8 +54,8 @@ It is hoped that the standard committee will consider the suggested improvements
 of the standard, and that at least some of the listed items will be addressed in the next edition of \shortstandard.
 
 Most importantly, the unclarity of the Data Masking Pattern selection algorithm description, and the related fact
-that some of the concrete  QR codes shown in the standard deviate from the Data Masking Pattern choice prescribed by
-the standard, is currently a source of confusion. This is discussed in ~Section~\ref{sec:dmp-scoring}, below. 
+that some of the concrete  QR codes shown in the standard itself deviate from the Data Masking Pattern choice prescribed
+by the standard, is currently a source of confusion. This is discussed in Section~\ref{sec:dmp-scoring}, below.
 
 \section{Suggested improvements}
 
@@ -104,7 +104,7 @@ error correction in terms of error correction capabilities.
 As stated, the most natural interpretation of the percentages would be that they indicate that if \emph{any} x\% of the
 modules in the entire QR code are damaged (inverted), the QR code would still be readable. However, this is not the
 case, as the percentage indicates the fraction of errors that can be dealt with \emph{per block code word} rather than for
-the entire QR code, and on the GF(8) symbol level rather than on the bit/module level.
+the entire QR code, and on the GF(256) symbol level rather than on the bit/module level.
 
 An unlucky set of module-level errors can, in fact, damage the QR code beyond repair with \emph{far less} than the stated
 percentages of module-level errors.
@@ -126,13 +126,13 @@ see also Sections~\ref{sec:dmp-scoring} and \ref{sec:dmp-changed-2}.
 \includegraphics[width=0.4\textwidth]{images/qrcode_iso18004_2000_2006_2015_QRCodeSymbol_1Mp5.png}
 \includegraphics[width=0.4\textwidth]{images/qrcode_iso18004_2024_QRCodeSymbol_1Mp6.png}
 \caption{The text ``QR Code Symbol'' represented as a 1-M QR code using two different data masking patterns.
-         The left version, as found in the 2000, 2016, and 2015 editions of the standard, uses data masking pattern 5.
+         The left version, as found in the 2000, 2006, and 2015 editions of the standard, uses data masking pattern 5.
          The right version, as found in the 2024 edition of the standard, uses data masking pattern 6.}
 \end{figure}
 
 \subsection{\standard, Section 5.2, Figure 1, caption (page 6)}
 
-The caption claims the QR code example encodes the text``QR code Symbol''.
+The caption claims the QR code example encodes the text ``QR code Symbol''.
 
 In fact, the QR code example encodes the text ``QR Code Symbol'', with the word `Code' capitalized.
 
@@ -235,8 +235,8 @@ The explanation of the $p$ value is overly complicated. Consider rewriting it fo
 
 The last two columns of the table are confusing, as each version's entry can have more than the expected
 four rows specifying the code block parameters used for each of the four error levels (L, Q, M, H). The
-fact that a single specification can span multiple line, as a specific version / error correction level
-combination can use more than one block code, is not a-priori clear.
+fact that a single specification can span multiple lines, to reflect the fact that a specific
+version / error correction level combination can use more than one block code, is not a-priori clear.
 
 Consider adding horizontal separator lines in the last two columns, to show
 which code lines correspond to which of the four error correction levels.
@@ -257,7 +257,7 @@ One of the more confusing sentences in this section is this:
 \quotestandard{\ddd the variables N1 to N4 represent weighted penalty scores for the undesirable features \ddd}
 \end{quote}
 
-First off, N1 to N4 are not variables, but \emph{constants}. And they don't represent weighted penalty
+However, N1 to N4 are not variables, but \emph{constants}; and they don't represent weighted penalty
 scores; rather, they are merely constants used in the calculation of the four terms that make up
 the final penalty score for a given symbol.
 
@@ -292,9 +292,9 @@ Figure I.4            & ``01234567''                             & 1-M & 1153,12
 \caption{Overview of QR codes found in \standard}
 \end{table}
 
-The clarity of this section could be greatly improved if one or two worked-out examples were added that show the
-score contributions and final scores for each of the eight data masking patterns. For example, for the QR code example discussed in
-Annex~I, this table lists the four score terms and the total score for each data masking pattern choice:
+The clarity of this section could be greatly improved if one or two worked-out examples were added that show the four score
+contribution terms and final scores for each of the eight data masking patterns. For example, for the QR code example discussed
+in Annex~I, this table lists the four score terms and the total score for each data masking pattern choice:
 
 \begin{table}[h]
 \centering
@@ -363,7 +363,7 @@ The definition of the generator polynomials is not correct:
 where n is the degree of the generator polynomial.}
 \end{quote}
 
-This mixes up the primitive root of GF(8), $\alpha$, with its byte representation, the value 2.
+This mixes up the primitive root of GF(256), $\alpha$, with its byte representation, the value 2.
 
 The correct statement is:
 
@@ -382,7 +382,7 @@ spacing being accommodated between the timing pattern and the first alignment pa
 \end{quote}
 
 Unfortunately, this doesn't provide enough information on how this accommodation is achieved; it still leaves multiple
-possible solutions for each QR code version where the alignment patterns cannot be distributed nicely.
+possible solutions for each QR code version where the alignment patterns cannot be distributed evenly.
 
 An explanation  of the choice made in those cases would be welcome. Specifically, this concerns the sixteen QR code versions
 15, 16, 18, 19, 22, 24, 26, 28, 30, 31, 32, 33, 36, 37, 39, and 40.
