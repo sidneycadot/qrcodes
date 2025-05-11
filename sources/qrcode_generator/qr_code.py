@@ -28,7 +28,7 @@ class ModuleValue(IntEnum):
     Bit 0 is useful to see if a module is light (0) or dark (1).
     Indeterminate modules are rendered as light (0).
     """
-    INDETERMINATE                     = 0x0e  # Module/pixel unset; defaults to 0 (light).
+    INDETERMINATE                     = 0x00  # Module/pixel unset; defaults to 0 (light).
     QUIET_ZONE_0                      = 0x10
     FINDER_PATTERN_0                  = 0x20
     FINDER_PATTERN_1                  = 0x21
@@ -48,8 +48,8 @@ class ModuleValue(IntEnum):
     DATA_1                            = 0x81
     ERRC_0                            = 0x82
     ERRC_1                            = 0x83
-    PAD_0                             = 0x84
-    PAD_1                             = 0x85
+    REMAINDER_BIT_0                   = 0x84
+    REMAINDER_BIT_1                   = 0x85
     DATA_ERRC_INDETERMINATE           = 0x8e  # Placeholder, to be filled in later. Defaults to 0 (light).
 
 
@@ -343,7 +343,7 @@ class QRCodeDrawer:
                 self.set_module_value(i, j, ModuleValue.ERRC_1 if channel_bit else ModuleValue.ERRC_0)
             else:
                 assert channel_bit == False
-                self.set_module_value(i, j, ModuleValue.PAD_1 if channel_bit else ModuleValue.PAD_0)
+                self.set_module_value(i, j, ModuleValue.REMAINDER_BIT_1 if channel_bit else ModuleValue.REMAINDER_BIT_0)
 
     def apply_data_masking_pattern(self, pattern: DataMaskingPattern) -> None:
         pattern_function = data_mask_pattern_function_table[pattern]
@@ -352,14 +352,14 @@ class QRCodeDrawer:
             assert module_value in (
                 ModuleValue.DATA_0, ModuleValue.DATA_1,
                 ModuleValue.ERRC_0, ModuleValue.ERRC_1,
-                ModuleValue.PAD_0, ModuleValue.PAD_1
+                ModuleValue.REMAINDER_BIT_0, ModuleValue.REMAINDER_BIT_1
             )
             # Invert if the pattern condition is True.
             if pattern_function(i, j):
                 module_value = ModuleValue(module_value.value ^ 1)
                 self.set_module_value(i, j, module_value)
 
-    def score(self):
+    def split_score(self) -> tuple[int, int, int, int]:
         """Determine a QR code's score. A higher score corresponds to more undesirable features.
 
         The score is used to select a data masking pattern.
@@ -503,7 +503,10 @@ class QRCodeDrawer:
 
         contribution_4 = 10 * k
 
-        return contribution_1 + contribution_2 + contribution_3 + contribution_4
+        return (contribution_1, contribution_2, contribution_3, contribution_4)
+
+    def score(self) -> int:
+        return sum(self.split_score())
 
 
 def make_qr_code(
@@ -527,44 +530,42 @@ def make_qr_code(
     # If a pattern is given as a parameter, we will use that.
     # Otherwise, we'll determine the best pattern based on a score.
 
-    if pattern is None:
+    score_pattern_tuple_list = []
 
-        score_pattern_tuple_list = []
+    for test_pattern in DataMaskingPattern:
 
-        for test_pattern in DataMaskingPattern:
+        standard_compliant = True
+        if standard_compliant:
+            # The standard prescribes that the version and format information should
+            # be left empty when scoring the patterns.
+            qr.place_version_information_placeholders()
+            qr.place_format_information_placeholders()
+        else:
+            # A more sensible, but not standard-compliant approach is to fill the
+            # version and format information before scoring, since it is all known at
+            # this point.
+            qr.place_version_information_patterns()
+            qr.place_format_information_patterns(level, test_pattern)
 
-            standard_compliant = True
-            if standard_compliant:
-                # The standard prescribes that the version and format information should
-                # be left empty when scoring the patterns.
-                qr.place_version_information_placeholders()
-                qr.place_format_information_placeholders()
-            else:
-                # A more sensible, but not standard-compliant approach is to fill the
-                # version and format information before scoring, since it is all known at
-                # this point.
-                qr.place_version_information_patterns()
-                qr.place_format_information_patterns(level, test_pattern)
+        # Apply the data mask test pattern.
+        qr.apply_data_masking_pattern(test_pattern)
 
-            # Apply the data mask test pattern.
-            qr.apply_data_masking_pattern(test_pattern)
-
-            # Calculate and record the score for this test pattern.
-            score = qr.score()
-            score_pattern_tuple_list.append((score, test_pattern))
-
-            # Un-apply the data mask test pattern.
-            qr.apply_data_masking_pattern(test_pattern)
-
-        # Sort the test patterns by score.
-        score_pattern_tuple_list.sort(key=lambda score_pattern_tuple: score_pattern_tuple[0])
+        # Calculate and record the score for this test pattern.
+        split_score = qr.split_score()
+        score = qr.score()
+        score_pattern_tuple_list.append((score, test_pattern))
 
         # As a debugging aid, print the scores for the different test patterns.
-        for (score, test_pattern) in score_pattern_tuple_list:
-            print(f"{score:3d} {test_pattern.name}")
+        print(f"{test_pattern.name} -> {score:3d} {split_score}")
 
-        # Select the test pattern that yields the lowest score.
-        pattern = score_pattern_tuple_list[0][1]
+        # Un-apply the data mask test pattern.
+        qr.apply_data_masking_pattern(test_pattern)
+
+        if pattern is None:
+            # Sort the test patterns by score.
+            score_pattern_tuple_list.sort(key=lambda score_pattern_tuple: score_pattern_tuple[0])
+            # Select the test pattern that yields the lowest score.
+            pattern = score_pattern_tuple_list[0][1]
 
     # Apply the selected data masking pattern.
     print(f"Applying data mask pattern {pattern.name}.")

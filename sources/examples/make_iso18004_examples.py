@@ -35,15 +35,21 @@ def write_introduction_examples(
         include_quiet_zone: bool,
         colormap: Optional[str | dict],
         optimize_png: bool) -> list[RenderHtmlExample]:
-    """Write the first example of a QR code found in the standard, from the 2006 edition onwards.
+    """Write the first example of a QR code found in the standard.
 
-    Note that the data masking pattern selected differs between the standard versions:
-    - 2000       ...... : example is not present.
-    - 2006, 2015 ...... : pattern 5
-    - 2024       ...... : pattern 6
+    Note that the data masking pattern selected differs between the standard editions:
+    - 2000, 2006, 2015 ...... : pattern 5
+    - 2024 .................. : pattern 6
+
+    The 2000 edition does not mention what the QR code encodes.
+
+    The 2006 and 2015 editions use this example QR code to showcase the effects of mirroring
+    and inversion, and indicate that the symbol encodes the text "QR Code Symbol".
+
+    The 2024 edition **incorrectly** indicates that the symbol encodes the text "QR code Symbol".
 
     References:
-    - ISO/IEC 18004:2000(E)   Not included in this version of the standard.
+    - ISO/IEC 18004:2000(E)   Figure 1, Section 5.2, page 5.
     - ISO/IEC 18004:2006(E)   Figure 1, Section 5.2, page 7.
     - ISO/IEC 18004:2015(E)   Figure 1, Section 6.2, page 7.
     - ISO/IEC 18004:2024(en)  Figure 1, Section 5.2, page 6.
@@ -53,10 +59,10 @@ def write_introduction_examples(
 
     return [
         RenderHtmlExample(
-            description=f"Introductory example\n{payload!r}\nISO/IEC 18004:{{2006,2015}}",
+            description=f"Introductory example\n{payload!r}\nISO/IEC 18004:{{2000,2006,2015}}",
             descriptor=write_optimal_qrcode(
                 payload=payload,
-                png_filename="qrcode_iso18004_2006_2015_QRCodeSymbol_{VERSION}{LEVEL}p{PATTERN}.png",
+                png_filename="qrcode_iso18004_2000_2006_2015_QRCodeSymbol_{VERSION}{LEVEL}p{PATTERN}.png",
                 include_quiet_zone=include_quiet_zone,
                 pattern=DataMaskingPattern.PATTERN5,
                 version_preference_list=[(1, ErrorCorrectionLevel.M)],
@@ -96,11 +102,11 @@ def write_explicit_eci_designator_example(
     - ISO/IEC 18004:2000(E)   Section 8.4.1.1, page 19.
     - ISO/IEC 18004:2006(E)   Section 6.4.2.1, page 24.
     - ISO/IEC 18004:2015(E)   Section 7.4.2.2, page 24.
-    - ISO/IEC 18004:2024(en)  <not yet available>
+    - ISO/IEC 18004:2024(en)  Section 7.4.3.2, page 22.
     """
 
     payload = "ΑΒΓΔΕ"
-    png_filename = "qrcode_iso18004_2000_2006_2015_ExplicitEciDesignator_{VERSION}{LEVEL}p{PATTERN}.png"
+    png_filename = "qrcode_iso18004_2000_2006_2015_2024_ExplicitEciDesignator_{VERSION}{LEVEL}p{PATTERN}.png"
 
     octets = payload.encode("iso-8859-7")
 
@@ -110,7 +116,7 @@ def write_explicit_eci_designator_example(
 
     return [
         RenderHtmlExample(
-            description=f"Explicit ECI designator\n{payload!r}\nISO/IEC 18004:{{2000,2006,2015}}",
+            description=f"Explicit ECI designator\n{payload!r}\nISO/IEC 18004:{{2000,2006,2015,2024}}",
             descriptor=save_qrcode_as_png_file(
                 png_filename=png_filename,
                 canvas=qr_canvas,
@@ -132,7 +138,7 @@ def write_structured_append_mode_examples(
     - ISO/IEC 18004:2000(E)   Section 9.1, Figure 22, page 56.
     - ISO/IEC 18004:2006(E)   Section 7.1, Figure 29, page 59.
     - ISO/IEC 18004:2015(E)   Section 8.1, Figure 28, page 60.
-    - ISO/IEC 18004:2024(en)  <not yet available>
+    - ISO/IEC 18004:2024(en)  Section 8.1, Figure 29, page 56.
     """
 
     payload = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"
@@ -145,7 +151,7 @@ def write_structured_append_mode_examples(
             description=f"Structured Append Mode example (all data)\n{payload!r}\nISO/IEC 18004:{{2000,2006,2015}}",
             descriptor = write_optimal_qrcode(
                 payload=payload,
-                png_filename="qrcode_iso18004_2000_2006_2015_StructuredAppendMode_combined_{VERSION}{LEVEL}p{PATTERN}.png",
+                png_filename="qrcode_iso18004_2000_2006_2015_2024_StructuredAppendMode_combined_{VERSION}{LEVEL}p{PATTERN}.png",
                 include_quiet_zone=include_quiet_zone,
                 version_preference_list=[(4, ErrorCorrectionLevel.M)],
                 pattern=DataMaskingPattern.PATTERN4,
@@ -173,7 +179,7 @@ def write_structured_append_mode_examples(
 
         qr_canvas = make_qr_code(de, version=1, level=ErrorCorrectionLevel.M, pattern=pattern, include_quiet_zone=include_quiet_zone)
 
-        png_filename = f"qrcode_iso18004_2000_2006_2015_StructuredAppendMode_split{index}_{{VERSION}}{{LEVEL}}p{{PATTERN}}.png"
+        png_filename = f"qrcode_iso18004_2000_2006_2015_2024_StructuredAppendMode_split{index}_{{VERSION}}{{LEVEL}}p{{PATTERN}}.png"
 
         examples.append(
             RenderHtmlExample(
@@ -206,7 +212,7 @@ def write_annex_examples(
     - ISO/IEC 18004:2000(E)   Figure G.2, Annex G, pages 84--85.
     - ISO/IEC 18004:2006(E)   Figure I.2, Annex I, pages 94--96.
     - ISO/IEC 18004:2015(E)   Figure I.2, Annex I, pages 94--96.
-    - ISO/IEC 18004:2024(en)  <not yet available>
+    - ISO/IEC 18004:2024(en)  Figure I.2, Annex I, pages 89--91.
     """
 
     payload = "01234567"
@@ -225,10 +231,10 @@ def write_annex_examples(
             )
         ),
         RenderHtmlExample(
-            description=f"Annex I example\n{payload!r}\nISO/IEC 18004:{{2006,2015}}",
+            description=f"Annex I example\n{payload!r}\nISO/IEC 18004:{{2006,2015,2024}}",
             descriptor=write_optimal_qrcode(
                 payload=payload,
-                png_filename="qrcode_iso18004_2006_2015_AnnexI_{VERSION}{LEVEL}p{PATTERN}.png",
+                png_filename="qrcode_iso18004_2006_2015_2024_AnnexI_{VERSION}{LEVEL}p{PATTERN}.png",
                 include_quiet_zone=include_quiet_zone,
                 pattern=DataMaskingPattern.PATTERN2,
                 version_preference_list=[(1, ErrorCorrectionLevel.M)],
@@ -261,7 +267,7 @@ def render(include_quiet_zone: bool, colormap: str, optimize_png: bool) -> list[
             colormap=colormap,
             optimize_png=optimize_png
         ),
-        # Reproduces the example QR code discussed in the appendix of the standard.
+        # Reproduces the example QR code discussed in the annex of the standard.
         *write_annex_examples(
             include_quiet_zone=include_quiet_zone,
             colormap=colormap,
@@ -275,7 +281,7 @@ def main():
     # Remove stale QR code example files.
 
     include_quiet_zone=True
-    colormap = 'color'
+    colormap = 'default'
     optimize_png = True
 
     remove_stale_files()

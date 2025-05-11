@@ -22,7 +22,7 @@ def write_eci_data_test(
         optimize_png: bool) -> QRCodePngFileDescriptor:
     """Write QR code using an ECI designator combined with a specific encoding."""
 
-    for version, level in itertools.product(range(1, 41), reversed(ErrorCorrectionLevel)):
+    for version, level in itertools.product(range(40, 41), reversed(ErrorCorrectionLevel)):
         version_specification = version_specification_table[(version, level)]
         # (20 bits for the ECI designator.)
         # 4 bits for the bytes block intro.

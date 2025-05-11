@@ -7,8 +7,6 @@ from colorama import Fore, Style
 from qrcode_generator.data_encoder import DataEncoder
 from qrcode_generator.enum_types import ErrorCorrectionLevel, EncodingVariant, DataMaskingPattern
 from qrcode_generator.qr_code import QRCodeDrawer
-from qrcode_generator.render.render_pil import render_qrcode_as_pil_image
-from qrcode_generator.render.utilities import optimize_png
 
 
 def run_testcase(testcase_name: str, de: DataEncoder, version: int, level: ErrorCorrectionLevel, reference_pattern: DataMaskingPattern):
@@ -27,10 +25,8 @@ def run_testcase(testcase_name: str, de: DataEncoder, version: int, level: Error
         score2 = qr.score()
         score1_map[pattern] = score1
         score2_map[pattern] = score2
-        if pattern == reference_pattern:
-            im = render_qrcode_as_pil_image(qr.canvas)
-            im.save(filename)
-            optimize_png(filename)
+        #if pattern == reference_pattern:
+        #    save_qrcode_as_png_file(filename, qr.canvas)
 
     score1_best = min(score1_map.values())
     score2_best = min(score2_map.values())

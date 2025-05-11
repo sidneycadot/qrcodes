@@ -22,8 +22,8 @@ colormap_default = {
     ModuleValue.DATA_1: '#000000',
     ModuleValue.ERRC_0: '#ffffff',
     ModuleValue.ERRC_1: '#000000',
-    ModuleValue.PAD_0: '#ffffff',
-    ModuleValue.PAD_1: '#000000',
+    ModuleValue.REMAINDER_BIT_0: '#ffffff',
+    ModuleValue.REMAINDER_BIT_1: '#000000',
     ModuleValue.DATA_ERRC_INDETERMINATE: '#ffffff',
     ModuleValue.INDETERMINATE: '#ffffff'
 }
@@ -48,8 +48,8 @@ colormap_color = {
     ModuleValue.DATA_1: '#001100',
     ModuleValue.ERRC_0: '#ffeeff',
     ModuleValue.ERRC_1: '#110033',
-    ModuleValue.PAD_0: '#ffff99',
-    ModuleValue.PAD_1: '#555500',
+    ModuleValue.REMAINDER_BIT_0: '#ffff99',
+    ModuleValue.REMAINDER_BIT_1: '#555500',
     ModuleValue.DATA_ERRC_INDETERMINATE: '#777777',
     ModuleValue.INDETERMINATE: '#ff0000'
 }
