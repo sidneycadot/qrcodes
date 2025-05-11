@@ -254,7 +254,7 @@ hard to ascertain the intended score calculation from this description alone.
 One of the more confusing sentences in this section is this:
 
 \begin{quote}
-\quotestandard{\ddd The variables N1 to N4 represent weighted penalty scores for the undesirable features \ddd}
+\quotestandard{\ddd the variables N1 to N4 represent weighted penalty scores for the undesirable features \ddd}
 \end{quote}
 
 First off, N1 to N4 are not variables, but \emph{constants}. And they don't represent weighted penalty
@@ -272,17 +272,6 @@ found in the standard, and for each of the eight data masking pattern choices. A
 pattern choice (with the  lowest score) and the data mask pattern actually used in the QR code symbol shown in the standard.
 
 These two data mask pattern choices should match, but for four out of seven cases, they do not.
-
-%| QR code example       | Description                            | Pattern scores P0..P7, best (lowest) in **bold** | Optimal pattern | Pattern used in standard   |              |
-%|-----------------------|----------------------------------------|--------------------------------------------------|-----------------|----------------------------|--------------|
-%| Figure 1              | "QR Code Symbol" in 1-M symbol         | 1219,1195,1189,1182,1142,**1107**,1116,1198      | Pattern 5       | Pattern 6                  | **MISMATCH** |
-%| Figure 29, top        | "A..Z 0..9 A..Z" in 4-M symbol         | 1672,1684,1568,**1402**,1416,1690,1598,1624      | Pattern 3       | Pattern 4                  | **MISMATCH** |
-%| Figure 29, second row | Structured append mode example, 1 of 4 | **1097**,1146,1208,1174,1136,1164,1184,1128      | Pattern 0       | Pattern 0                  | *MATCH*      |
-%| Figure 29, second row | Structured append mode example, 2 of 4 | **1095**,1192,1203,1167,1133,1178,1171,1103      | Pattern 0       | Pattern 7                  | **MISMATCH** |
-%| Figure 29, second row | Structured append mode example, 3 of 4 | 1119,1125,1191,1134,1196,1137,1123,**1090**      | Pattern 7       | Pattern 7                  | *MATCH*      |
-%| Figure 29, second row | Structured append mode example, 4 of 4 | 1245,1173,1207,**1128**,1148,1155,1172,1136      | Pattern 3       | Pattern 3                  | *MATCH*      |
-%| Figure I.4            | "01234567" in 1-M symbol               | 1153,1250,1160,**1128**,1214,1243,1153,1133      | Pattern 3       | Pattern 2                  | **MISMATCH** |
-
 
 \begin{table}[h]
 \centering
@@ -302,7 +291,6 @@ Figure I.4            & ``01234567''                             & 1-M & 1153,12
 \end{tabular}
 \caption{Overview of QR codes found in \standard}
 \end{table}
-
 
 The clarity of this section could be greatly improved if one or two worked-out examples were added that show the
 score contributions and final scores for each of the eight data masking patterns. For example, for the QR code example discussed in
