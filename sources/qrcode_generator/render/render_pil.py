@@ -66,6 +66,8 @@ def render_qrcode_as_pil_image(
                 im = im.transpose(Image.Transpose.ROTATE_270)
             elif tr in ("ccw", "counterclockwise", "rotate-counterclockwise"):
                 im = im.transpose(Image.Transpose.ROTATE_90)
+            elif tr == "rotate-180":
+                im = im.transpose(Image.Transpose.ROTATE_180)
             elif tr in ("h-mirror-horizontal", "mirror"):
                 im = im.transpose(Image.Transpose.FLIP_LEFT_RIGHT)
             elif tr == "mirror-vertical":

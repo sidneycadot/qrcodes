@@ -78,6 +78,42 @@ def make_testcase_oralb():
     return pixels
 
 
+def make_testcase_lego():
+    lego = """
+    ####### # # # # # #######|
+    #     #  #####  # #     #|
+    # ### # ###  ##   # ### #|
+    # ### # ### ##### # ### #|
+    # ### # #  ##  ## # ### #|
+    #     # # ## #    #     #|
+    ####### # # # # #########|
+            # # # ###        |
+    ####  # # ##  ####  ### #|
+    # # #     # ##  #  #   # |
+    ###   #  ###     # ##    |
+    ###    #### ## ## #  ##  |
+     ##   ## ####### ## # ###|
+     # ###   #    #######   #|
+     ###  ### #  #   ###  ###|
+    # ##   # # #  ####   #  #|
+         ##   #  #  #########|
+            ######  #   #   #|
+    #######  #  #   # # #####|
+    #     #  ## #  ##   #   #|
+    # ### #    #  # #####   #|
+    # ### # ## ## ## ## # ###|
+    # ### # #####  # ####### |
+    #     # #### # # ## # #  |
+    ####### ##   ##    ######|
+    """
+
+    lego = [line.replace("|", "") for line in textwrap.dedent(lego).strip().splitlines()]
+
+    pixels = [ [(c == '#') for c in line] for line in lego]
+
+    return pixels
+
+
 class BitstreamDecoder:
     def __init__(self):
         self.bits = []
@@ -251,8 +287,8 @@ def decode_pixels(pixels):
     block_error_length = []
     for (count, (code_c, code_k, code_r)) in version_specification.block_specification:
         for k in range(count):
-            block_data_length.append(code_c - code_k)
-            block_error_length.append(code_k)
+            block_data_length.append(code_k)
+            block_error_length.append(code_c - code_k)
 
     print("block data expected:", block_data_length)
     print("block error expected:", block_error_length)
@@ -300,11 +336,13 @@ def decode_pixels(pixels):
 
             idx += 1
 
-    return
+    #return
 
     data = []
     for d_block in d_blocks:
         data.extend(d_block)
+
+    print("number of data octets:", len(data))
 
     # Turn it into a bit-stream:
     decoder = BitstreamDecoder()
@@ -314,11 +352,15 @@ def decode_pixels(pixels):
 
     variant = EncodingVariant.from_version(version)
 
+    print("bits in decoder:", decoder.available())
+    print(decoder.bits)
+
     while True:
         if decoder.available() >= 4:
             directive = decoder.pop_bits(4)
-
+            print("directive", directive)
             if directive == 0b0000: # Terminator
+                print("found terminator.")
                 break
             elif directive == 0b0100:  # Bytes mode.
                 number_of_count_bits = count_bits_table[variant][CharacterEncodingType.BYTES]
@@ -345,7 +387,9 @@ def decode_pixels(pixels):
 
 def main():
     #pixels = make_testcase_oralb()
-    pixels = make_testcase()
+    #pixels = make_testcase()
+    pixels = make_testcase_lego()
+
     decode_pixels(pixels)
 
 
