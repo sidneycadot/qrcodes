@@ -63,6 +63,7 @@ def save_qrcode_as_png_file(
         mode: Optional[str] = None,
         colormap: Optional[str | dict] = None,
         magnification: Optional[int] = None,
+        transform: Optional[str] = None,
         optimize_png: Optional[bool] = None) -> QRCodePngFileDescriptor:
 
     if optimize_png is None:
@@ -74,7 +75,14 @@ def save_qrcode_as_png_file(
     png_filename = png_filename.replace("{PATTERN}" , f"{canvas.pattern.name[-1]}")
 
     # Save the canvas as a PNG file.
-    im = render_qrcode_as_pil_image(canvas, mode=mode, colormap=colormap, magnification=magnification)
+    im = render_qrcode_as_pil_image(
+        canvas,
+        mode=mode,
+        colormap=colormap,
+        magnification=magnification,
+        transform=transform
+    )
+
     print(f"Saving {png_filename} ...")
     im.save(png_filename)
 
