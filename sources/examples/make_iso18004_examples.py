@@ -1,13 +1,27 @@
 #! /usr/bin/env -S python3 -B
 
-"""Write QR codes discussed in the standard as PNG image files.
+"""Write QR codes shown in the standard as PNG image files.
 
 There are currently four editions of the standard:
 
-ISO/IEC 18004:2000(E)
-ISO/IEC 18004:2006(E)
-ISO/IEC 18004:2015(E)
-ISO/IEC 18004:2024(en)
+* ISO/IEC 18004:2000(E)
+* ISO/IEC 18004:2006(E)
+* ISO/IEC 18004:2015(E)
+* ISO/IEC 18004:2024(en)
+
+Each of these contains precisely seven concrete QR code examples:
+
+- Introduction: a QR code encoding the text "QR Code Symbol" as a 1-M symbol.
+- The Structured Append Mode section provides an example of a single 4-M symbol encoding
+  the string "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ", and also
+  four 1-M symbols that together encode the same string.
+- Annex: a QR code encoding the numeric string "01234567"  is discussed.
+
+In addition to these, the encoding of the string "ΑΒΓΔΕ" using the ISO/IEC 8859-7
+encoding in combination with an ECI designator is discussed, even though no image
+of a concrete QR code for this case is shown.
+
+The code below reproduces all these examples.
 """
 
 import glob
@@ -46,7 +60,7 @@ def write_introduction_examples(
     The 2006 and 2015 editions use this example QR code to showcase the effects of mirroring
     and inversion, and indicate that the symbol encodes the text "QR Code Symbol".
 
-    The 2024 edition **incorrectly** indicates that the symbol encodes the text "QR code Symbol".
+    The 2024 edition incorrectly indicates that the symbol encodes the text "QR code Symbol".
 
     References:
     - ISO/IEC 18004:2000(E)   Figure 1, Section 5.2, page 5.

@@ -1,6 +1,6 @@
 """Support for Kanji character encoding in QR code data.
 
-This implements the encoding algorithm as described in Section 7.4.6 of ISO/IEC 18004:2015(E).
+This implements the encoding algorithm as described in Section 7.4.7 of ISO/IEC 18004:2024(en).
 """
 
 from typing import Optional

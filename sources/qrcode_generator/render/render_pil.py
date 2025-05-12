@@ -20,7 +20,8 @@ def render_qrcode_as_pil_image(
         qr_canvas: QRCodeCanvas, *,
         mode: Optional[str] = None,
         colormap: Optional[str|dict] = None,
-        magnification: Optional[int] = None
+        magnification: Optional[int] = None,
+        transform: Optional[str] = None
     ) -> Image.Image:
 
     """Render QRCodeCanvas as a PIL image."""
@@ -52,4 +53,25 @@ def render_qrcode_as_pil_image(
             rect = (j * magnification, i * magnification, (j + 1) * magnification - 1, (i + 1) * magnification - 1)
             draw.rectangle(rect, color)
 
+    if transform is not None:
+        for tr in transform.split(","):
+            # Transpose.FLIP_LEFT_RIGHT
+            # Transpose.FLIP_TOP_BOTTOM
+            # Transpose.ROTATE_90
+            # Transpose.ROTATE_180
+            # Transpose.ROTATE_270
+            # Transpose.TRANSPOSE
+            # Transpose.TRANSVERSE
+            if tr in ("cw", "clockwise", "rotate-clockwise"):
+                im = im.transpose(Image.Transpose.ROTATE_270)
+            elif tr in ("ccw", "counterclockwise", "rotate-counterclockwise"):
+                im = im.transpose(Image.Transpose.ROTATE_90)
+            elif tr in ("h-mirror-horizontal", "mirror"):
+                im = im.transpose(Image.Transpose.FLIP_LEFT_RIGHT)
+            elif tr == "mirror-vertical":
+                im = im.transpose(Image.Transpose.FLIP_TOP_BOTTOM)
+            elif tr == "transpose":
+                im = im.transpose(Image.Transpose.TRANSPOSE)
+            else:
+                raise ValueError(f"Bad transform: {tr!r}")
     return im
