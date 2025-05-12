@@ -1,5 +1,6 @@
 \documentclass[a4paper,twoside]{article}
 \usepackage[utf8]{inputenc}
+\usepackage{url}
 \usepackage{color}
 \usepackage{charter}
 \usepackage{caption}
@@ -26,7 +27,7 @@
 %
 %
 \title{Suggested improvements to \standard}
-\author{Sidney~Cadot \texttt{\textless sidney.cadot@gmail.com\textgreater}}
+\author{Sidney~Cadot~\url{<sidney.cadot@gmail.com>}}
 \date{May~2025}
 %
 %
@@ -42,20 +43,23 @@
 %
 \section{Introduction}
 
-The \standard{} standard describes QR codes. The author of this document recently implemented a QR code
-encoder library, using the standard for guidance. To this end, the standard was studied in detail with a
-'fresh pair of eyes', and without a lot of a-priori knowledge of how QR codes are supposed to work.
+The \standard{} standard describes the encoding and decoding of QR code symbols. With this standard in hand,
+I recently implemented a QR code encoder library\footnote{The encoder I implemented can be found on Github:
+\url{https://github.com/sidneycadot/qrcodes}.}, mostly to satisfy my curiosity about how QR codes work.
 
-From this close reading it became clear that the standard contains several clear and unambiguous mistakes
-that are easily fixable. In addition, a few sections could be improved to improve understandability. These
-potential improvements are collected in the document you are currently reading.
+Not surprisingly, a close reading of the standard was necessary to achieve a working encoder. With the benefit
+of reading with a 'fresh pair of eyes', several small mistakes were found in the standard text that are easily
+fixable. In addition, it was found that a few sections could be improved in terms of understandability. All
+these potential improvements are collected in the document that you are currently reading.
 
-It is hoped that the standard committee will consider the suggested improvements, in order to improve the quality
-of the standard, and that at least some of the listed items will be addressed in the next edition of \shortstandard.
+My hope is that the standard committee will consider the suggested improvements in order to improve the
+quality of the \shortstandard{} standard, and that at least some of the items listed will be addressed in
+the next edition.
 
-Most importantly, the unclarity of the Data Masking Pattern selection algorithm description, and the related fact
-that some of the concrete  QR codes shown in the standard itself deviate from the Data Masking Pattern choice prescribed
-by the standard, is currently a source of confusion. This is discussed in Section~\ref{sec:dmp-scoring}, below.
+Most notably, the rather hard to understand description of the Data Masking Pattern scoring algorithm in
+Section~7.8.3.1, and the related fact that some of the concrete QR codes shown in the standard appear to
+select a non-optimal Data Masking Pattern, leaves room for improvement. This is discussed in
+Section~\ref{sec:dmp-scoring}, below.
 
 \section{Suggested improvements}
 
