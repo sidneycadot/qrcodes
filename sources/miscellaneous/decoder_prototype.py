@@ -16,8 +16,10 @@ def weight(value: int) -> int:
         value >>= 1
     return result
 
+
 def hamming_distance(a: int, b: int) -> int:
     return weight(a ^ b)
+
 
 def make_testcase():
     version = 7
@@ -34,6 +36,7 @@ def make_testcase():
     pixels = [[bool(qr_canvas.get_module_value(i, j).value % 2) for j in range(qr_canvas.width)] for i in range(qr_canvas.height)]
 
     return pixels
+
 
 def make_testcase_oralb():
     oralb = """
@@ -73,6 +76,7 @@ def make_testcase_oralb():
     pixels = [ [(c == '#') for c in line] for line in oralb]
 
     return pixels
+
 
 class BitstreamDecoder:
     def __init__(self):

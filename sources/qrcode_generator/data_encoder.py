@@ -349,7 +349,8 @@ class DataEncoder:
 
         channel_bits = [channel_bit for word in channel_words for channel_bit in enumerate_bits(word, 8)]
 
-        # Add padding bits if the channel bits don't fully fill the QR code capacity.
+        # Add so-called "remainder" bits if the channel bits don't fully fill the QR code capacity.
+        # These are light (before data masking).
 
         channel_bits_available = calculate_qrcode_capacity(version)
 

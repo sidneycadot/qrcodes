@@ -1,6 +1,6 @@
 """Calculation of redundant bits for the format and version information areas in QR code symbols.
 
-These use the binary block codes described in Appendices C and D of ISO/IEC 18004:2015(E).
+These use the binary block codes described in Appendices C and D of ISO/IEC 18004:2024(en).
 """
 
 

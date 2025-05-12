@@ -12,6 +12,8 @@ def enumerate_bits(value: int, num_bits: int):
 
 def calculate_qrcode_capacity(version: int) -> int:
     """Return the number of modules (pixels) available for storing data and error correction bits."""
+    assert 1 <= version <= 40
+
     v7 = version // 7
 
     extra = 0

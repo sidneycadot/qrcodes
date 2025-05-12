@@ -377,8 +377,8 @@ def make_optimal_qrcode(
             if len(solutions) == 0:
                 solution = None
             else:
-                #for solution in solutions:
-                #    print("->", solution)
+                for solution in solutions:
+                    print("->", solution)
                 solution = solutions[0]
                 # print(f"Shortest solution: {solution.bitcount()} bits.")
             variant_cache[variant] = solution

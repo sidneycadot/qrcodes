@@ -67,7 +67,7 @@ def multiply_polynomial(pa: list[int], pb: list[int]) -> list[int]:
 def calculate_reed_solomon_polynomial(n: int, *, strip: bool) -> list[int]:
     """Determine the n-degree Reed-Solomon polynomial used for QR codes.
 
-    This function reproduces the polynomials given in Appendix A of ISO/IEC 18004:2015(E).
+    This function reproduces the polynomials given in Appendix A of ISO/IEC 18004:2024(en).
     """
     element = 1
     poly = [1]
