@@ -125,7 +125,6 @@ def main():
     render_iso_standard_customer_feedback_code()
     render_oralb_package_code()
     render_lego_bouwplaats_code()
-    pass
 
 
 if __name__ == "__main__":

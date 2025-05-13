@@ -16,7 +16,7 @@ from typing import NamedTuple
 
 from qrcode_generator.render.utilities import write_optimal_qrcode
 
-from render_html_examples import RenderHtmlExample
+from utilities.render_html_examples import RenderHtmlExample
 
 
 def remove_stale_files() -> None:

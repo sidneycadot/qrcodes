@@ -5,7 +5,7 @@ import make_application_examples
 import make_eci_examples
 import make_miscellaneous_examples
 
-from render_html_examples import render_html_examples, RenderHtmlExampleCollection
+from examples.utilities.render_html_examples import render_html_examples, RenderHtmlExampleCollection
 
 
 def main():
