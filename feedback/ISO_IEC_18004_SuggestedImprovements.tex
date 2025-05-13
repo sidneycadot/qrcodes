@@ -27,11 +27,9 @@
 %
 %
 \title{Suggested improvements to \standard}
-\author{Sidney~Cadot~\url{<sidney.cadot@gmail.com>}}
-\date{May~2025}
-%
-%
-%
+\author{\includegraphics[width=0.2\textwidth]{images/email.png} \\ \\ Sidney~Cadot~\url{<sidney.cadot@gmail.com>}} 
+
+\date{Version 0.1 --- May~2025}
 %
 %
 %
@@ -119,19 +117,20 @@ terms.
 \subsection{\standard, Section 5.2, Figure 1 (page 6)}
 \label{sec:dmp-changed-1}
 
-The QR code symbol used here as an example uses Data Masking Pattern 6, whereas in earlier editions of the standard
-(2000, 2006, 2015), this same example uses Data Masking Pattern 5.
+The QR code symbol used here as an example uses Data Masking Pattern~6, whereas in earlier editions of the standard
+(2000, 2006, 2015), this same example used Data Masking Pattern~5 (Figure~\ref{fig:dmp-changed-1}).
 
 It would be useful to explicitly acknowledge this change, and explain which one is the correct choice;
 see also Sections~\ref{sec:dmp-scoring} and \ref{sec:dmp-changed-2}.
 
-\begin{figure}[h]
+\begin{figure}[h!]
 \centering
 \includegraphics[width=0.4\textwidth]{images/qrcode_iso18004_2000_2006_2015_QRCodeSymbol_1Mp5.png}
 \includegraphics[width=0.4\textwidth]{images/qrcode_iso18004_2024_QRCodeSymbol_1Mp6.png}
 \caption{The text ``QR Code Symbol'' represented as a 1-M QR code using two different data masking patterns.
          The left version, as found in the 2000, 2006, and 2015 editions of the standard, uses data masking pattern 5.
          The right version, as found in the 2024 edition of the standard, uses data masking pattern 6.}
+\label{fig:dmp-changed-1}
 \end{figure}
 
 \subsection{\standard, Section 5.2, Figure 1, caption (page 6)}
@@ -159,15 +158,16 @@ The example shown in this section erroneously encodes them as byte values \hex{A
 
 This mistake is also present in the 2000, 2006, and 2015 editions of the standard.
 
-It would also be useful if an example QR code symbol that contains the encoded data is included in the standard, for example:
+It would also be useful if an example QR code symbol that contains the encoded data is included in the standard (Figure~\ref{fig:greek-encoding}).
 
 \begin{figure}[h]
 \centering
 \includegraphics[width=0.4\textwidth]{images/qrcode_iso18004_2024_QRCodeSymbol_1Mp6.png}
-\caption{The text ``AB$\mathit{\Gamma\Delta}$E'' represented as a 1-H QR code using data masking pattern 0.
+\caption{The text ``AB$\mathit{\Gamma\Delta}$E'' represented as a 1-H QR code using data masking pattern 6.
          The five bytes values \hex{C1} to \hex{C5} are preceded by an ECI designator that changes the character
          interpretation to the value 000009, indicating that the bytes that follow should be interpreted using
          the ISO/IEC~8859-7 byte-to-character mapping.}
+\label{fig:greek-encoding}
 \end{figure}
 
 \subsection{\standard, Section 7.4.6, Note 3, 4 (page 26)}
@@ -271,13 +271,13 @@ More importantly, the score calculation described in this section does not lead 
 pattern choices made for the seven QR code symbol examples given in the standard itself (Figure~1,
 Figure~29 with five examples, and Figure~I.4).
 
-The table below shows the scores calculated according to the scoring method described, for each of the seven QR codes
+Table~\ref{tab:dmp-selections} shows the scores calculated according to the scoring method described, for each of the seven QR codes
 found in the standard, and for each of the eight data masking pattern choices. Also listed is the optimal data mask
 pattern choice (with the  lowest score) and the data mask pattern actually used in the QR code symbol shown in the standard.
 
 These two data mask pattern choices should match, but for four out of seven cases, they do not.
 
-\begin{table}[h]
+\begin{table}[h!]
 \centering
 \tiny
 \begin{tabular}{|c|c|c|c|c|c|}
@@ -294,13 +294,15 @@ Figure I.4            & ``01234567''                             & 1-M & 1153,12
 \hline
 \end{tabular}
 \caption{Overview of QR codes found in \standard}
+\label{tab:dmp-selections}
 \end{table}
 
 The clarity of this section could be greatly improved if one or two worked-out examples were added that show the four score
 contribution terms and final scores for each of the eight data masking patterns. For example, for the QR code example discussed
-in Annex~I, this table lists the four score terms and the total score for each data masking pattern choice:
+in Annex~I, a table such as Table~\ref{tab:dmp-selection-annex-example} lists the four score terms and the total score for each
+data masking pattern choice:
 
-\begin{table}[h]
+\begin{table}[h!]
 \centering
 \tiny
 \begin{tabular}{|c|c|c|c|c|c|}
@@ -318,6 +320,7 @@ Pattern 7            & 203              & 210               & 720              &
 \hline
 \end{tabular}
 \caption{Partial and total scores for the QR code discussed in Annex~I}
+\label{tab:dmp-selection-annex-example}
 \end{table}
 
 \subsubsection*{Missing tie-breaker rule}
@@ -408,18 +411,19 @@ This should be changed to:
 
 This makes this subsection internally consistent, as the explanation describes that data masking pattern 2 is selected.
 
-It seems that this mistake stems from the 2000 edition of the standard, where the same example was
-worked out; except back then, data masking pattern 3 was chosen instead of 2.  When updating this
-section to reflect that change for the 2006 edition, it appears that this particular  reference to
-data masking pattern 011 was left by accident, and this wasn't corrected in the 2015 and 2024 editions.
+It seems that this mistake stems from the 2000 edition of the standard, where the same example was worked out;
+except back then, Data Masking Pattern~3 was chosen instead of Data Masking Pattern~2(Figure~\ref{fig:dmp-changed-2}).
+When updating this section to reflect that change for the 2006 edition, it appears that this particular reference
+to data masking pattern 011 was left by accident, and this wasn't corrected in the 2015 and 2024 editions.
 
-\begin{figure}[h]
+\begin{figure}[h!]
 \centering
 \includegraphics[width=0.4\textwidth]{images/qrcode_iso18004_2000_AnnexG_1Mp3.png}
 \includegraphics[width=0.4\textwidth]{images/qrcode_iso18004_2006_2015_2024_AnnexI_1Mp2.png}
 \caption{The text ``01234567'' represented as a 1-M QR code using two different data masking patterns.
          The left version, as found in the 2000 edition of the standard, uses data masking pattern 3.
          The right version, as found in the 2006, 2015, and 2024 editions of the standard, uses data masking pattern 2.}
+\label{fig:dmp-changed-2}
 \end{figure}
 
 It would be useful to explicitly acknowledge this change, and explain which one is the correct choice.
