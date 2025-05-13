@@ -2,13 +2,15 @@
 
 """Write poster with pi QR codes as HTML file."""
 
+import os
 import base64
 import textwrap
 
-from examples.make_qrcode_pi_as_svg import number_of_pi_characters_that_can_be_represented, pi_10k
 from qrcode_generator.enum_types import ErrorCorrectionLevel
 from qrcode_generator.render.utilities import make_optimal_qrcode, save_qrcode_as_png_file
 from qrcode_generator.render.xml_writer import XmlWriter
+
+from utilities.render_pi import number_of_pi_characters_that_can_be_represented, first_n_characters_of_pi
 
 
 def render_html_pi_poster(filename_html: str) -> None:
@@ -42,7 +44,7 @@ def render_html_pi_poster(filename_html: str) -> None:
                                 with html.write_container_tag("td",  arguments={"class": "qr-code"}):
                                     # Generate the QR code.
                                     number_of_pi_characters = number_of_pi_characters_that_can_be_represented(version, level)
-                                    pi_characters = pi_10k[:number_of_pi_characters]
+                                    pi_characters = first_n_characters_of_pi(number_of_pi_characters)
                                     canvas = make_optimal_qrcode(payload=pi_characters, version_preference_list=[(version, level)], include_quiet_zone=False)
                                     png_filename = "temp.png"
                                     descriptor = save_qrcode_as_png_file(
@@ -58,8 +60,12 @@ def render_html_pi_poster(filename_html: str) -> None:
                                         html.write_leaf_tag("img", arguments={"src": source})
                                         html.write_leaf_tag("p", content=description.replace("\n", "<br/>"))
 
+    os.remove("temp.png")
+
+
 def main():
     render_html_pi_poster("pi_poster.html")
+
 
 if __name__ == "__main__":
     main()

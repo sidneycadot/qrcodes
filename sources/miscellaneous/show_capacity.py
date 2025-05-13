@@ -1,5 +1,6 @@
 #! /usr/bin/env -S python3 -B
 
+# The data module count reproduces the fifth column of Table 1 of ISO/IEC 18004/2024.
 data_module_count = {
      1:   208,
      2:   359,

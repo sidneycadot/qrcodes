@@ -342,10 +342,13 @@ class QRCodeDrawer:
             elif index < total_number_of_bits:
                 self.set_module_value(i, j, ModuleValue.ERRC_1 if channel_bit else ModuleValue.ERRC_0)
             else:
-                assert channel_bit == False
                 self.set_module_value(i, j, ModuleValue.REMAINDER_BIT_1 if channel_bit else ModuleValue.REMAINDER_BIT_0)
 
     def apply_data_masking_pattern(self, pattern: DataMaskingPattern) -> None:
+        """Apply a data masking pattern to the QR code.
+
+        Note that the effect of a data mask pattern can be undone by applying it again.
+        """
         pattern_function = data_mask_pattern_function_table[pattern]
         for (i, j) in self.data_and_error_correction_positions:
             module_value = self.get_module_value(i, j)
@@ -423,7 +426,7 @@ class QRCodeDrawer:
 
         contribution_2 = 3 * num_blocks
 
-        # Contribution 3: 1011101 with preceding or following 4 white pixels.
+        # Contribution 3: Count occurrences of (1, 0, 1, 1, 1, 0, 1) with preceding or following 4 white pixels.
 
         occurrences = 0
         pattern = bytes([1, 0, 1, 1, 1, 0, 1])

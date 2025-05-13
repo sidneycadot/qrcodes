@@ -33,7 +33,7 @@ from qrcode_generator.enum_types import ErrorCorrectionLevel, EncodingVariant, D
 from qrcode_generator.qr_code import make_qr_code
 from qrcode_generator.render.utilities import write_optimal_qrcode, save_qrcode_as_png_file
 
-from render_html_examples import RenderHtmlExample
+from examples.utilities.render_html_examples import RenderHtmlExample
 
 
 def remove_stale_files() -> None:
