@@ -39,6 +39,7 @@ def render_qr_canvas_as_svg_path(
         path = " ".join(squares)
         svg.write_leaf_tag("path", {"fill": dark_color, "d": path} | extra_path_attributes)
 
+
 def render_qr_canvas_as_svg_group(
         svg: XmlWriter,
         *,
