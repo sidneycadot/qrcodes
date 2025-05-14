@@ -564,11 +564,11 @@ def make_qr_code(
         # Un-apply the data mask test pattern.
         qr.apply_data_masking_pattern(test_pattern)
 
-        if pattern is None:
-            # Sort the test patterns by score.
-            score_pattern_tuple_list.sort(key=lambda score_pattern_tuple: score_pattern_tuple[0])
-            # Select the test pattern that yields the lowest score.
-            pattern = score_pattern_tuple_list[0][1]
+    if pattern is None:
+        # Sort the test patterns by score.
+        score_pattern_tuple_list.sort(key=lambda score_pattern_tuple: score_pattern_tuple[0])
+        # Select the test pattern that yields the lowest score.
+        pattern = score_pattern_tuple_list[0][1]
 
     # Apply the selected data masking pattern.
     print(f"Applying data mask pattern {pattern.name}.")
