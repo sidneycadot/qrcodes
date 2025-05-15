@@ -67,6 +67,8 @@ class QRCodeCanvas:
         self.width = width
         self.height = height
         self.modules = bytearray([ModuleValue.INDETERMINATE]) * (width * height)
+        self.split_score: Optional[tuple[int, int, int, int]] = None
+        self.score: Optional[int] = None
 
     def set_module_value(self, i: int, j: int, value: ModuleValue) -> None:
         if not ((0 <= i < self.height) and (0 <= j < self.width)):
@@ -584,6 +586,7 @@ def make_qr_code(
     qr.canvas.version = version
     qr.canvas.level = level
     qr.canvas.pattern = pattern
-    qr.canvas.split_score_dict = split_score_dict
+    qr.canvas.split_score = split_score_dict[pattern]
+    qr.canvas.score = sum(qr.canvas.split_score)
 
     return qr.canvas
