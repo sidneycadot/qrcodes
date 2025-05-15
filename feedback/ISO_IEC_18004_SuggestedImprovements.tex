@@ -54,9 +54,9 @@ My hope is that the standard committee will consider the suggested improvements 
 quality of the \shortstandard{} standard, and that at least some of the items listed will be addressed in
 the next edition.
 
-Most notably, the rather hard to understand description of the Data Masking Pattern scoring algorithm in
+Most notably, the rather hard to understand description of the data mask pattern scoring algorithm in
 Section~7.8.3.1, and the related fact that some of the concrete QR codes shown in the standard appear to
-select a non-optimal Data Masking Pattern, leaves room for improvement. This is discussed in
+select a non-optimal data mask pattern, leaves room for improvement. This is discussed in
 Section~\ref{sec:dmp-scoring}, below.
 
 \section{Suggested improvements}
@@ -117,8 +117,9 @@ terms.
 \subsection{\standard, Section 5.2, Figure 1 (page 6)}
 \label{sec:dmp-changed-1}
 
-The QR code symbol used here as an example uses Data Masking Pattern~6, whereas in earlier editions of the standard
-(2000, 2006, 2015), this same example used Data Masking Pattern~5 (Figure~\ref{fig:dmp-changed-1}).
+The QR code symbol used here as an example uses data mask pattern~6, whereas in earlier editions of the standard
+(2000, 2006, 2015), this same example used data mask pattern~5.
+These two alternative code symbols are shown in Figure~\ref{fig:dmp-changed-1}).
 
 It would be useful to explicitly acknowledge this change, and explain which one is the correct choice;
 see also Sections~\ref{sec:dmp-scoring} and \ref{sec:dmp-changed-2}.
@@ -127,9 +128,9 @@ see also Sections~\ref{sec:dmp-scoring} and \ref{sec:dmp-changed-2}.
 \centering
 \includegraphics[width=0.4\textwidth]{images/qrcode_iso18004_2000_2006_2015_QRCodeSymbol_1Mp5.png}
 \includegraphics[width=0.4\textwidth]{images/qrcode_iso18004_2024_QRCodeSymbol_1Mp6.png}
-\caption{The text ``QR Code Symbol'' represented as a 1-M QR code using two different data masking patterns.
-         The left version, as found in the 2000, 2006, and 2015 editions of the standard, uses data masking pattern 5.
-         The right version, as found in the 2024 edition of the standard, uses data masking pattern 6.}
+\caption{The text ``QR Code Symbol'' represented as a 1-M QR code using two different data mask patterns.
+         The left version, as found in the 2000, 2006, and 2015 editions of the standard, uses data mask pattern~5.
+         The right version, as found in the 2024 edition of the standard, uses data mask pattern~6.}
 \label{fig:dmp-changed-1}
 \end{figure}
 
@@ -163,7 +164,7 @@ It would also be useful if an example QR code symbol that contains the encoded d
 \begin{figure}[h]
 \centering
 \includegraphics[width=0.4\textwidth]{images/qrcode_iso18004_2024_QRCodeSymbol_1Mp6.png}
-\caption{The text ``AB$\mathit{\Gamma\Delta}$E'' represented as a 1-H QR code using data masking pattern 6.
+\caption{The text ``AB$\mathit{\Gamma\Delta}$E'' represented as a 1-H QR code using data mask pattern 6.
          The five bytes values \hex{C1} to \hex{C5} are preceded by an ECI designator that changes the character
          interpretation to the value 000009, indicating that the bytes that follow should be interpreted using
          the ISO/IEC~8859-7 byte-to-character mapping.}
@@ -265,14 +266,14 @@ However, N1 to N4 are not variables, but \emph{constants}; and they don't repres
 scores; rather, they are merely constants used in the calculation of the four terms that make up
 the final penalty score for a given symbol.
 
-\subsubsection*{Inconsistency between the scoring algorithm and the Data Masking Pattern choices in the example QR codes found in \standard}
+\subsubsection*{Inconsistency between the scoring algorithm and the data mask pattern choices in the example QR codes found in \standard}
 
-More importantly, the score calculation described in this section does not lead to the data masking
+More importantly, the score calculation described in this section does not lead to the data mask
 pattern choices made for the seven QR code symbol examples given in the standard itself (Figure~1,
 Figure~29 with five examples, and Figure~I.4).
 
 Table~\ref{tab:dmp-selections} shows the scores calculated according to the scoring method described, for each of the seven QR codes
-found in the standard, and for each of the eight data masking pattern choices. Also listed is the optimal data mask
+found in the standard, and for each of the eight data mask pattern choices. Also listed is the optimal data mask
 pattern choice (with the  lowest score) and the data mask pattern actually used in the QR code symbol shown in the standard.
 
 These two data mask pattern choices should match, but for four out of seven cases, they do not.
@@ -298,16 +299,16 @@ Figure I.4            & ``01234567''                             & 1-M & 1153,12
 \end{table}
 
 The clarity of this section could be greatly improved if one or two worked-out examples were added that show the four score
-contribution terms and final scores for each of the eight data masking patterns. For example, for the QR code example discussed
+contribution terms and final scores for each of the eight data mask patterns. For example, for the QR code example discussed
 in Annex~I, a table such as Table~\ref{tab:dmp-selection-annex-example} lists the four score terms and the total score for each
-data masking pattern choice:
+data mask pattern choice:
 
 \begin{table}[h!]
 \centering
 \tiny
 \begin{tabular}{|c|c|c|c|c|c|}
 \hline
-Data Masking Pattern & First score term & Second score term & Third score term & Fourth score term & Total score (best score underlined) \\
+Data mask pattern & First score term & Second score term & Third score term & Fourth score term & Total score (best score underlined) \\
 \hline
 Pattern 0            & 182              & 171               & 800              &  0                & 1153        \\
 Pattern 1            & 216              & 234               & 800              &  0                & 1250        \\
@@ -325,14 +326,14 @@ Pattern 7            & 203              & 210               & 720              &
 
 \subsubsection*{Missing tie-breaker rule}
 
-A tie-breaker rule should be defined in case two data masking patterns yield an identical score.
+A tie-breaker rule should be defined in case two data mask patterns yield an identical score.
 
 This would ensure that, for each QR code, there is a fully deterministic and unambiguous way of selecting the
-correct data masking pattern.
+correct data mask pattern.
 
-\subsubsection*{Specify behavior of decoders when encountering QR codes with sub-optimal data masking pattern}
+\subsubsection*{Specify behavior of decoders when encountering QR codes with sub-optimal data mask pattern}
 
-It is suggested that a statement be added that decoders \emph{should} accept QR codes with a suboptimal data masking
+It is suggested that a statement be added that decoders \emph{should} accept QR codes with a suboptimal data mask
 pattern choice.
 
 \subsubsection*{Two further remarks on the score algorithm}
@@ -340,8 +341,8 @@ pattern choice.
 (1) According to the scoring procedure, the scores are determined with the version and format information areas
 cleared (light modules). This is an unfortunate and suboptimal choice for which there seems to be no good reason.
 It would be better if the standard mandated that both the version and format information were fully filled in when 
-scoring the data masking patterns, taking into account that the format version information changes when assessing
-the eight data masking patterns in turn.
+scoring the data mask patterns, taking into account that the format version information changes when assessing
+the eight data mask patterns in turn.
 
 (2) The fourth term in the scoring algorithm penalizes an imbalance between dark and light
 squares in the QR code; but it does so by binning the percentual deviations in `classes' of
@@ -400,29 +401,31 @@ An explanation  of the choice made in those cases would be welcome. Specifically
 This subsection contains an incorrect statement:
 
 \begin{quote}
-\quotestandard{\ddd the data masking pattern is 011.}
+\quotestandard{\ddd the data mask pattern is 011.}
 \end{quote}
 
 This should be changed to:
 
 \begin{quote}
-\quotestandard{\ddd the data masking pattern is \change{010}.}
+\quotestandard{\ddd the data mask pattern is \change{010}.}
 \end{quote}
 
-This makes this subsection internally consistent, as the explanation describes that data masking pattern 2 is selected.
+This makes this subsection internally consistent, as the explanation describes that data mask pattern~2 is selected.
 
 It seems that this mistake stems from the 2000 edition of the standard, where the same example was worked out;
-except back then, Data Masking Pattern~3 was chosen instead of Data Masking Pattern~2(Figure~\ref{fig:dmp-changed-2}).
+except back then, data mask pattern~3 was chosen instead of data mask pattern~2.
+These two alternative code symbols are shown in Figure~\ref{fig:dmp-changed-2}).
+
 When updating this section to reflect that change for the 2006 edition, it appears that this particular reference
-to data masking pattern 011 was left by accident, and this wasn't corrected in the 2015 and 2024 editions.
+to data mask pattern `011' was left by accident, and this wasn't corrected in the 2015 and 2024 editions.
 
 \begin{figure}[h!]
 \centering
 \includegraphics[width=0.4\textwidth]{images/qrcode_iso18004_2000_AnnexG_1Mp3.png}
 \includegraphics[width=0.4\textwidth]{images/qrcode_iso18004_2006_2015_2024_AnnexI_1Mp2.png}
-\caption{The text ``01234567'' represented as a 1-M QR code using two different data masking patterns.
-         The left version, as found in the 2000 edition of the standard, uses data masking pattern 3.
-         The right version, as found in the 2006, 2015, and 2024 editions of the standard, uses data masking pattern 2.}
+\caption{The text ``01234567'' represented as a 1-M QR code using two different data mask patterns.
+         The left version, as found in the 2000 edition of the standard, uses data mask pattern~3.
+         The right version, as found in the 2006, 2015, and 2024 editions of the standard, uses data mask pattern~2.}
 \label{fig:dmp-changed-2}
 \end{figure}
 
@@ -432,12 +435,12 @@ See also Sections~\ref{sec:dmp-changed-1} and \ref{sec:dmp-scoring}.
 
 \subsection{General recommendations}
 
-Once the issues with the Data Masking Pattern scoring are fixed, it would be useful to include more concrete examples
+Once the issues with the data mask pattern scoring are fixed, it would be useful to include more concrete examples
 of QR code symbols in the standard, perhaps as an Annex. These could serve as a `gold standard' for implementers of both
 encoders and decoders.
 
 For some of the more esoteric parts of the standard (in particular, the codes used for the format information and version areas,
-the Reed-Solomon codes used for the information area, and the data masking pattern scoring) it would be very helpful if pseudocode
+the Reed-Solomon codes used for the information area, and the data mask pattern scoring) it would be very helpful if pseudocode
 (or even code in a mainstream programming language, like Python) would be provided, perhaps as an Annex.
 
 \end{document}

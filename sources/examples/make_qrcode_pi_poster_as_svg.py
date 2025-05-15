@@ -1,13 +1,14 @@
 #! /usr/bin/env -S python3 -B
 
 """Write QR code poster with encodings of pi as an SVG image."""
+
 import base64
 import os
 import subprocess
 
-from qrcode_generator.render.render_svg import render_qr_canvas_as_svg_path
+from qrcode_generator.render.render_svg import render_qr_canvas_as_svg_group
 from qrcode_generator.render.xml_writer import XmlWriter
-from qrcode_generator.enum_types import DataMaskingPattern, ErrorCorrectionLevel
+from qrcode_generator.enum_types import ErrorCorrectionLevel
 from qrcode_generator.lookup_tables import version_specification_table
 from qrcode_generator.render.utilities import make_optimal_qrcode, save_qrcode_as_png_file
 
@@ -20,29 +21,36 @@ def write_svg_qrcode_poster(filename_svg: str) -> None:
 
         with svg.write_container_tag(
             "svg", {
-                "viewBox": "0 0 5400 5400",
+                "viewBox": "0 0 5000 52000",
                 "xmlns": "http://www.w3.org/2000/svg",
                 "xmlns:xlink": "http://www.w3.org/1999/xlink"
             }):
 
             svg.write_leaf_tag("rect", {"width": "100%", "height": "100%", "fill": "white"})
 
-            svg.write_leaf_tag("text", {"x": 2700.0, "y": 350.0, "fill": "red", "font-size": "300px", "dominant-baseline": "middle", "text-anchor": "middle"}, content="Decimals of π encoded in QR codes")
+            with svg.write_container_tag("g", {"transform": "translate(2500 700) scale(800)"}):
 
-            with svg.write_container_tag("g", {"transform": "translate(600 700) scale(800)"}):
+                svg.write_leaf_tag(
+                    "text",
+                    {
+                        "x": 0.0, "y": -0.42, "fill": "blue", "font-size": "0.36",
+                        "dominant-baseline": "middle", "text-anchor": "middle"
+                    },
+                    content="Decimals of π encoded in QR codes"
+                )
 
                 for version in range(1, 41):
 
-                    if version not in (1, 3): continue
+                    # if version not in (1, 2, 3): continue
 
-                    with svg.write_container_tag("g", {"transform": f"translate(0 {(version - 1) * 1.2:.9f})"}):
+                    with svg.write_container_tag("g", {"transform": f"translate(0 {(version - 1) * 1.6:.9f})"}):
 
                         for level in reversed(ErrorCorrectionLevel):
 
                             number_of_pi_characters = number_of_pi_characters_that_can_be_represented(version, level)
                             pi_characters = first_n_characters_of_pi(number_of_pi_characters)
 
-                            with svg.write_container_tag("g", {"transform": f"translate({(ErrorCorrectionLevel.H.value - level.value) * 1.2:.9f} 0 )"}):
+                            with svg.write_container_tag("g", {"transform": f"translate({(ErrorCorrectionLevel.H.value - level.value - 1.5) * 1.4:.9f} 0)"}):
 
                                 version_specification = version_specification_table[(version, level)]
 
@@ -53,40 +61,54 @@ def write_svg_qrcode_poster(filename_svg: str) -> None:
                                     include_quiet_zone=False
                                 )
 
-                                label = f'<tspan x="0" y="0.8">{version}-{level.name}, pattern {canvas.pattern.name[-1]}</tspan>' \
-                                        f'<tspan x="0" y="1.2">{version_specification.number_of_data_codewords() * 8} databits</tspan>' \
-                                        f'<tspan x="0" y="1.6">π to {number_of_pi_characters - 2} digits</tspan>'
-
-                                svg.write_leaf_tag("text", {
-                                    "x": 0, "y": "1.2",
-                                    "fill": "blue",
-                                    "font-size": "0.06px",
-                                    "font-weight": "bold",
-                                    "dominant-baseline": "middle",
-                                    "text-anchor": "middle"
-                                }, content=label)
-
                                 colormap = "color"
 
-                                descriptor = save_qrcode_as_png_file(
-                                    png_filename="temp.png",
-                                    canvas=canvas,
-                                    colormap=colormap,
-                                    optimize_png=True
-                                )
+                                use_embedded_png = True
 
-                                with open(descriptor.png_filename, "rb") as fi:
-                                    imagedata = fi.read()
+                                if use_embedded_png:
+
+                                    descriptor = save_qrcode_as_png_file(
+                                        png_filename="temp.png",
+                                        canvas=canvas,
+                                        colormap=colormap,
+                                        optimize_png=True
+                                    )
+
+                                    with open(descriptor.png_filename, "rb") as fi:
+                                        imagedata = fi.read()
+
+                                    os.unlink(descriptor.png_filename)
+
                                     source = f"data:image/png;base64,{base64.b64encode(imagedata).decode('ascii')}"
-                                    #description = f"{canvas.version}-{canvas.level.name}, pattern {canvas.pattern.name[-1]}\n{number_of_pi_characters} characters of π"
                                     svg.write_leaf_tag("image", arguments={
                                         "x": "-0.5",
+                                        "style" : "image-rendering: pixelated;",
                                         "width": 1,
                                         "height": 1,
                                         "href": source
                                     })
 
-    os.unlink("temp.png")
+                                else:
+
+                                    render_qr_canvas_as_svg_group(
+                                        svg,
+                                        canvas=canvas,
+                                        extra_group_attributes={"transform": f"translate(-0.5 0) scale({1/canvas.width})"},
+                                        colormap=colormap
+                                    )
+
+                                label = f'<tspan x="0" y="1.10">{version}-{level.name}, pattern {canvas.pattern.name[-1]}</tspan>' \
+                                        f'<tspan x="0" y="1.24">{version_specification.number_of_data_codewords() * 8} databits</tspan>' \
+                                        f'<tspan x="0" y="1.36">{version_specification.number_of_error_correcting_codewords * 8} error correction bits</tspan>' \
+                                        f'<tspan x="0" y="1.48">π to {number_of_pi_characters - 2} digits</tspan>'
+
+                                svg.write_leaf_tag("text", {
+                                    "fill": "blue",
+                                    "font-size": "0.10px",
+                                    "font-weight": "bold",
+                                    "dominant-baseline": "middle",
+                                    "text-anchor": "middle"
+                                }, content=label)
 
     filename_pdf = os.path.splitext(filename_svg)[0] + ".pdf"
 
