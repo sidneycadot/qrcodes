@@ -63,6 +63,7 @@ class QRCodeCanvas:
         self.version: Optional[int] = None
         self.level: Optional[ErrorCorrectionLevel] = None
         self.pattern: Optional[DataMaskingPattern] = None
+        self.split_score_dict: Optional[dict[DataMaskingPattern, tuple[int, int, int, int]]] = None
         self.width = width
         self.height = height
         self.modules = bytearray([ModuleValue.INDETERMINATE]) * (width * height)
@@ -533,6 +534,7 @@ def make_qr_code(
     # If a pattern is given as a parameter, we will use that.
     # Otherwise, we'll determine the best pattern based on a score.
 
+    split_score_dict = {}
     score_pattern_tuple_list = []
 
     for test_pattern in DataMaskingPattern:
@@ -555,6 +557,7 @@ def make_qr_code(
 
         # Calculate and record the score for this test pattern.
         split_score = qr.split_score()
+        split_score_dict[test_pattern] = split_score
         score = qr.score()
         score_pattern_tuple_list.append((score, test_pattern))
 
@@ -564,11 +567,11 @@ def make_qr_code(
         # Un-apply the data mask test pattern.
         qr.apply_data_masking_pattern(test_pattern)
 
-        if pattern is None:
-            # Sort the test patterns by score.
-            score_pattern_tuple_list.sort(key=lambda score_pattern_tuple: score_pattern_tuple[0])
-            # Select the test pattern that yields the lowest score.
-            pattern = score_pattern_tuple_list[0][1]
+    if pattern is None:
+        # Sort the test patterns by score.
+        score_pattern_tuple_list.sort(key=lambda score_pattern_tuple: score_pattern_tuple[0])
+        # Select the test pattern that yields the lowest score.
+        pattern = score_pattern_tuple_list[0][1]
 
     # Apply the selected data masking pattern.
     print(f"Applying data mask pattern {pattern.name}.")
@@ -581,5 +584,6 @@ def make_qr_code(
     qr.canvas.version = version
     qr.canvas.level = level
     qr.canvas.pattern = pattern
+    qr.canvas.split_score_dict = split_score_dict
 
     return qr.canvas
