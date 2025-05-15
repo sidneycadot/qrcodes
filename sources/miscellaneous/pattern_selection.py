@@ -111,7 +111,7 @@ def main():
         for (example, example_spec) in example_specs.items():
 
             print("\\begin{table}", file=fo)
-            print("\\begin{tabular}[|c|c|c|c|c|c|c|]", file=fo)
+            print("\\begin{tabular}{|c|c|c|c|c|c|c|}", file=fo)
             print("\\hline", file=fo)
             print("Symbol & Data Mask Pattern & Score term 1 & Score term 2 & Score term 3 & Score term 4 & Total score \\\\", file=fo)
             print("\\hline", file=fo)
@@ -137,11 +137,11 @@ def main():
                     optimize_png=True
                 )
 
-                print(f"\\includegraphics{descriptor.png_filename} & Pattern~{pattern.name[-1]} & {canvas.split_score_dict[pattern][0]:6d} & {canvas.split_score_dict[pattern][1]:6d} & {canvas.split_score_dict[pattern][2]:6d} & {canvas.split_score_dict[pattern][3]:6d} & {sum(canvas.split_score_dict[pattern]):6d} \\\\", file=fo)
+                print(f"\\includegraphics[trim=-5mm -5mm -5mm -5mm]{{{descriptor.png_filename}}} & \\vspace{{-1cm}} Pattern~{pattern.name[-1]} & {canvas.split_score_dict[pattern][0]:6d} & {canvas.split_score_dict[pattern][1]:6d} & {canvas.split_score_dict[pattern][2]:6d} & {canvas.split_score_dict[pattern][3]:6d} & {sum(canvas.split_score_dict[pattern]):6d} \\\\", file=fo)
+                print("\\hline", file=fo)
 
-            print("\\hline", file=fo)
             print("\\end{tabular}", file=fo)
-            print(f"\\caption{{Score of {example_spec.description}. The best pattern is Pattern~{best_pattern.name[-1]} with a score of {best_score}.", file=fo)
+            print(f"\\caption{{Score of {example_spec.description}. The best pattern is Pattern~{best_pattern.name[-1]} with a score of {best_score}.}}", file=fo)
             print(f"\\label{{tab:score-{example_spec.shortname}}}", file=fo)
             print("\\end{table}", file=fo)
             print(file=fo)
