@@ -20,7 +20,6 @@ def render_html_pi_poster(filename_html: str) -> None:
     colormap='color'
 
     css_style_definitions ="""
-    
         table,th,td { border: 1px solid black; }
         td { padding-left: 10mm; padding-right: 10mm; }
         .qr-code img { display: block; width: 80mm; margin-left: auto; margin-right: auto; margin-top: 8mm; margin-bottom: 8mm; image-rendering: pixelated; }
