@@ -3,7 +3,7 @@
 """Render codes found in the wild."""
 
 from qrcode_generator.data_encoder import DataEncoder
-from qrcode_generator.enum_types import ErrorCorrectionLevel, EncodingVariant, DataMaskingPattern
+from qrcode_generator.enum_types import ErrorCorrectionLevel, EncodingVariant, DataMaskPattern
 from qrcode_generator.qr_code import make_qr_code
 from qrcode_generator.render.utilities import save_qrcode_as_png_file
 
@@ -11,7 +11,7 @@ from qrcode_generator.render.utilities import save_qrcode_as_png_file
 def render_iso_standard_customer_feedback_code():
     """Render QR code found on the cover of the ISO/IEC 18004:2024 standard."""
     version = 8
-    pattern = DataMaskingPattern.PATTERN3
+    pattern = DataMaskPattern.PATTERN3
     level = ErrorCorrectionLevel.L
 
     include_quiet_zone = True
@@ -48,7 +48,7 @@ def render_oralb_package_code():
     """Reproduce the QR code found on a commercial toothbrush blister."""
 
     version = 3
-    pattern = DataMaskingPattern.PATTERN2
+    pattern = DataMaskPattern.PATTERN2
     level = ErrorCorrectionLevel.H
 
     include_quiet_zone = True
@@ -87,7 +87,7 @@ def render_lego_bouwplaats_code():
     """Render QR code found in Delft, Lego shop display."""
 
     version = 2
-    pattern = DataMaskingPattern.PATTERN3
+    pattern = DataMaskPattern.PATTERN3
     level = ErrorCorrectionLevel.L
 
     include_quiet_zone = True

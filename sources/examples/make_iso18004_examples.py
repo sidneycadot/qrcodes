@@ -29,7 +29,7 @@ import os
 from typing import Optional
 
 from qrcode_generator.data_encoder import DataEncoder
-from qrcode_generator.enum_types import ErrorCorrectionLevel, EncodingVariant, DataMaskingPattern
+from qrcode_generator.enum_types import ErrorCorrectionLevel, EncodingVariant, DataMaskPattern
 from qrcode_generator.qr_code import make_qr_code
 from qrcode_generator.render.utilities import write_optimal_qrcode, save_qrcode_as_png_file
 
@@ -78,7 +78,7 @@ def write_introduction_examples(
                 payload=payload,
                 png_filename="qrcode_iso18004_2000_2006_2015_QRCodeSymbol_{VERSION}{LEVEL}p{PATTERN}.png",
                 include_quiet_zone=include_quiet_zone,
-                pattern=DataMaskingPattern.PATTERN5,
+                pattern=DataMaskPattern.PATTERN5,
                 version_preference_list=[(1, ErrorCorrectionLevel.M)],
                 colormap=colormap,
                 optimize_png=optimize_png
@@ -90,7 +90,7 @@ def write_introduction_examples(
                 payload=payload,
                 png_filename="qrcode_iso18004_2024_QRCodeSymbol_{VERSION}{LEVEL}p{PATTERN}.png",
                 include_quiet_zone=include_quiet_zone,
-                pattern=DataMaskingPattern.PATTERN6,
+                pattern=DataMaskPattern.PATTERN6,
                 version_preference_list=[(1, ErrorCorrectionLevel.M)],
                 colormap=colormap,
                 optimize_png=optimize_png
@@ -168,7 +168,7 @@ def write_structured_append_mode_examples(
                 png_filename="qrcode_iso18004_2000_2006_2015_2024_StructuredAppendMode_combined_{VERSION}{LEVEL}p{PATTERN}.png",
                 include_quiet_zone=include_quiet_zone,
                 version_preference_list=[(4, ErrorCorrectionLevel.M)],
-                pattern=DataMaskingPattern.PATTERN4,
+                pattern=DataMaskPattern.PATTERN4,
                 colormap=colormap,
                 optimize_png=optimize_png
             )
@@ -181,10 +181,10 @@ def write_structured_append_mode_examples(
         checksum ^= ord(c)
 
     structured_append_qrcode_specs = [
-        (0, DataMaskingPattern.PATTERN0, payload[0:14]),
-        (1, DataMaskingPattern.PATTERN7, payload[14:30]),
-        (2, DataMaskingPattern.PATTERN7, payload[30:46]),
-        (3, DataMaskingPattern.PATTERN3, payload[46:62])
+        (0, DataMaskPattern.PATTERN0, payload[0:14]),
+        (1, DataMaskPattern.PATTERN7, payload[14:30]),
+        (2, DataMaskPattern.PATTERN7, payload[30:46]),
+        (3, DataMaskPattern.PATTERN3, payload[46:62])
     ]
 
     for (index, pattern, sub_payload) in structured_append_qrcode_specs:
@@ -238,7 +238,7 @@ def write_annex_examples(
                 payload=payload,
                 png_filename="qrcode_iso18004_2000_AnnexG_{VERSION}{LEVEL}p{PATTERN}.png",
                 include_quiet_zone=include_quiet_zone,
-                pattern=DataMaskingPattern.PATTERN3,
+                pattern=DataMaskPattern.PATTERN3,
                 version_preference_list=[(1, ErrorCorrectionLevel.M)],
                 colormap=colormap,
                 optimize_png=optimize_png
@@ -250,7 +250,7 @@ def write_annex_examples(
                 payload=payload,
                 png_filename="qrcode_iso18004_2006_2015_2024_AnnexI_{VERSION}{LEVEL}p{PATTERN}.png",
                 include_quiet_zone=include_quiet_zone,
-                pattern=DataMaskingPattern.PATTERN2,
+                pattern=DataMaskPattern.PATTERN2,
                 version_preference_list=[(1, ErrorCorrectionLevel.M)],
                 colormap=colormap,
                 optimize_png=optimize_png

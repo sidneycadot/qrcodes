@@ -8,7 +8,7 @@ from enum import Enum
 from typing import NamedTuple
 
 from qrcode_generator.data_encoder import DataEncoder
-from qrcode_generator.enum_types import ErrorCorrectionLevel, EncodingVariant, DataMaskingPattern
+from qrcode_generator.enum_types import ErrorCorrectionLevel, EncodingVariant, DataMaskPattern
 from qrcode_generator.qr_code import make_qr_code
 from qrcode_generator.render.utilities import save_qrcode_as_png_file
 from qrcode_generator.render.xml_writer import XmlWriter
@@ -34,13 +34,13 @@ class Example(Enum):
 class ExampleCodeSpec(NamedTuple):
     edition: StandardEdition
     location: str
-    pattern: DataMaskingPattern
+    pattern: DataMaskPattern
 
 
 StructuredAppendExampleParity = 1
 
 class EditionInfo(NamedTuple):
-    pattern: DataMaskingPattern
+    pattern: DataMaskPattern
     location: str
 
 class ExampleSpec(NamedTuple):
@@ -56,10 +56,10 @@ example_specs = {
         shortname="introduction_example",
         description="String \"QR Code Symbol\" encoded using byte mode in a 1-M QR code symbol",
         editions={
-            StandardEdition.E2000: EditionInfo(DataMaskingPattern.PATTERN5, "Section 7.1, Figure 1, Page 5"),
-            StandardEdition.E2006: EditionInfo(DataMaskingPattern.PATTERN5, "Section 5.2, Figure 1(a), Page 7"),
-            StandardEdition.E2015: EditionInfo(DataMaskingPattern.PATTERN5, "Section 6.2, Figure 1(a), Page 7"),
-            StandardEdition.E2024: EditionInfo(DataMaskingPattern.PATTERN6, "Section 5.2, Figure 1(a), Page 6")
+            StandardEdition.E2000: EditionInfo(DataMaskPattern.PATTERN5, "Section 7.1, Figure 1, Page 5"),
+            StandardEdition.E2006: EditionInfo(DataMaskPattern.PATTERN5, "Section 5.2, Figure 1(a), Page 7"),
+            StandardEdition.E2015: EditionInfo(DataMaskPattern.PATTERN5, "Section 6.2, Figure 1(a), Page 7"),
+            StandardEdition.E2024: EditionInfo(DataMaskPattern.PATTERN6, "Section 5.2, Figure 1(a), Page 6")
         },
         version=1,
         level=ErrorCorrectionLevel.M,
@@ -69,10 +69,10 @@ example_specs = {
         shortname="structured_append_mode_example_combined",
         description="Structured Append Mode example: 62 alphanumeric characters, combined in a 4-M QR code symbol",
         editions={
-            StandardEdition.E2000: EditionInfo(DataMaskingPattern.PATTERN4, "Section 9.1, Figure 22 (top), page 56"),
-            StandardEdition.E2006: EditionInfo(DataMaskingPattern.PATTERN4, "Section 7.1, Figure 29 (top), page 59"),
-            StandardEdition.E2015: EditionInfo(DataMaskingPattern.PATTERN4, "Section 8.1, Figure 29 (top), page 60"),
-            StandardEdition.E2024: EditionInfo(DataMaskingPattern.PATTERN4, "Section 8.1, Figure 29 (top), page 56")
+            StandardEdition.E2000: EditionInfo(DataMaskPattern.PATTERN4, "Section 9.1, Figure 22 (top), page 56"),
+            StandardEdition.E2006: EditionInfo(DataMaskPattern.PATTERN4, "Section 7.1, Figure 29 (top), page 59"),
+            StandardEdition.E2015: EditionInfo(DataMaskPattern.PATTERN4, "Section 8.1, Figure 29 (top), page 60"),
+            StandardEdition.E2024: EditionInfo(DataMaskPattern.PATTERN4, "Section 8.1, Figure 29 (top), page 56")
         },
         version=4,
         level=ErrorCorrectionLevel.M,
@@ -82,10 +82,10 @@ example_specs = {
         shortname="structured_append_mode_example_1_of_4",
         description="Structured Append Mode example: 14 alphanumeric characters characters, first of four parts, in a 1-M QR code symbol",
         editions={
-            StandardEdition.E2000: EditionInfo(DataMaskingPattern.PATTERN0, "Section 9.1, Figure 22 (bottom row, first of four), page 56"),
-            StandardEdition.E2006: EditionInfo(DataMaskingPattern.PATTERN0, "Section 7.1, Figure 29 (bottom row, first of four), page 59"),
-            StandardEdition.E2015: EditionInfo(DataMaskingPattern.PATTERN0, "Section 8.1, Figure 29 (bottom row, first of four), page 60"),
-            StandardEdition.E2024: EditionInfo(DataMaskingPattern.PATTERN0, "Section 8.1, Figure 29 (bottom row, first of four), page 56")
+            StandardEdition.E2000: EditionInfo(DataMaskPattern.PATTERN0, "Section 9.1, Figure 22 (bottom row, first of four), page 56"),
+            StandardEdition.E2006: EditionInfo(DataMaskPattern.PATTERN0, "Section 7.1, Figure 29 (bottom row, first of four), page 59"),
+            StandardEdition.E2015: EditionInfo(DataMaskPattern.PATTERN0, "Section 8.1, Figure 29 (bottom row, first of four), page 60"),
+            StandardEdition.E2024: EditionInfo(DataMaskPattern.PATTERN0, "Section 8.1, Figure 29 (bottom row, first of four), page 56")
         },
         version=1,
         level=ErrorCorrectionLevel.M,
@@ -95,10 +95,10 @@ example_specs = {
         shortname="structured_append_mode_example_2_of_4",
         description="Structured Append Mode example, 16 alphanumeric characters characters, second of four parts, in a 1-M QR code symbol",
         editions={
-            StandardEdition.E2000: EditionInfo(DataMaskingPattern.PATTERN7, "Section 9.1, Figure 22 (bottom row, second of four), page 56"),
-            StandardEdition.E2006: EditionInfo(DataMaskingPattern.PATTERN7, "Section 7.1, Figure 29 (bottom row, second of four), page 59"),
-            StandardEdition.E2015: EditionInfo(DataMaskingPattern.PATTERN7, "Section 8.1, Figure 29 (bottom row, second of four), page 60"),
-            StandardEdition.E2024: EditionInfo(DataMaskingPattern.PATTERN7, "Section 8.1, Figure 29 (bottom row, second of four), page 56")
+            StandardEdition.E2000: EditionInfo(DataMaskPattern.PATTERN7, "Section 9.1, Figure 22 (bottom row, second of four), page 56"),
+            StandardEdition.E2006: EditionInfo(DataMaskPattern.PATTERN7, "Section 7.1, Figure 29 (bottom row, second of four), page 59"),
+            StandardEdition.E2015: EditionInfo(DataMaskPattern.PATTERN7, "Section 8.1, Figure 29 (bottom row, second of four), page 60"),
+            StandardEdition.E2024: EditionInfo(DataMaskPattern.PATTERN7, "Section 8.1, Figure 29 (bottom row, second of four), page 56")
         },
         version=1,
         level=ErrorCorrectionLevel.M,
@@ -108,10 +108,10 @@ example_specs = {
         shortname="structured_append_mode_example_3_of_4",
         description="Structured Append Mode example, 16 alphanumeric characters characters, third of four parts, in a 1-M QR code symbol",
         editions={
-            StandardEdition.E2000: EditionInfo(DataMaskingPattern.PATTERN7, "Section 9.1, Figure 22 (bottom row, third of four), page 56"),
-            StandardEdition.E2006: EditionInfo(DataMaskingPattern.PATTERN7, "Section 7.1, Figure 29 (bottom row, third of four), page 59"),
-            StandardEdition.E2015: EditionInfo(DataMaskingPattern.PATTERN7, "Section 8.1, Figure 29 (bottom row, third of four), page 60"),
-            StandardEdition.E2024: EditionInfo(DataMaskingPattern.PATTERN7, "Section 8.1, Figure 29 (bottom row, third of four), page 56")
+            StandardEdition.E2000: EditionInfo(DataMaskPattern.PATTERN7, "Section 9.1, Figure 22 (bottom row, third of four), page 56"),
+            StandardEdition.E2006: EditionInfo(DataMaskPattern.PATTERN7, "Section 7.1, Figure 29 (bottom row, third of four), page 59"),
+            StandardEdition.E2015: EditionInfo(DataMaskPattern.PATTERN7, "Section 8.1, Figure 29 (bottom row, third of four), page 60"),
+            StandardEdition.E2024: EditionInfo(DataMaskPattern.PATTERN7, "Section 8.1, Figure 29 (bottom row, third of four), page 56")
         },
         version=1,
         level=ErrorCorrectionLevel.M,
@@ -121,10 +121,10 @@ example_specs = {
         shortname="structured_append_mode_example_4_of_4",
         description="Structured Append Mode example, 16 alphanumeric characters characters, fourth of four parts, in a 1-M QR code symbol",
         editions={
-            StandardEdition.E2000: EditionInfo(DataMaskingPattern.PATTERN3, "Section 9.1, Figure 22 (bottom row, last of four), page 56"),
-            StandardEdition.E2006: EditionInfo(DataMaskingPattern.PATTERN3, "Section 7.1, Figure 29 (bottom row, last of four), page 59"),
-            StandardEdition.E2015: EditionInfo(DataMaskingPattern.PATTERN3, "Section 8.1, Figure 29 (bottom row, last of four), page 60"),
-            StandardEdition.E2024: EditionInfo(DataMaskingPattern.PATTERN3, "Section 8.1, Figure 29 (bottom row, last of four), page 56")
+            StandardEdition.E2000: EditionInfo(DataMaskPattern.PATTERN3, "Section 9.1, Figure 22 (bottom row, last of four), page 56"),
+            StandardEdition.E2006: EditionInfo(DataMaskPattern.PATTERN3, "Section 7.1, Figure 29 (bottom row, last of four), page 59"),
+            StandardEdition.E2015: EditionInfo(DataMaskPattern.PATTERN3, "Section 8.1, Figure 29 (bottom row, last of four), page 60"),
+            StandardEdition.E2024: EditionInfo(DataMaskPattern.PATTERN3, "Section 8.1, Figure 29 (bottom row, last of four), page 56")
         },
         version=1,
         level=ErrorCorrectionLevel.M,
@@ -134,10 +134,10 @@ example_specs = {
         shortname="annex_example",
         description="Annex example, \"01234567\" encoded as numeric characters, 1-M symbol",
         editions={
-            StandardEdition.E2000: EditionInfo(DataMaskingPattern.PATTERN3, "Annex G, Figure G.2, page 85"),
-            StandardEdition.E2006: EditionInfo(DataMaskingPattern.PATTERN2, "Annex I, Figure I.2, page 96"),
-            StandardEdition.E2015: EditionInfo(DataMaskingPattern.PATTERN2, "Annex I, Figure I.2, page 96"),
-            StandardEdition.E2024: EditionInfo(DataMaskingPattern.PATTERN2, "Annex I, Figure I.2, page 91")
+            StandardEdition.E2000: EditionInfo(DataMaskPattern.PATTERN3, "Annex G, Figure G.2, page 85"),
+            StandardEdition.E2006: EditionInfo(DataMaskPattern.PATTERN2, "Annex I, Figure I.2, page 96"),
+            StandardEdition.E2015: EditionInfo(DataMaskPattern.PATTERN2, "Annex I, Figure I.2, page 96"),
+            StandardEdition.E2024: EditionInfo(DataMaskPattern.PATTERN2, "Annex I, Figure I.2, page 91")
         },
         version=1,
         level=ErrorCorrectionLevel.M,
@@ -205,7 +205,7 @@ def main():
                         best_score = None
                         best_pattern = None
 
-                        for pattern in DataMaskingPattern:
+                        for pattern in DataMaskPattern:
 
                             with html.write_container_tag("tr"):
 

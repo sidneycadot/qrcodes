@@ -4,7 +4,7 @@ import os
 import subprocess
 from typing import NamedTuple,Optional
 
-from qrcode_generator.enum_types import ErrorCorrectionLevel, DataMaskingPattern
+from qrcode_generator.enum_types import ErrorCorrectionLevel, DataMaskPattern
 from qrcode_generator.optimal_encoding import make_optimal_qrcode
 from qrcode_generator.qr_code import QRCodeCanvas
 from qrcode_generator.render.render_pil import render_qrcode_as_pil_image
@@ -20,7 +20,7 @@ def write_optimal_qrcode(
         payload: str,
         png_filename: str,
         include_quiet_zone: Optional[bool] = None,
-        pattern: Optional[DataMaskingPattern] = None,
+        pattern: Optional[DataMaskPattern] = None,
         version_preference_list: Optional[list[tuple[int, ErrorCorrectionLevel]]] = None,
         byte_mode_encoding: Optional[str] = None,
         mode: Optional[str] = None,

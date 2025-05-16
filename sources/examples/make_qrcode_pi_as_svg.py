@@ -6,13 +6,13 @@ import subprocess
 
 from qrcode_generator.render.render_svg import render_qr_canvas_as_svg_path, render_qr_canvas_as_svg_group
 from qrcode_generator.render.xml_writer import XmlWriter
-from qrcode_generator.enum_types import DataMaskingPattern, ErrorCorrectionLevel
+from qrcode_generator.enum_types import DataMaskPattern, ErrorCorrectionLevel
 from qrcode_generator.render.utilities import make_optimal_qrcode
 
 from utilities.render_pi import number_of_pi_characters_that_can_be_represented, first_n_characters_of_pi
 
 
-def write_qrcode_pi_as_svg(version: int, level: ErrorCorrectionLevel, pattern: DataMaskingPattern, include_quiet_zone: bool) -> None:
+def write_qrcode_pi_as_svg(version: int, level: ErrorCorrectionLevel, pattern: DataMaskPattern, include_quiet_zone: bool) -> None:
 
     number_of_pi_characters = number_of_pi_characters_that_can_be_represented(version, level)
 
@@ -48,8 +48,8 @@ def main():
 
     include_quiet_zone = False
 
-    write_qrcode_pi_as_svg(1, ErrorCorrectionLevel.H, DataMaskingPattern.PATTERN0, include_quiet_zone)
-    write_qrcode_pi_as_svg(1, ErrorCorrectionLevel.L, DataMaskingPattern.PATTERN0, include_quiet_zone)
+    write_qrcode_pi_as_svg(1, ErrorCorrectionLevel.H, DataMaskPattern.PATTERN0, include_quiet_zone)
+    write_qrcode_pi_as_svg(1, ErrorCorrectionLevel.L, DataMaskPattern.PATTERN0, include_quiet_zone)
     #write_qrcode_pi_as_svg(40, ErrorCorrectionLevel.H, DataMaskingPattern.PATTERN0, include_quiet_zone)
     #write_qrcode_pi_as_svg(40, ErrorCorrectionLevel.L, DataMaskingPattern.PATTERN0, include_quiet_zone)
 

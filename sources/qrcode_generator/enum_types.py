@@ -12,7 +12,7 @@ class CharacterEncodingType(Enum):
     KANJI        = 104
 
 
-class DataMaskingPattern(Enum):
+class DataMaskPattern(Enum):
     """The eight types of XOR masks to scramble QR code symbols."""
     PATTERN0 = 200
     PATTERN1 = 201
