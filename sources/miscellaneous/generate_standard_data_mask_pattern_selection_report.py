@@ -67,7 +67,7 @@ example_specs = {
     ),
     Example.StructuredAppendModeCombined: ExampleSpec(
         shortname="structured_append_mode_example_combined",
-        description="Structured Append Mode example: 62 alphanumeric characters, combined in a 4-M QR code symbol",
+        description="Structured Append Mode example: 62 alphanumeric characters in a single 4-M QR code symbol",
         editions={
             StandardEdition.E2000: EditionInfo(DataMaskPattern.PATTERN4, "Section 9.1, Figure 22 (top), page 56"),
             StandardEdition.E2006: EditionInfo(DataMaskPattern.PATTERN4, "Section 7.1, Figure 29 (top), page 59"),
@@ -157,17 +157,19 @@ def main():
         .bad { font-weight: bold; color: red; }
     """
 
-    with XmlWriter("pattern_selection.html") as html:
+    with XmlWriter("standard_data_mask_patterns_report.html") as html:
+
+        document_title_string = "Data Mask Pattern Selection of the QR code symbols found in the ISO/IEC 18004 standard"
 
         with html.write_container_tag("html"):
             with html.write_container_tag("head"):
-                html.write_leaf_tag("title", content="Data Mask Pattern Selection of example QR codes in the ISO/IEC 18004 standard")
+                html.write_leaf_tag("title", content=document_title_string)
                 with html.write_container_tag("style"):
                     for line in textwrap.dedent(css_style_definitions).strip().splitlines():
                         html.write_indented_line(line)
 
             with html.write_container_tag("body"):
-                html.write_leaf_tag("h1", content="Data Mask Pattern Selection of QR codes in the ISO/IEC 18004 standard")
+                html.write_leaf_tag("h1", content=document_title_string)
                 html.write_leaf_tag("p", { "class": "author" }, content="Sidney Cadot <tt>&lt;sidney.cadot@gmail.com&gt;</tt>")
                 html.write_leaf_tag("hr")
                 html.write_leaf_tag("h2", content="Introduction")
@@ -177,18 +179,21 @@ def main():
                             "five examples that demonstrate <emph>structured append mode</emph>, and one as an example in an Annex.")
                 html.write_leaf_tag(
                     "p",
-                    content="These seven examples should use the Data Mask Pattern selected in accordance with the scoring algorithm described in the standard "
-                            "(specifically, the one having the lowest score), but unfortunately this isn't always the case.")
+                    content="These seven examples should use the Data Mask Pattern selected in accordance with the scoring algorithm described "
+                            "in the standard (specifically, the one having the lowest score), but unfortunately this isn't always the case.")
                 html.write_leaf_tag(
                     "p",
-                    content="Below, we show the score calculation for each of the seven QR code symbol "
-                            "examples, and all of the eight possible Data Mask Pattern choices, as a table. For each example, the table is followed by "
-                            "a statement of the optimal Data Mask Pattern choice, and a list of the four standard editions, that says which "
-                            "Data Mask Pattern was actually used in that particular edition.")
+                    content="Below, we show the score calculation for each of the seven QR code symbols in the standard. "
+                            "For each QR code symbol, we tabulate all eight possible Data Mask Pattern choices, "
+                            "and show the value of the four score terms that add up to the total score. "
+                            "The table is followed by a statement of the optimal Data Mask Pattern choice, "
+                            "and a list of the four standard editions stating which Data Mask Pattern was actually used "
+                            "in that particular edition, and where it can be found.")
                 html.write_leaf_tag(
                     "p",
                     content="This is shown in <span class=\"good\">green</span> in case the choice complies with the optimal choice, "
-                            "and <span class=\"bad\">red</span> if it doesn't. The latter indicates an inconsistency in the standard.")
+                            "and <span class=\"bad\">red</span> if it doesn't. The latter indicates an inconsistency in that particular"
+                            " edition of the standard.")
                 for (example, example_spec) in example_specs.items():
                     html.write_leaf_tag("hr")
                     html.write_leaf_tag("h2", content=f"{example_spec.description}.")
