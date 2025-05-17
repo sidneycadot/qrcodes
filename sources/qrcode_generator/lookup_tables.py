@@ -2,7 +2,7 @@
 
 from typing import NamedTuple
 
-from .enum_types import ErrorCorrectionLevel, DataMaskingPattern, EncodingVariant, CharacterEncodingType
+from .enum_types import ErrorCorrectionLevel, DataMaskPattern, EncodingVariant, CharacterEncodingType
 
 # The encoding of the error correction level as specified in Table 12 of ISO/IEC 18004:2024(en).
 
@@ -266,25 +266,25 @@ version_specification_table = {
 # Data mask pattern definitions as given in Table 10 of ISO/IEC 18004:2024(en).
 
 data_masking_pattern_encoding = {
-    DataMaskingPattern.PATTERN0: 0,
-    DataMaskingPattern.PATTERN1: 1,
-    DataMaskingPattern.PATTERN2: 2,
-    DataMaskingPattern.PATTERN3: 3,
-    DataMaskingPattern.PATTERN4: 4,
-    DataMaskingPattern.PATTERN5: 5,
-    DataMaskingPattern.PATTERN6: 6,
-    DataMaskingPattern.PATTERN7: 7
+    DataMaskPattern.PATTERN0: 0,
+    DataMaskPattern.PATTERN1: 1,
+    DataMaskPattern.PATTERN2: 2,
+    DataMaskPattern.PATTERN3: 3,
+    DataMaskPattern.PATTERN4: 4,
+    DataMaskPattern.PATTERN5: 5,
+    DataMaskPattern.PATTERN6: 6,
+    DataMaskPattern.PATTERN7: 7
 }
 
 data_mask_pattern_function_table = {
-    DataMaskingPattern.PATTERN0: lambda i, j: (i + j) % 2 == 0,
-    DataMaskingPattern.PATTERN1: lambda i, j: i % 2 == 0,
-    DataMaskingPattern.PATTERN2: lambda i, j: j % 3 == 0,
-    DataMaskingPattern.PATTERN3: lambda i, j: (i + j) % 3 == 0,
-    DataMaskingPattern.PATTERN4: lambda i, j: ((i // 2) + (j // 3)) % 2 == 0,
-    DataMaskingPattern.PATTERN5: lambda i, j: (i * j) % 2 + (i * j) % 3 == 0,
-    DataMaskingPattern.PATTERN6: lambda i, j: ((i * j) % 2 + (i * j) % 3) % 2 == 0,
-    DataMaskingPattern.PATTERN7: lambda i, j: ((i + j) % 2 + (i * j) % 3) % 2 == 0
+    DataMaskPattern.PATTERN0: lambda i, j: (i + j) % 2 == 0,
+    DataMaskPattern.PATTERN1: lambda i, j: i % 2 == 0,
+    DataMaskPattern.PATTERN2: lambda i, j: j % 3 == 0,
+    DataMaskPattern.PATTERN3: lambda i, j: (i + j) % 3 == 0,
+    DataMaskPattern.PATTERN4: lambda i, j: ((i // 2) + (j // 3)) % 2 == 0,
+    DataMaskPattern.PATTERN5: lambda i, j: (i * j) % 2 + (i * j) % 3 == 0,
+    DataMaskPattern.PATTERN6: lambda i, j: ((i * j) % 2 + (i * j) % 3) % 2 == 0,
+    DataMaskPattern.PATTERN7: lambda i, j: ((i + j) % 2 + (i * j) % 3) % 2 == 0
 }
 
 # Alignment pattern positions QR codes as specified in Table E.1 of ISO/IEC 18004:2024(en).

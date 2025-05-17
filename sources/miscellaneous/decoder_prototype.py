@@ -2,7 +2,7 @@ import textwrap
 
 from qrcode_generator.binary_codes import format_information_code_remainder, version_information_code_remainder
 from qrcode_generator.data_encoder import DataEncoder
-from qrcode_generator.enum_types import EncodingVariant, DataMaskingPattern, ErrorCorrectionLevel, CharacterEncodingType
+from qrcode_generator.enum_types import EncodingVariant, DataMaskPattern, ErrorCorrectionLevel, CharacterEncodingType
 from qrcode_generator.lookup_tables import error_correction_level_encoding, data_masking_pattern_encoding, data_mask_pattern_function_table, \
     version_specification_table, count_bits_table
 from qrcode_generator.qr_code import make_qr_code, QRCodeDrawer
@@ -24,7 +24,7 @@ def hamming_distance(a: int, b: int) -> int:
 def make_testcase():
     version = 7
     level = ErrorCorrectionLevel.L
-    pattern = DataMaskingPattern.PATTERN5
+    pattern = DataMaskPattern.PATTERN5
 
     variant = EncodingVariant.from_version(version)
     de = DataEncoder(variant)

@@ -4,7 +4,7 @@ from enum import IntEnum
 from typing import Optional
 
 from .auxiliary import calculate_qrcode_capacity, enumerate_bits
-from .enum_types import ErrorCorrectionLevel, DataMaskingPattern
+from .enum_types import ErrorCorrectionLevel, DataMaskPattern
 from .binary_codes import format_information_code_remainder, version_information_code_remainder
 from .lookup_tables import alignment_pattern_position_table, data_mask_pattern_function_table, error_correction_level_encoding, \
     data_masking_pattern_encoding, version_specification_table
@@ -62,8 +62,8 @@ class QRCodeCanvas:
     def __init__(self, width: int, height: int):
         self.version: Optional[int] = None
         self.level: Optional[ErrorCorrectionLevel] = None
-        self.pattern: Optional[DataMaskingPattern] = None
-        self.split_score_dict: Optional[dict[DataMaskingPattern, tuple[int, int, int, int]]] = None
+        self.pattern: Optional[DataMaskPattern] = None
+        self.split_score_dict: Optional[dict[DataMaskPattern, tuple[int, int, int, int]]] = None
         self.width = width
         self.height = height
         self.modules = bytearray([ModuleValue.INDETERMINATE]) * (width * height)
@@ -244,7 +244,7 @@ class QRCodeDrawer:
         # Place the single fixed "dark module" above and to the right of the bottom-left finder pattern (7.9.1).
         self.set_module_value(self.height-8, 8, ModuleValue.FORMAT_INFORMATION_INDETERMINATE)
 
-    def place_format_information_patterns(self, level: ErrorCorrectionLevel, pattern: DataMaskingPattern):
+    def place_format_information_patterns(self, level: ErrorCorrectionLevel, pattern: DataMaskPattern):
 
         level_encoding = error_correction_level_encoding[level]
         pattern_encoding = data_masking_pattern_encoding[pattern]
@@ -347,7 +347,7 @@ class QRCodeDrawer:
             else:
                 self.set_module_value(i, j, ModuleValue.REMAINDER_BIT_1 if channel_bit else ModuleValue.REMAINDER_BIT_0)
 
-    def apply_data_masking_pattern(self, pattern: DataMaskingPattern) -> None:
+    def apply_data_masking_pattern(self, pattern: DataMaskPattern) -> None:
         """Apply a data masking pattern to the QR code.
 
         Note that the effect of a data mask pattern can be undone by applying it again.
@@ -521,7 +521,7 @@ def make_qr_code(
             version: int,
             level: ErrorCorrectionLevel,
             include_quiet_zone: Optional[bool] = None,
-            pattern: Optional[DataMaskingPattern] = None
+            pattern: Optional[DataMaskPattern] = None
         ) -> QRCodeCanvas:
 
     # Prepare the selected QR code symbol and fill it with the data.
@@ -539,7 +539,7 @@ def make_qr_code(
     split_score_dict = {}
     score_pattern_tuple_list = []
 
-    for test_pattern in DataMaskingPattern:
+    for test_pattern in DataMaskPattern:
 
         standard_compliant = True
         if standard_compliant:

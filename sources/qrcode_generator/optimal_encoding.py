@@ -31,7 +31,7 @@ from __future__ import annotations
 from typing import Optional
 
 from .data_encoder import numeric_character_map, alphanumeric_character_map, DataEncoder
-from .enum_types import CharacterEncodingType, EncodingVariant, ErrorCorrectionLevel, DataMaskingPattern
+from .enum_types import CharacterEncodingType, EncodingVariant, ErrorCorrectionLevel, DataMaskPattern
 from .kanji_encode import kanji_character_value
 from .lookup_tables import count_bits_table, version_specification_table
 from .qr_code import QRCodeCanvas, make_qr_code
@@ -358,7 +358,7 @@ def make_optimal_qrcode(
             *,
             payload: str,
             include_quiet_zone: Optional[bool] = None,
-            pattern: Optional[DataMaskingPattern] = None,
+            pattern: Optional[DataMaskPattern] = None,
             version_preference_list: Optional[list[tuple[int, ErrorCorrectionLevel]]] = None,
             byte_mode_encoding: Optional[str] = None
         ) -> Optional[QRCodeCanvas]:
