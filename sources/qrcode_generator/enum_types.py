@@ -26,10 +26,10 @@ class DataMaskPattern(Enum):
 
 class ErrorCorrectionLevel(Enum):
     """The four levels of error correction used in QR codes."""
-    L = 301  # Allows recovery of  7% of bad modules.
-    M = 302  # Allows recovery of 15% of bad modules.
-    Q = 303  # Allows recovery of 25% of bad modules.
-    H = 304  # Allows recovery of 30% of bad modules.
+    L = 301  # Allows recovery of  7% of bad symbols in each data block.
+    M = 302  # Allows recovery of 15% of bad symbols in each data block.
+    Q = 303  # Allows recovery of 25% of bad symbols in each data block.
+    H = 304  # Allows recovery of 30% of bad symbols in each data block.
 
 
 class EncodingVariant(Enum):
