@@ -45,7 +45,7 @@ def render_html_pi_poster(filename_html: str) -> None:
                                     number_of_pi_characters = number_of_pi_characters_that_can_be_represented(version, level)
                                     pi_characters = first_n_characters_of_pi(number_of_pi_characters)
                                     canvas = make_optimal_qrcode(payload=pi_characters, version_preference_list=[(version, level)], include_quiet_zone=False)
-                                    png_filename = "temp.png"
+                                    png_filename = "temp_{VERSION}{LEVEL}p{PATTERN}.png"
                                     descriptor = save_qrcode_as_png_file(
                                         png_filename=png_filename,
                                         canvas=canvas,
@@ -59,7 +59,7 @@ def render_html_pi_poster(filename_html: str) -> None:
                                         html.write_leaf_tag("img", arguments={"src": source})
                                         html.write_leaf_tag("p", content=description.replace("\n", "<br/>"))
 
-    os.remove("temp.png")
+                                    os.remove(descriptor.png_filename)
 
 
 def main():
