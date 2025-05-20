@@ -34,7 +34,7 @@ def main():
     with XmlWriter(filename_svg) as svg:
         with svg.write_container_tag(
             "svg", {
-                    "viewBox": "0 0 10 10",
+                    "viewBox": "0 0 2 2",
                     "xmlns": "http://www.w3.org/2000/svg"
                 }
             ):
