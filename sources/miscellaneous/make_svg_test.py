@@ -1,6 +1,10 @@
 #! /usr/bin/env -S python3 -B
 
-"""Write QR code poster with encodings of pi as an SVG image."""
+"""Write PNG, SVG, PDF that shows a 2x2 pixel image.
+
+As it turns out, the PDF generated from the SVG file (using rsvg-convert) uses pixel interpolation,
+where we'd like to see a perfectly pixelated image.
+"""
 
 import base64
 
