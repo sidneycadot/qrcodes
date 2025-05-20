@@ -47,7 +47,7 @@ def write_eci_test(
     else:
         raise RuntimeError("Cannot encode the string with an ECI designator prefix (too big).")
 
-    de = DataEncoder(EncodingVariant.from_version(version)).append_eci_designator(eci_designator_value).append_byte_mode_block(payload_octets)
+    de = DataEncoder(EncodingVariant.from_version(version)).append_eci_designator(eci_designator_value).append_byte_mode_segment(payload_octets)
 
     canvas = make_qr_code(de, version=version, level=level, include_quiet_zone=include_quiet_zone)
 

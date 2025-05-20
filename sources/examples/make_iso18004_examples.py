@@ -124,7 +124,7 @@ def write_explicit_eci_designator_example(
 
     octets = payload.encode("iso-8859-7")
 
-    de = DataEncoder(EncodingVariant.SMALL).append_eci_designator(9).append_byte_mode_block(octets)
+    de = DataEncoder(EncodingVariant.SMALL).append_eci_designator(9).append_byte_mode_segment(octets)
 
     qr_canvas = make_qr_code(de, version=1, level=ErrorCorrectionLevel.H, include_quiet_zone=include_quiet_zone)
 
@@ -189,7 +189,7 @@ def write_structured_append_mode_examples(
 
     for (index, pattern, sub_payload) in structured_append_qrcode_specs:
 
-        de = DataEncoder(EncodingVariant.SMALL).append_structured_append_marker(index, 4, checksum).append_alphanumeric_mode_block(sub_payload)
+        de = DataEncoder(EncodingVariant.SMALL).append_structured_append_marker(index, 4, checksum).append_alphanumeric_mode_segment(sub_payload)
 
         qr_canvas = make_qr_code(de, version=1, level=ErrorCorrectionLevel.M, pattern=pattern, include_quiet_zone=include_quiet_zone)
 
