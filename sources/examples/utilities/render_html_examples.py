@@ -17,12 +17,14 @@ class RenderHtmlExampleCollection(NamedTuple):
     description: str
     examples: list[RenderHtmlExample]
 
+
 def render_html_examples(filename_html: str, example_collections: list[RenderHtmlExampleCollection]) -> None:
 
     # Generate HTML file.
 
     css_style_definitions ="""
-        .qr-code img { display: block; width: 40mm; margin-left: auto; margin-right: auto; margin-top: 8mm; margin-bottom: 8mm; image-rendering: pixelated; }
+        .qr-code img { display: block; width: 40mm; margin-left: auto; margin-right: auto;
+                       margin-top: 8mm; margin-bottom: 8mm; image-rendering: pixelated; }
         .qr-code p { text-align: center; font-weight: bold; color: blue; }
     """
 

@@ -38,7 +38,7 @@ def write_eci_data_test(
 
     de = DataEncoder(EncodingVariant.from_version(version))
     # de.append_eci_designator(899)
-    de.append_byte_mode_block(payload)
+    de.append_byte_mode_segment(payload)
 
     qr_canvas = make_qr_code(de, version=version, level=level)
 

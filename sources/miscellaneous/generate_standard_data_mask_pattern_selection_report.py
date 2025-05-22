@@ -63,7 +63,7 @@ example_specs = {
         },
         version=1,
         level=ErrorCorrectionLevel.M,
-        data_encoder=DataEncoder(EncodingVariant.SMALL).append_byte_mode_block(b"QR Code Symbol")
+        data_encoder=DataEncoder(EncodingVariant.SMALL).append_byte_mode_segment(b"QR Code Symbol")
     ),
     Example.StructuredAppendModeCombined: ExampleSpec(
         shortname="structured_append_mode_example_combined",
@@ -76,7 +76,7 @@ example_specs = {
         },
         version=4,
         level=ErrorCorrectionLevel.M,
-        data_encoder=DataEncoder(EncodingVariant.SMALL).append_alphanumeric_mode_block("ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ")
+        data_encoder=DataEncoder(EncodingVariant.SMALL).append_alphanumeric_mode_segment("ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ")
     ),
     Example.StructuredAppendModePart1: ExampleSpec(
         shortname="structured_append_mode_example_1_of_4",
@@ -89,7 +89,7 @@ example_specs = {
         },
         version=1,
         level=ErrorCorrectionLevel.M,
-        data_encoder=DataEncoder(EncodingVariant.SMALL).append_structured_append_marker(0, 4, StructuredAppendExampleParity).append_alphanumeric_mode_block("ABCDEFGHIJKLMN")
+        data_encoder=DataEncoder(EncodingVariant.SMALL).append_structured_append_marker(0, 4, StructuredAppendExampleParity).append_alphanumeric_mode_segment("ABCDEFGHIJKLMN")
     ),
     Example.StructuredAppendModePart2: ExampleSpec(
         shortname="structured_append_mode_example_2_of_4",
@@ -102,7 +102,7 @@ example_specs = {
         },
         version=1,
         level=ErrorCorrectionLevel.M,
-        data_encoder=DataEncoder(EncodingVariant.SMALL).append_structured_append_marker(1, 4, StructuredAppendExampleParity).append_alphanumeric_mode_block("OPQRSTUVWXYZ0123")
+        data_encoder=DataEncoder(EncodingVariant.SMALL).append_structured_append_marker(1, 4, StructuredAppendExampleParity).append_alphanumeric_mode_segment("OPQRSTUVWXYZ0123")
     ),
     Example.StructuredAppendModePart3: ExampleSpec(
         shortname="structured_append_mode_example_3_of_4",
@@ -115,7 +115,7 @@ example_specs = {
         },
         version=1,
         level=ErrorCorrectionLevel.M,
-        data_encoder=DataEncoder(EncodingVariant.SMALL).append_structured_append_marker(2, 4, StructuredAppendExampleParity).append_alphanumeric_mode_block("456789ABCDEFGHIJ")
+        data_encoder=DataEncoder(EncodingVariant.SMALL).append_structured_append_marker(2, 4, StructuredAppendExampleParity).append_alphanumeric_mode_segment("456789ABCDEFGHIJ")
     ),
     Example.StructuredAppendModePart4: ExampleSpec(
         shortname="structured_append_mode_example_4_of_4",
@@ -128,7 +128,7 @@ example_specs = {
         },
         version=1,
         level=ErrorCorrectionLevel.M,
-        data_encoder=DataEncoder(EncodingVariant.SMALL).append_structured_append_marker(3, 4, StructuredAppendExampleParity).append_alphanumeric_mode_block("KLMNOPQRSTUVWXYZ")
+        data_encoder=DataEncoder(EncodingVariant.SMALL).append_structured_append_marker(3, 4, StructuredAppendExampleParity).append_alphanumeric_mode_segment("KLMNOPQRSTUVWXYZ")
     ),
     Example.Annex: ExampleSpec(
         shortname="annex_example",
@@ -141,7 +141,7 @@ example_specs = {
         },
         version=1,
         level=ErrorCorrectionLevel.M,
-        data_encoder=DataEncoder(EncodingVariant.SMALL).append_numeric_mode_block("01234567")
+        data_encoder=DataEncoder(EncodingVariant.SMALL).append_numeric_mode_segment("01234567")
     )
 }
 

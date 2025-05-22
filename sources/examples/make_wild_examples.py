@@ -24,7 +24,7 @@ def render_iso_standard_customer_feedback_code(colormap: str) -> None:
     payload = "https://go.iso.org/customer-feedback?token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdGQiOiJJU08vSUVDIDE4MDA0OjIwMjQiLCJpc3MiOiJJU08ifQ.4cn-n2MBPD_i_oNu1dZxQbD5j-rZNKq2DTTOqnPaqCY"
 
     de = DataEncoder(EncodingVariant.from_version(version))
-    de.append_byte_mode_block(payload.encode('iso_8859_1'))
+    de.append_byte_mode_segment(payload.encode('iso_8859_1'))
 
     canvas = make_qr_code(
         de,
@@ -61,7 +61,7 @@ def render_oralb_package_code(colormap: str) -> None:
 
     de = DataEncoder(EncodingVariant.from_version(version))
     de.append_eci_designator(26)
-    de.append_byte_mode_block(payload.encode('utf_8'))
+    de.append_byte_mode_segment(payload.encode('utf_8'))
 
     canvas = make_qr_code(
         de,
@@ -99,7 +99,7 @@ def render_ferrero_rocher_code(colormap: str) -> None:
 
     de = DataEncoder(EncodingVariant.from_version(version))
     de.append_eci_designator(26)
-    de.append_byte_mode_block(payload.encode('utf_8'))
+    de.append_byte_mode_segment(payload.encode('utf_8'))
 
     canvas = make_qr_code(
         de,
@@ -135,7 +135,7 @@ def render_lego_bouwplaats_code(colormap: str) -> None:
     payload = "http://debontebouwplaats.nl"
 
     de = DataEncoder(EncodingVariant.from_version(version))
-    de.append_byte_mode_block(payload.encode('iso_8859_1'))
+    de.append_byte_mode_segment(payload.encode('iso_8859_1'))
 
     canvas = make_qr_code(
         de,

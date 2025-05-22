@@ -29,7 +29,7 @@ def make_testcase():
     variant = EncodingVariant.from_version(version)
     de = DataEncoder(variant)
 
-    de.append_byte_mode_block(b"hello, world!")
+    de.append_byte_mode_segment(b"hello, world!")
 
     qr_canvas = make_qr_code(de, version, level, include_quiet_zone=False, pattern=pattern)
 

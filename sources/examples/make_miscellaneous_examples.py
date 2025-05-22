@@ -138,9 +138,9 @@ def write_example_kanji_encodings(
     This routine uses a DataEncoder with explicitly specified encoding blocks.
     """
     de = DataEncoder(EncodingVariant.SMALL)
-    de.append_byte_mode_block("Kanji characters as Kanji mode block:\n\n".encode())
-    de.append_kanji_mode_block(payload)
-    de.append_byte_mode_block(
+    de.append_byte_mode_segment("Kanji characters as Kanji mode block:\n\n".encode())
+    de.append_kanji_mode_segment(payload)
+    de.append_byte_mode_segment(
         f"\n\nKanji characters as byte mode block with UTF-8 encoding:\n\n{payload}".encode())
 
     canvas = make_qr_code(de, version=7, level=ErrorCorrectionLevel.L, include_quiet_zone=include_quiet_zone)
@@ -163,7 +163,7 @@ def write_bytemode_default_encoding_test(
 
     This routine uses a DataEncoder with an explicitly specified byt-mode encoding block.
     """
-    de = DataEncoder(EncodingVariant.MEDIUM).append_byte_mode_block(
+    de = DataEncoder(EncodingVariant.MEDIUM).append_byte_mode_segment(
         b"The two-byte sequence {0xc2, 0xa9} is rendered by your decoder software like this: '\xc2\xa9'.\n\n"
         b"If it renders as the two Japanese kana characters Tsu and U, the default encoding is JIS-8, as prescribed by the 2000 edition of the standard.\n\n"
         b"If it renders as two characters: an A-circumflex followed by a copyright sign, the default encoding is ISO-8859-1, as prescribed by the 2006, 2015, and 2024 editions of the standard.\n\n"

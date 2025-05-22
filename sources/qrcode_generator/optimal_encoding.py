@@ -18,7 +18,7 @@ mode switches.
 An encoding solution is optimal if:
 
   (1) its bit-count is minimal;
-  (2) among the encoding solutions with minimal bit-count, the number of mode blocks is minimal.
+  (2) among the encoding solutions with minimal bit-count, the number of mode segments is minimal.
 
 Note: pathological input strings exist that lead to many different optimal encoding solutions that are all
       optimal in the sense as defined above.
@@ -37,8 +37,8 @@ from .lookup_tables import count_bits_table, version_specification_table
 from .qr_code import QRCodeCanvas, make_qr_code
 
 
-class EncodingBlock:
-    """Abstract base class for data encoding blocks in QR codes."""
+class EncodingSegment:
+    """Abstract base class for data encoding segments in QR codes."""
 
     def append_character(self, c: str) -> None:
         raise NotImplementedError()
@@ -47,7 +47,7 @@ class EncodingBlock:
         raise NotImplementedError()
 
 
-class EncodingBlockNumeric(EncodingBlock):
+class EncodingSegmentNumeric(EncodingSegment):
 
     encoding = CharacterEncodingType.NUMERIC
 
@@ -56,13 +56,13 @@ class EncodingBlockNumeric(EncodingBlock):
         self.payload = "" if initial_payload is None else initial_payload
 
     def __repr__(self):
-        return f"EncodingBlockNumeric({self.payload!r})"
+        return f"EncodingSegmentNumeric({self.payload!r})"
 
-    def copy(self) -> EncodingBlockNumeric:
-        return EncodingBlockNumeric(self.variant, self.payload)
+    def copy(self) -> EncodingSegmentNumeric:
+        return EncodingSegmentNumeric(self.variant, self.payload)
 
     def render(self, data_encoder: DataEncoder) -> None:
-        data_encoder.append_numeric_mode_block(self.payload)
+        data_encoder.append_numeric_mode_segment(self.payload)
 
     def append_character(self, c: str) -> None:
         self.payload = self.payload + c
@@ -78,7 +78,7 @@ class EncodingBlockNumeric(EncodingBlock):
             return 4 + count_bits + (n // 3) * 10 + 7
 
 
-class EncodingBlockAlphanumeric(EncodingBlock):
+class EncodingSegmentAlphanumeric(EncodingSegment):
 
     encoding = CharacterEncodingType.ALPHANUMERIC
 
@@ -89,13 +89,13 @@ class EncodingBlockAlphanumeric(EncodingBlock):
         self.payload = "" if initial_payload is None else initial_payload
 
     def __repr__(self):
-        return f"EncodingBlockAlphanumeric({self.payload!r})"
+        return f"EncodingSegmentAlphanumeric({self.payload!r})"
 
-    def copy(self) -> EncodingBlockAlphanumeric:
-        return EncodingBlockAlphanumeric(self.variant, self.payload)
+    def copy(self) -> EncodingSegmentAlphanumeric:
+        return EncodingSegmentAlphanumeric(self.variant, self.payload)
 
     def render(self, data_encoder: DataEncoder) -> None:
-        data_encoder.append_alphanumeric_mode_block(self.payload)
+        data_encoder.append_alphanumeric_mode_segment(self.payload)
 
     def append_character(self, c: str) -> None:
         self.payload = self.payload + c
@@ -109,7 +109,7 @@ class EncodingBlockAlphanumeric(EncodingBlock):
             return 4 + count_bits + (n // 2) * 11 + 6
 
 
-class EncodingBlockBytes(EncodingBlock):
+class EncodingSegmentBytes(EncodingSegment):
 
     encoding = CharacterEncodingType.BYTES
 
@@ -118,13 +118,13 @@ class EncodingBlockBytes(EncodingBlock):
         self.payload = b"" if initial_payload is None else initial_payload
 
     def __repr__(self):
-        return f"EncodingBlockBytes({self.payload!r})"
+        return f"EncodingSegmentBytes({self.payload!r})"
 
-    def copy(self) -> EncodingBlockBytes:
-        return EncodingBlockBytes(self.variant, self.payload)
+    def copy(self) -> EncodingSegmentBytes:
+        return EncodingSegmentBytes(self.variant, self.payload)
 
     def render(self, data_encoder: DataEncoder) -> None:
-        data_encoder.append_byte_mode_block(self.payload)
+        data_encoder.append_byte_mode_segment(self.payload)
 
     def append_bytes(self, b: bytes):
         self.payload = self.payload + b
@@ -135,7 +135,7 @@ class EncodingBlockBytes(EncodingBlock):
         return 4 + count_bits + n * 8
 
 
-class EncodingBlockKanji(EncodingBlock):
+class EncodingSegmentKanji(EncodingSegment):
 
     encoding = CharacterEncodingType.KANJI
 
@@ -144,13 +144,13 @@ class EncodingBlockKanji(EncodingBlock):
         self.payload = "" if initial_payload is None else initial_payload
 
     def __repr__(self):
-        return f"EncodingBlockKanji({self.payload!r})"
+        return f"EncodingSegmentKanji({self.payload!r})"
 
-    def copy(self) -> EncodingBlockKanji:
-        return EncodingBlockKanji(self.variant, self.payload)
+    def copy(self) -> EncodingSegmentKanji:
+        return EncodingSegmentKanji(self.variant, self.payload)
 
     def render(self, data_encoder: DataEncoder) -> None:
-        data_encoder.append_kanji_mode_block(self.payload)
+        data_encoder.append_kanji_mode_segment(self.payload)
 
     def append_character(self, c: str) -> None:
         self.payload = self.payload + c
@@ -163,56 +163,56 @@ class EncodingBlockKanji(EncodingBlock):
 
 class EncodingSolution:
 
-    def __init__(self, variant: EncodingVariant, blocks=None):
-        if blocks is None:
-            blocks = []
+    def __init__(self, variant: EncodingVariant, segments=None):
+        if segments is None:
+            segments = []
         self.variant = variant
-        self.blocks = blocks
+        self.segments = segments
 
     def __repr__(self):
-        return f"EncodingSolution({self.variant}, {self.blocks})"
+        return f"EncodingSolution({self.variant}, {self.segments})"
 
     def copy(self) -> EncodingSolution:
-        return EncodingSolution(self.variant, [block.copy() for block in self.blocks])
+        return EncodingSolution(self.variant, [segment.copy() for segment in self.segments])
 
     def render(self, data_encoder: DataEncoder) -> None:
-        for block in self.blocks:
-            block.render(data_encoder)
+        for segment in self.segments:
+            segment.render(data_encoder)
 
     def append_numeric_character(self, c: str) -> None:
-        """Append a numeric character to the solution, in the last block or as a new block if needed."""
+        """Append a numeric character to the solution, in the last segment or as a new segment if needed."""
         if self.active_encoding() == CharacterEncodingType.NUMERIC:
-            self.blocks[-1].append_character(c)
+            self.segments[-1].append_character(c)
         else:
-            self.blocks.append(EncodingBlockNumeric(self.variant, c))
+            self.segments.append(EncodingSegmentNumeric(self.variant, c))
 
     def append_alphanumeric_character(self, c: str) -> None:
-        """Append an alphanumeric character to the solution, in the last block or as a new block if needed."""
+        """Append an alphanumeric character to the solution, in the last segment or as a new segment if needed."""
         if self.active_encoding() == CharacterEncodingType.ALPHANUMERIC:
-            self.blocks[-1].append_character(c)
+            self.segments[-1].append_character(c)
         else:
-            self.blocks.append(EncodingBlockAlphanumeric(self.variant, c))
+            self.segments.append(EncodingSegmentAlphanumeric(self.variant, c))
 
-    def append_bytes_block(self, encoded_character_bytes: bytes) -> None:
-        """Append bytes to the solution, in the last block or as a new block if needed."""
+    def append_bytes(self, encoded_character_bytes: bytes) -> None:
+        """Append bytes to the solution, in the last segment or as a new segment if needed."""
         if self.active_encoding() == CharacterEncodingType.BYTES:
-            self.blocks[-1].append_bytes(encoded_character_bytes)
+            self.segments[-1].append_bytes(encoded_character_bytes)
         else:
-            self.blocks.append(EncodingBlockBytes(self.variant, encoded_character_bytes))
+            self.segments.append(EncodingSegmentBytes(self.variant, encoded_character_bytes))
 
     def append_kanji_character(self, c: str) -> None:
-        """Append a kanji character to the solution, in the last block or as a new block if needed."""
+        """Append a kanji character to the solution, in the last segment or as a new segment if needed."""
         if self.active_encoding() == CharacterEncodingType.KANJI:
-            self.blocks[-1].append_character(c)
+            self.segments[-1].append_character(c)
         else:
-            self.blocks.append(EncodingBlockKanji(self.variant, c))
+            self.segments.append(EncodingSegmentKanji(self.variant, c))
 
-    def active_encoding(self) -> Optional[EncodingBlock]:
-        return self.blocks[-1].encoding if self.blocks else None
+    def active_encoding(self) -> Optional[EncodingSegment]:
+        return self.segments[-1].encoding if self.segments else None
 
     def bitcount(self) -> int:
         # Note that we DO NOT add 4 bits for the terminator.
-        return sum(block.bitcount() for block in self.blocks)
+        return sum(segment.bitcount() for segment in self.segments)
 
     def strictly_better(self, other: EncodingSolution) -> bool:
         return (self.active_encoding() == other.active_encoding()) and self.better(other)
@@ -224,7 +224,7 @@ class EncodingSolution:
         if self_bitcount < other_bitcount:
             return True
 
-        return (self_bitcount == other_bitcount) and (len(self.blocks) < len(other.blocks))
+        return (self_bitcount == other_bitcount) and (len(self.segments) < len(other.segments))
 
 
 def find_optimal_string_encoding(
@@ -235,14 +235,14 @@ def find_optimal_string_encoding(
     """Find the optimal (shortest) encoding of a given string.
 
     There are three variants of the encoding, that differ only in the number of bits used to represent
-    character counts in each of the four data block types (numeric, alphanumeric, bytes, and Kanji).
+    character counts in each of the four data segment types (numeric, alphanumeric, bytes, and Kanji).
     Larger versions of the QR code symbols allow more bits for those counts.
 
-    The byte mode encoding specifies which encoding should be assumed for 'byte' mode blocks.
+    The byte mode encoding specifies which encoding should be assumed for 'byte' mode segments.
 
-    The 2000 version of the standard prescribes JIS8 as a default encoding for byte-mode block.
-    The 2015 version of the standard prescribes ISO-8859-1 as a default encoding for byte-mode block.
-    (It is not currently known what the 2024 version of the standard prescribes.)
+    The 2000 edition of the standard prescribes JIS8 as a default encoding for byte-mode segments.
+    The 2006, 2015, and 2024 editions of the standard prescribes ISO-8859-1 as a default encoding for byte-mode
+    segments.
 
     For most modern applications, UTF-8 is a good default; byte mode blocks are interpreted as UTF-8 on
     all modern widely available QR-code readers that were tried.
@@ -253,11 +253,11 @@ def find_optimal_string_encoding(
     This algorithm works by starting with a single empty solution that encodes a zero-character string;
     and then iterating over each character to be encoded.
       For each character, the set of partial solutions that were found without this new character are considered.
-    Each of them is extended with an encoding of the currently visited character. The four block modes (numeric,
-    alphanumeric, byte, and kanji) are all considered. If the character can be represented in the mode, we will
-    generate a new (sub)solution that extends the current solution either by extending the last encoding block
-    of the currently considered partial solution, if no mode switch is required; or by introducing a new coding
-    block that encodes the single character currently under consideration.
+    Each of them is extended with an encoding of the currently visited character. The four data segment modes
+    (numeric, alphanumeric, byte, and kanji) are all considered. If the character can be represented in the mode,
+    we will generate a new (sub)solution that extends the current solution either by extending the last encoding
+    segment of the currently considered partial solution, if no mode switch is required; or by introducing a new
+    data segment that encodes the single character currently under consideration.
       After a new set of partial solutions is produced that generate all characters up to and including the
     currently visited character, a pruning step is performed: partial solutions that are "strictly worse" than
     another partial solution also generated are discarded. Strictly worse here means that the partial solution
@@ -267,7 +267,7 @@ def find_optimal_string_encoding(
     all solutions that are suboptimal are now discarded.
 
     The end result is a set (represented as a list) of EncodingSolution instances that are optimal. Each of these
-    solutions will have (1) minimal bitcount; and (2) a minimal number of mode blocks.
+    solutions will have (1) minimal bitcount; and (2) a minimal number of mode segments.
 
     Note that pathological inputs exist that lead to many 'equally optimal' solutions. In fact, inputs can be
     constructed that give rise to an exponential number of solutions as the input length grows linearly.
@@ -314,7 +314,7 @@ def find_optimal_string_encoding(
                 pass
             else:
                 partial_solution_candidate = partial_solution.copy()
-                partial_solution_candidate.append_bytes_block(encoded_character_bytes)
+                partial_solution_candidate.append_bytes(encoded_character_bytes)
                 partial_solution_candidates.append(partial_solution_candidate)
 
             # Consider KANJI encoding for this character.
@@ -338,10 +338,10 @@ def find_optimal_string_encoding(
         if not any(s2.better(s1) for s2 in partial_solutions):
             solutions.append(s1)
 
-    # Sort solutions by bitcount and number of blocks. Best solutions will come first.
-    solutions_list = [(solution.bitcount(), len(solution.blocks), solution) for solution in solutions]
+    # Sort solutions by bitcount and number of segments. Best solutions will come first.
+    solutions_list = [(solution.bitcount(), len(solution.segments), solution) for solution in solutions]
     solutions_list.sort(key=lambda x: (x[0], x[1]), reverse=True)
-    solutions = [solution for (bitcount, block_count, solution) in solutions_list]
+    solutions = [solution for (bitcount, segment_count, solution) in solutions_list]
 
     return solutions
 
@@ -377,8 +377,8 @@ def make_optimal_qrcode(
             if len(solutions) == 0:
                 solution = None
             else:
-                for solution in solutions:
-                    print("->", solution)
+                #for solution in solutions:
+                #    print("->", solution)
                 solution = solutions[0]
                 # print(f"Shortest solution: {solution.bitcount()} bits.")
             variant_cache[variant] = solution
@@ -389,8 +389,6 @@ def make_optimal_qrcode(
         version_specification = version_specification_table[(version, level)]
 
         if version_specification.number_of_data_codewords() * 8 >= solution.bitcount():
-            print(f"Selected code: {version}-{level.name}")
-            # print(solution)
             break
 
     else:

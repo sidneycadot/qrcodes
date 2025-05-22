@@ -1,6 +1,6 @@
 #! /usr/bin/env -S python3 -B
 
-"""Write QR codes shown in the standard as PNG image files.
+"""Generate QR code symbols from the ISO/IEC 18004 standard.
 
 There are currently four editions of the standard:
 
@@ -11,17 +11,15 @@ There are currently four editions of the standard:
 
 Each of these contains precisely seven concrete QR code examples:
 
-- Introduction: a QR code encoding the text "QR Code Symbol" as a 1-M symbol.
-- The Structured Append Mode section provides an example of a single 4-M symbol encoding
-  the string "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ", and also
-  four 1-M symbols that together encode the same string.
-- Annex: a QR code encoding the numeric string "01234567"  is discussed.
+- Introduction: a QR code symbol encoding the text "QR Code Symbol" as a 1-M symbol.
+- The Structured Append Mode section provides an example of a single 4-M QR code symbol
+  encoding the string "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+  and also four 1-M symbols that together encode the same string.
+- Annex: a QR code symbol encoding the numeric string "01234567" is discussed.
 
 In addition to these, the encoding of the string "ΑΒΓΔΕ" using the ISO/IEC 8859-7
 encoding in combination with an ECI designator is discussed, even though no image
-of a concrete QR code for this case is shown.
-
-The code below reproduces all these examples.
+of a QR code symbol for this case is present in the standard.
 """
 
 import glob
@@ -52,6 +50,7 @@ def write_introduction_examples(
     """Write the first example of a QR code found in the standard.
 
     Note that the data masking pattern selected differs between the standard editions:
+
     - 2000, 2006, 2015 ...... : pattern 5
     - 2024 .................. : pattern 6
 
@@ -63,7 +62,7 @@ def write_introduction_examples(
     The 2024 edition incorrectly indicates that the symbol encodes the text "QR code Symbol".
 
     References:
-    - ISO/IEC 18004:2000(E)   Figure 1, Section 5.2, page 5.
+    - ISO/IEC 18004:2000(E)   Figure 1, Section 7.1, page 5.
     - ISO/IEC 18004:2006(E)   Figure 1, Section 5.2, page 7.
     - ISO/IEC 18004:2015(E)   Figure 1, Section 6.2, page 7.
     - ISO/IEC 18004:2024(en)  Figure 1, Section 5.2, page 6.
@@ -124,7 +123,7 @@ def write_explicit_eci_designator_example(
 
     octets = payload.encode("iso-8859-7")
 
-    de = DataEncoder(EncodingVariant.SMALL).append_eci_designator(9).append_byte_mode_block(octets)
+    de = DataEncoder(EncodingVariant.SMALL).append_eci_designator(9).append_byte_mode_segment(octets)
 
     qr_canvas = make_qr_code(de, version=1, level=ErrorCorrectionLevel.H, include_quiet_zone=include_quiet_zone)
 
@@ -148,21 +147,25 @@ def write_structured_append_mode_examples(
         optimize_png: bool) -> list[RenderHtmlExample]:
     """This reproduces the structured append mode example as given in the standard.
 
+    The example shows a 62-character string; first as a single 4-M symbol, then as four 1-M symbols
+    using Structured Append Mode.
+
+    The five QR codes are identical for all four editions of the standard.
+
     References:
     - ISO/IEC 18004:2000(E)   Section 9.1, Figure 22, page 56.
     - ISO/IEC 18004:2006(E)   Section 7.1, Figure 29, page 59.
-    - ISO/IEC 18004:2015(E)   Section 8.1, Figure 28, page 60.
+    - ISO/IEC 18004:2015(E)   Section 8.1, Figure 29, page 60.
     - ISO/IEC 18004:2024(en)  Section 8.1, Figure 29, page 56.
     """
 
     payload = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
-
     examples = [
         # Reproduces the example where the full payload is encoded in a single QR code.
         # The 62 characters are encoded in a single alphanumeric block.
         RenderHtmlExample(
-            description=f"Structured Append Mode example (all data)\n{payload!r}\nISO/IEC 18004:{{2000,2006,2015}}",
+            description=f"Structured Append Mode example (all data)\n{payload!r}\nISO/IEC 18004:{{2000,2006,2015,2024}}",
             descriptor = write_optimal_qrcode(
                 payload=payload,
                 png_filename="qrcode_iso18004_2000_2006_2015_2024_StructuredAppendMode_combined_{VERSION}{LEVEL}p{PATTERN}.png",
@@ -189,7 +192,7 @@ def write_structured_append_mode_examples(
 
     for (index, pattern, sub_payload) in structured_append_qrcode_specs:
 
-        de = DataEncoder(EncodingVariant.SMALL).append_structured_append_marker(index, 4, checksum).append_alphanumeric_mode_block(sub_payload)
+        de = DataEncoder(EncodingVariant.SMALL).append_structured_append_marker(index, 4, checksum).append_alphanumeric_mode_segment(sub_payload)
 
         qr_canvas = make_qr_code(de, version=1, level=ErrorCorrectionLevel.M, pattern=pattern, include_quiet_zone=include_quiet_zone)
 
@@ -197,7 +200,7 @@ def write_structured_append_mode_examples(
 
         examples.append(
             RenderHtmlExample(
-                description=f"Structured Append Mode example (part {index + 1} of 4)\n{sub_payload!r}\nISO/IEC 18004:{{2000,2006,2015}}",
+                description=f"Structured Append Mode example (part {index + 1} of 4)\n{sub_payload!r}\nISO/IEC 18004:{{2000,2006,2015,2024}}",
                 descriptor=save_qrcode_as_png_file(
                     png_filename=png_filename,
                     canvas=qr_canvas,
@@ -217,10 +220,12 @@ def write_annex_examples(
         optimize_png: bool) -> list[RenderHtmlExample]:
     """Write the appendix example of a QR code found in the standard.
 
-    Note that the data masking pattern selected differs between the standard versions:
-    - 2000       ...... : pattern 3
-    - 2006, 2015 ...... : pattern 2
-    - 2024       ...... : (unknown)
+    This encodes the numeric string "01234567" as a version 1-M QR code symbol.
+
+    Note that the data masking pattern selected differs between the standard editions:
+
+    - 2000 .................. : pattern 3
+    - 2006, 2015, 2024 ...... : pattern 2
 
     References:
     - ISO/IEC 18004:2000(E)   Figure G.2, Annex G, pages 84--85.

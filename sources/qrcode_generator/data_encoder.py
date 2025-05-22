@@ -1,16 +1,16 @@
 """QR code data encoder.
 
-The data payload of QR codes consists of a bitstream containing encoding blocks as described in the standard.
+The data payload of QR codes consists of a bitstream containing encoding segments as described in the standard.
 
-Each encoding block starts with a 4-bit indicator of its type.
+Each encoding segment starts with a 4-bit indicator of its type.
 
-Four block types encode string data; they are followed by a character count, and finally the character data:
+Four segment types encode string data; they are followed by a character count, and finally the character data:
 
-0001 Numeric data;      alphabet is any of the 10 characters "0123456789".
-0010 Alphanumeric data; alphabet is any of the 45 characters "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ $%*+-./:".
+0001 Numeric data;      The alphabet is any of the 10 characters "0123456789".
+0010 Alphanumeric data; The alphabet is any of the 45 characters "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ $%*+-./:".
 0100 Byte data;         Eight-bit bytes, representing a string in some encoding. The standard specifies a default
-                        encoding that can be changed with an ECI block.
-1000 Kanji data;        alphabet is Kanji characters encoded in 13 bits each.
+                        encoding that can be changed with an ECI segment.
+1000 Kanji data;        The alphabet is Kanji characters encoded in 13 bits each.
 
 The message is ended by a terminator of four zero bits, if the QR code symbol has room for it.
 """
@@ -85,7 +85,7 @@ class DataEncoder:
         return self
 
     def append_eci_designator(self, value: int) -> Self:
-        """Append Extended Channel Interpretation (ECI) block."""
+        """Append Extended Channel Interpretation (ECI) segment."""
 
         if not (0 <= value <= 999999):
             raise ValueError(f"Bad ECI designator value ({value}).")
@@ -103,8 +103,8 @@ class DataEncoder:
 
         return self
 
-    def append_numeric_mode_block(self, s: str) -> Self:
-        """Append Numeric mode block."""
+    def append_numeric_mode_segment(self, s: str) -> Self:
+        """Append Numeric mode segment."""
 
         # Verify that all characters in the string can be represented as numeric characters.
         if not all(c in numeric_character_map for c in s):
@@ -116,10 +116,10 @@ class DataEncoder:
         if not (len(s) < (1 << count_bits)):
             raise ValueError("Numeric string too long.")
 
-        # Append the numeric mode block intro.
+        # Append the numeric mode segment intro.
         self.append_integer_value(0b0001, 4)
 
-        # Append the numeric mode block character count.
+        # Append the numeric mode segment character count.
         self.append_integer_value(len(s), count_bits)
 
         # Append the numeric character data, in chunks of 1, 2, or 3 characters.
@@ -139,8 +139,8 @@ class DataEncoder:
 
         return self
 
-    def append_alphanumeric_mode_block(self, s: str) -> Self:
-        """Append Alphanumeric mode block."""
+    def append_alphanumeric_mode_segment(self, s: str) -> Self:
+        """Append Alphanumeric mode segment."""
 
         # Verify that all characters in the string can be represented as alphanumeric characters.
         if not all(c in alphanumeric_character_map for c in s):
@@ -152,10 +152,10 @@ class DataEncoder:
         if not (len(s) < (1 << count_bits)):
             raise ValueError("Alphanumeric string too long.")
 
-        # Append the alphanumeric mode block intro.
+        # Append the alphanumeric mode segment intro.
         self.append_integer_value(0b0010, 4)
 
-        # Append the alphanumeric mode block character count.
+        # Append the alphanumeric mode segment character count.
         self.append_integer_value(len(s), count_bits)
 
         # Append the alphanumeric character data, in chunks of 1 or 2 characters.
@@ -175,8 +175,8 @@ class DataEncoder:
 
         return self
 
-    def append_byte_mode_block(self, b: bytes) -> Self:
-        """Append Byte mode block."""
+    def append_byte_mode_segment(self, b: bytes) -> Self:
+        """Append Byte mode segment."""
 
         count_bits = count_bits_table[self.variant][CharacterEncodingType.BYTES]
 
@@ -184,10 +184,10 @@ class DataEncoder:
         if not (len(b) < (1 << count_bits)):
             raise ValueError("Byte sequence too long.")
 
-        # Append the byte mode block intro.
+        # Append the byte mode segment intro.
         self.append_integer_value(0b0100, 4)
 
-        # Append the byte mode block character count.
+        # Append the byte mode segment character count.
         self.append_integer_value(len(b), count_bits)
 
         # Append the byte data.
@@ -196,8 +196,8 @@ class DataEncoder:
 
         return self
 
-    def append_kanji_mode_block(self, s: str) -> Self:
-        """Append Kanji mode block."""
+    def append_kanji_mode_segment(self, s: str) -> Self:
+        """Append Kanji mode segment."""
 
         values = []
         for c in s:
@@ -211,10 +211,10 @@ class DataEncoder:
         if not (len(values) < (1 << count_bits)):
             raise ValueError("Kanji string too long.")
 
-        # Append the kanji mode block intro.
+        # Append the kanji mode segment intro.
         self.append_integer_value(0b1000, 4)
 
-        # Append the kanji mode block character count.
+        # Append the kanji mode segment character count.
         self.append_integer_value(len(values), count_bits)
 
         # Append the kanji character data.

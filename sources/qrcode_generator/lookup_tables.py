@@ -41,6 +41,7 @@ count_bits_table = {
 # Among other things, these specify the Reed-Solomon codes used in each of the 160 QR code formats
 # described by the standard (40 versions, with 4 error correction levels per version).
 
+
 class VersionSpecification(NamedTuple):
     """Represent version-specific information."""
     version: int

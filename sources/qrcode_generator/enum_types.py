@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from enum import Enum
 
+
 class CharacterEncodingType(Enum):
     """The four types of characters encoding used in QR codes."""
     NUMERIC      = 101
