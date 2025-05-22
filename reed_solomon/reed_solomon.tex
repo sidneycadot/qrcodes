@@ -1,0 +1,46 @@
+\documentclass[a4paper]{article}
+%
+\usepackage{charter}
+\usepackage{parskip}
+\usepackage[margin=2cm]{geometry}
+%
+\title{Reed-Solomon algorithms for QR codes}
+\author{Sidney~Cadot}
+%
+\begin{document}
+\maketitle
+\section{Introduction}
+%
+This document provides background information on Reed-Solomon codes.
+The aim is to explain the encoding and decoding algorithms used in QR code symbols.
+
+This document refers extensively to the standard ISO/IEC~18004:2024(en), which is the
+most recent edition of the standard that describes QR code symbols.
+%
+\section{Construction of GF($2^8$)}
+The Reed-Solomon codes used in QR codes are \emph{block codes}, where each code word is a
+finite-length vector of code symbols. The code symbols are elements of the Galois field of
+order $2^8=256$.
+
+The precise definition of a Galois field can be found in any introductory textbook
+on algebra. For the purpose of this document, it suffices to think of it as a set of
+256 elements with well-defined operation for addition and multiplication that behave
+very similar to the operations defined on the numbers we normally use.
+
+For example, there is an element zero (which is the additive identity) and an element
+one (which is the multiplicative identity); subtraction is well defined although a bit
+strange ($x-y$ is equal to $x+y$), and division by any non-zero element is well-defined,
+yielding one of the 256 elements. Division by the element 0 is undefined.
+Also, the normal distributive, commutative, and associative laws hold.
+
+Apart from the elements $0$ and $1$, there is also an element called the primitive root,
+which is denoted as $\alpha$. The powers $a^k$ for $k$ from $0$ to $254$ generate the
+non-zero elements of GF($2^8$). In particular, $\alpha^0=1$.
+
+The 256 elements of $GF^8$ can thus be denoted as $\{ 0, \alpha^0, \alpha^1, \ldots, \alpha^{254} \}$.
+Expanding the sequence of powers of $\alpha$ further repeats the non-zero values, i.e., $\alpha^{255}=\alpha^0=1$, $\alpha^{256}=\alpha^2$, and so on.
+
+\section{Generator polynomials used in QR codes}
+\section{Encoding}
+\section{Decoding and error correction}
+\end{document}
