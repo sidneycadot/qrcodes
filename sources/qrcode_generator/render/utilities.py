@@ -26,6 +26,7 @@ def write_optimal_qrcode(
         mode: Optional[str] = None,
         colormap: Optional[str|dict] = None,
         magnification: Optional[int] = None,
+        transform: Optional[str] = None,
         optimize_png: Optional[bool] = None
     ) -> QRCodePngFileDescriptor:
 
@@ -45,6 +46,7 @@ def write_optimal_qrcode(
         mode=mode,
         colormap=colormap,
         magnification=magnification,
+        transform=transform,
         optimize_png=optimize_png
     )
 
