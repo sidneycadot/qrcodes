@@ -7,7 +7,7 @@
 \usepackage{parskip}
 \usepackage{graphicx}
 \usepackage[margin=1in]{geometry}
-
+%
 %
 \newcommand{\shortstandard}{ISO/IEC~18004}
 \newcommand{\standard}{\shortstandard:2024(en)}
@@ -21,23 +21,19 @@
 \newcommand{\bad}[1]{\textcolor{red}{#1}}
 %
 %
-%
 \captionsetup{margin=10pt,font={small,it}} % Options: tiny, scriptsize, footnotesize, small, normalsize, etc.
 %
 %
-%
 \title{Suggested improvements to \standard}
-\author{\includegraphics[width=0.2\textwidth]{images/email.png} \\ \\ Sidney~Cadot~\url{<sidney.cadot@gmail.com>}} 
-
-\date{Version 0.1 --- May~2025}
-%
+\author{\includegraphics[width=0.2\textwidth]{images/email.png} \\ \\ Sidney~Cadot~\url{<sidney.cadot@gmail.com>}\footnote{The author wishes to acknowledge Joris~van~Rantwijk for the many fruitful discussions about the
+precise meaning of some sections in the QR code standard, and for proofreading this document. Joris wrote a QR code \emph{decoder} a few years ago, so his insights nicely complemented my own experience on the encoder side.}}
+\date{Version 1.0 --- May~31\textsuperscript{st},~2025}
 %
 %
 \begin{document}
 %
-%
 \maketitle
-%
+\tableofcontents
 %
 \section{Introduction}
 
@@ -45,236 +41,91 @@ The \standard{} standard describes the encoding and decoding of QR code symbols.
 I recently implemented a QR code encoder library\footnote{The encoder I implemented can be found on Github:
 \url{https://github.com/sidneycadot/qrcodes}.}, mostly to satisfy my curiosity about how QR codes work.
 
-Not surprisingly, a close reading of the standard was necessary to achieve a working encoder. With the benefit
-of reading with a 'fresh pair of eyes', several small mistakes were found in the standard text that are easily
-fixable. In addition, it was found that a few sections could be improved in terms of understandability. All
-these potential improvements are collected in the document that you are currently reading.
+To implement a working encoder, a close reading of the standard was necessary. With the benefit of reading
+with a `fresh pair of eyes', several suspected mistakes were found:
 
-My hope is that the standard committee will consider the suggested improvements in order to improve the
-quality of the \shortstandard{} standard, and that at least some of the items listed will be addressed in
-the next edition.
+\begin{itemize}
+\item The Data Mask Pattern selection procedure appears to be incorrectly applied in four of the seven
+      QR code symbols shown in the standard.
+      This issue is described in Section~\ref{sec:data-mask-pattern-selection}.
+\item The procedure for dealing with mirrored QR codes as described in the standard leads to a failure
+      to correctly decode mirrored QR codes in most cases.
+      This issue is described in Section~\ref{sec:mirrored-symbol-issue}.
+\item A number of trivial syntactic mistakes were found.
+      These are listed in Section~\ref{sec:trivial-issues}.
+\end{itemize}
 
-Most notably, the rather hard to understand description of the data mask pattern scoring algorithm in
-Section~7.8.3.1, and the related fact that some of the concrete QR codes shown in the standard appear to
-select a non-optimal data mask pattern, leaves room for improvement. This is discussed in
-Section~\ref{sec:dmp-scoring}, below.
+Apart from these issues, there are several other places where it may be possible to improve the clarity
+of the standard. In the interest of brevity these are not currently included in this document. If useful,
+I can present a list of these at a later stage.
 
-\section{Suggested improvements}
+%My hope is that the standard committee will consider the issues described in this document, and that at
+%least some of those will lead to improvements in the next edition of the standard.
 
-Below is a list of suggested improvements to the standard. All section and page references are to the most recent (fourth)
-edition of the standard, i.e., \standard. Quotes from the standard are shown in \textcolor{blue}{blue}.
+\section{ Data Mask Pattern selection and the standard's QR code symbols}
+\label{sec:data-mask-pattern-selection}
 
-\subsection{\standard, Introduction (page vii)}
+Section~7.8.3.1 of \standard\ describes a scoring procedure for QR code symbols using eight different
+Data Mask Patterns, with the goal of selecting the pattern that is least likely to confuse QR code readers.
 
-In the third clause of the enumeration, it is unclear what the sentence fragment below means; it appears to be non-grammatical:
+\subsection{Wording of the scoring procedure}
 
-\begin{quote}
-\quotestandard{\ddd the option for specifying alternative character is set to the default.}
-\end{quote}
+Section~7.8.3.1 is quite terse and several parts of it are hard to understand.
 
-It is suggested to reword this for clarity.
-
-\subsection{\standard, Introduction (page vii)}
-
-In the fourth clause of the enumeration, a word appears to be missing.
-
-\begin{quote}
-\quotestandard{\ddd which enables small to moderate amount of data to be represented \ddd}
-\end{quote}
-
-It is suggested to change this to:
-
-\begin{quote}
-\quotestandard{\ddd which enables \change{a} small to moderate amount of data to be represented \ddd}
-\end{quote}
-
-\subsection{\standard, Section 5.1, clause b.3 (page 4)}
-
-The default character set for byte data in the absence of an explicit ECI designator is defined here as ISO/IEC~8859-1.
-
-It would be useful to explicitly indicate that in the 2000 edition of the standard, the default encoding was JIS-8,
-and that this was changed to ISO/IEC 8859-1 in the 2006 edition of the standard.
-
-Furthermore, it may be useful to mention that, in contradiction to the standard, many modern QR code decoders (e.g. those
-implemented on mobile phones) use UTF-8 as the default encoding instead.
-
-\subsection{\standard, Section 5.1, clause f (page 5)}
-
-It is not made clear what these percentages mean, i.e., what the precise guarantee is for any of the four levels of
-error correction in terms of error correction capabilities.
-
-As stated, the most natural interpretation of the percentages would be that they indicate that if \emph{any} x\% of the
-modules in the entire QR code are damaged (inverted), the QR code would still be readable. However, this is not the
-case, as the percentage indicates the fraction of errors that can be dealt with \emph{per block code word} rather than for
-the entire QR code, and on the GF(256) symbol level rather than on the bit/module level.
-
-An unlucky set of module-level errors can, in fact, damage the QR code beyond repair with \emph{far less} than the stated
-percentages of module-level errors.
-
-It would be helpful if the precise meaning of the percentages given is made clear, as well as what they mean in practical
-terms.
-
-\subsection{\standard, Section 5.2, Figure 1 (page 6)}
-\label{sec:dmp-changed-1}
-
-The QR code symbol used here as an example uses data mask pattern~6, whereas in earlier editions of the standard
-(2000, 2006, 2015), this same example used data mask pattern~5.
-These two alternative code symbols are shown in Figure~\ref{fig:dmp-changed-1}).
-
-It would be useful to explicitly acknowledge this change, and explain which one is the correct choice;
-see also Sections~\ref{sec:dmp-scoring} and \ref{sec:dmp-changed-2}.
-
-\begin{figure}[h!]
-\centering
-\includegraphics[width=0.4\textwidth]{images/qrcode_iso18004_2000_2006_2015_QRCodeSymbol_1Mp5.png}
-\includegraphics[width=0.4\textwidth]{images/qrcode_iso18004_2024_QRCodeSymbol_1Mp6.png}
-\caption{The text ``QR Code Symbol'' represented as a 1-M QR code using two different data mask patterns.
-         The left version, as found in the 2000, 2006, and 2015 editions of the standard, uses data mask pattern~5.
-         The right version, as found in the 2024 edition of the standard, uses data mask pattern~6.}
-\label{fig:dmp-changed-1}
-\end{figure}
-
-\subsection{\standard, Section 5.2, Figure 1, caption (page 6)}
-
-The caption claims the QR code example encodes the text ``QR code Symbol''.
-
-In fact, the QR code example encodes the text ``QR Code Symbol'', with the word `Code' capitalized.
-
-In earlier editions of the standard (2006, 2015) the caption was correct. This change should be reverted.
-
-\subsection{\standard, Section 7.3.1 (page 18)}
-
-It is unclear what this section is saying, precisely.
-
-\subsection{\standard, Section 7.3.6 (page 18)}
-
-It is unclear what this section is saying, precisely.
-
-\subsection{\standard, Section 7.4.3.2 (page 22)}
-
-The ECI designator example given is incorrect.
-
-In ISO/IEC~8859-7, the five Greek letters A, B, $\Gamma$, $\Delta$, and E are encoded as byte values \hex{C1} to \hex{C5}.
-The example shown in this section erroneously encodes them as byte values \hex{A1} to \hex{A5}.
-
-This mistake is also present in the 2000, 2006, and 2015 editions of the standard.
-
-It would also be useful if an example QR code symbol that contains the encoded data is included in the standard (Figure~\ref{fig:greek-encoding}).
-
-\begin{figure}[h]
-\centering
-\includegraphics[width=0.4\textwidth]{images/qrcode_iso18004_2024_QRCodeSymbol_1Mp6.png}
-\caption{The text ``AB$\mathit{\Gamma\Delta}$E'' represented as a 1-H QR code using data mask pattern 6.
-         The five bytes values \hex{C1} to \hex{C5} are preceded by an ECI designator that changes the character
-         interpretation to the value 000009, indicating that the bytes that follow should be interpreted using
-         the ISO/IEC~8859-7 byte-to-character mapping.}
-\label{fig:greek-encoding}
-\end{figure}
-
-\subsection{\standard, Section 7.4.6, Note 3, 4 (page 26)}
-
-These two notes indicate the differences between Table~6 and ISO/IEC~8859-1, especially in
-regard to the interpretation of  the lower 32 byte values.
-
-However, Section~5.1, clause b.3 indicates that the default encoding of bytes blocks
-(in absence of a preceding ECI designator) is ISO/IEC~8859-1, which leaves those 32 bytes
-undefined.
-
-These statements are in contradiction. Either the default encoding is actually ISO/IEC~8859-1
-(with the first 32 byte values undefined) or it is the similar-but-different encoding given
-in Table~6, where an interpretation is assigned to the first 32 byte values.
-
-The standard should make an unequivocal choice.
-
-\subsection{\standard, Section 7.4.11 (page 29)}
-
-This text can be improved for readability.
-
-\subsubsection*{First suggestion}
-
-\begin{quote}
-\quotestandard{\ddd shall be connected in order \ddd}
-\end{quote}
-
-can be changed to:
-
-\begin{quote}
-\quotestandard{\ddd shall be \change{concatenated} in order \ddd}
-\end{quote}
-
-\subsubsection*{Second suggestion}
-
-\begin{quote}
-\quotestandard{In certain versions of symbol \ddd}
-\end{quote}
-
-can be changed to:
-
-\begin{quote}
-\quotestandard{In certain \change{QR code symbol versions} \ddd}
-\end{quote}
-
-\subsection{\standard, Section 7.5.1 (page 33)}
-
-\begin{quote}
-\quotestandard{Since QR code is a matrix symbology, a defect converting a module from dark to light or vice versa
-will result in the affected symbol character misdecoding as an apparently valid but different codeword.}
-\end{quote}
-
-This statement, in particular the part before the comma, does not make sense. The fact that module
-inversion will lead to a symbol character misdecoding is true, but this is not `because QR code is a
-matrix symbology'.
-
-Deleting the part before the comma improves the clarity of the statement:
-
-\begin{quote}
-\quotestandard{\change{A} defect converting a module from dark to light or vice versa will result in the affected symbol
-character misdecoding as an apparently valid but different codeword.}
-\end{quote}
-
-\subsection{\standard, Section 7.5.1 (page 33, 34)}
-
-The explanation of the $p$ value is overly complicated. Consider rewriting it for clarity.
-
-\subsection{\standard, Section 7.5.1, Table 9 (pages 34 to 40)}
-
-The last two columns of the table are confusing, as each version's entry can have more than the expected
-four rows specifying the code block parameters used for each of the four error levels (L, Q, M, H). The
-fact that a single specification can span multiple lines, to reflect the fact that a specific
-version / error correction level combination can use more than one block code, is not a-priori clear.
-
-Consider adding horizontal separator lines in the last two columns, to show
-which code lines correspond to which of the four error correction levels.
-
-Note: the table used to be formatted like that in the corresponding tables in the 2000
-and 2006 editions of the standard. The presentation of the same information in those two
-editions of the standard is much clearer because of that.
-
-\subsection{\standard, Section 7.8.3.1 (pages 49, 50)}
-\label{sec:dmp-scoring}
-
-This section is quite unclear; it would be advisable to re-write it. it is very
-hard to ascertain the intended score calculation from this description alone. 
-
-One of the more confusing sentences in this section is this:
+The sentence fragment below from the introductory paragraph is somewhat confusing:
 
 \begin{quote}
 \quotestandard{\ddd the variables N1 to N4 represent weighted penalty scores for the undesirable features \ddd}
 \end{quote}
 
 However, N1 to N4 are not variables, but \emph{constants}; and they don't represent weighted penalty
-scores; rather, they are merely constants used in the calculation of the four terms that make up
-the final penalty score for a given symbol.
+scores, as claimed; rather, they are merely constants used in the calculation of the four terms that make
+up the final penalty score for a given symbol.
 
-\subsubsection*{Inconsistency between the scoring algorithm and the data mask pattern choices in the example QR codes found in \standard}
+Another issue is that there is an ambiguity in this section with regard to the calculation of the first score term.
+In NOTE~1 it is first said that blocks consisting of \emph{more than five} modules are checked, but later on
+it is stated that a five-module block counts for three points.
 
-More importantly, the score calculation described in this section does not lead to the data mask
-pattern choices made for the seven QR code symbol examples given in the standard itself (Figure~1,
-Figure~29 with five examples, and Figure~I.2).
+The clarity of this section could be greatly improved if one or two concrete examples were added that show the four
+terms contributing to the penalty score, as well as the final scores, for each of the eight data mask patterns.
 
-Table~\ref{tab:dmp-selections} shows the scores calculated according to the scoring method described, for each of the seven QR codes
-found in the standard, and for each of the eight data mask pattern choices. Also listed is the optimal data mask
-pattern choice (with the  lowest score) and the data mask pattern actually used in the QR code symbol shown in the standard.
+An example of what that could look like is shown in Table~\ref{tab:dmp-selection-annex-example} below.
+For the QR code symbol discussed in Annex~I, it shows the exact score contributions and the total score for each
+of the eight data patterns.
+
+\begin{table}[h!]
+\centering
+\small
+\begin{tabular}{|c|c|c|c|c|c|}
+\hline
+Data mask pattern & 1st score term & 2nd score term & 3rd score term & 4th score term & Total score \\
+\hline
+Pattern 0            & 182              & 171               & 800              &  0                & 1153        \\
+Pattern 1            & 216              & 234               & 800              &  0                & 1250        \\
+Pattern 2            & 235              & 195               & 720              & 10                & 1160        \\
+Pattern 3            & 216              & 192               & 720              &  0                & \best{1128} \\
+Pattern 4            & 217              & 237               & 760              &  0                & 1214        \\
+Pattern 5            & 245              & 228               & 760              & 10                & 1243        \\
+Pattern 6            & 207              & 186               & 760              &  0                & 1153        \\
+Pattern 7            & 203              & 210               & 720              &  0                & 1133        \\
+\hline
+\end{tabular}
+\caption{Partial and total scores for the QR code discussed in Annex~I}
+\label{tab:dmp-selection-annex-example}
+\end{table}
+
+\subsection{Some Data Mask Patterns in the standard's QR code examples are incorrect}
+
+The standard contains seven QR code symbol examples: one in Figure~1, five in Figure~29, and one in Figure~I.2.
+
+Unfortunately, the Data Mask Pattern used in those symbols does not always correspond to the Data Mask Pattern
+with the lowest score, which is confusing for implementers that try to reproduce those examples to validate
+their own implementation.
+
+Table~\ref{tab:dmp-selections} shows the scores calculated according to the scoring method described in Section~7.8.3.1,
+for each of the seven QR codes found in the standard, and for each of the eight data mask pattern choices.
+Also listed is the optimal data mask pattern choice (with the  lowest score) and the data mask pattern actually
+used in the QR code symbol shown in the standard.
 
 These two data mask pattern choices should match, but for four out of seven cases, they do not.
 
@@ -294,73 +145,170 @@ Figure 29, second row & Structured Append Mode example, 4 of 4   & 1-M & 1245,11
 Figure I.2            & ``01234567''                             & 1-M & 1153,1250,1160,\best{1128},1214,1243,1153,1133 & Pattern 3 & \bad{Pattern 2} \\
 \hline
 \end{tabular}
-\caption{Overview of QR codes found in \standard}
+\caption{Overview of the QR code symbols found in \standard\ and their data mask pattern choices}
 \label{tab:dmp-selections}
 \end{table}
 
-The clarity of this section could be greatly improved if one or two worked-out examples were added that show the four score
-contribution terms and final scores for each of the eight data mask patterns. For example, for the QR code example discussed
-in Annex~I, a table such as Table~\ref{tab:dmp-selection-annex-example} lists the four score terms and the total score for each
-data mask pattern choice:
+\subsection{Missing tie-breaker rule}
+
+The standard does not currently specify a tie-breaker rule in case two data mask patterns yield an identical score.
+
+Such a rule could be very simple, e.g., `in case of multiple data mask pattern choices having the same score, select
+Pattern~0 over Pattern~1, Pattern~1 over Pattern~2, and so on', or something to that effect.
+
+This would ensure that, for each QR code, there is a fully deterministic and unambiguous way of selecting the correct data mask pattern.
+
+\section{The prescribed procedure for handling mirrored QR codes leads to decoding failures}
+\label{sec:mirrored-symbol-issue}
+
+
+The handling of mirrored QR code symbols was introduced in the 2006 edition of the standard. The procedure to determine if a QR code symbol
+is mirrored is described in \standard, Clause~11~part~(b), and Clause~12~parts~(j) and (k).
+
+The prescribed procedure to determine if the QR code symbol being decoded is \emph{normal} or \emph{mirrored} can be summarized as follows:
+
+\begin{itemize}
+\item Inspect the format information bits. If (after error correction) it is correct, proceed with decoding under the assumption that the symbol
+      is \emph{normal} (i.e., non-mirrored).
+\item If not, try to reverse the order of the format information bits, and see if (after error correction) that yields an acceptable format information
+      codeword. If so, proceed with decoding under the assumption that the symbol is \emph{mirrored}.
+\item If not, declare failure. 
+\end{itemize}
+
+The problem with this procedure is that the reverse-order bit string of most encoded format information words decode to another valid format information word, with a Hamming
+distance equal to 3. Table~\ref{tab:format-information-bit-reversal} on the next page shows for which of the 32 possible format information bit patterns this happens.
+
+Hence, based on the format information alone, and allowing for 3 incorrect (inverted) modules, it is not possible to make a reliable determination of
+whether the QR code symbol being decoded is mirrored or not.
 
 \begin{table}[h!]
 \centering
-\tiny
-\begin{tabular}{|c|c|c|c|c|c|}
+\begin{tabular}{|c|c|c|c|c|}
 \hline
-Data mask pattern & First score term & Second score term & Third score term & Fourth score term & Total score (best score underlined) \\
+entry & data bits & sequence after masking & sequence after matching, reversed & unintended match \\
 \hline
-Pattern 0            & 182              & 171               & 800              &  0                & 1153        \\
-Pattern 1            & 216              & 234               & 800              &  0                & 1250        \\
-Pattern 2            & 235              & 195               & 720              & 10                & 1160        \\
-Pattern 3            & 216              & 192               & 720              &  0                & \best{1128} \\
-Pattern 4            & 217              & 237               & 760              &  0                & 1214        \\
-Pattern 5            & 245              & 228               & 760              & 10                & 1243        \\
-Pattern 6            & 207              & 186               & 760              &  0                & 1153        \\
-Pattern 7            & 203              & 210               & 720              &  0                & 1133        \\
+ 0 & 00000 & 101010000010010 & 010010000010101 & \bad{entry 28} \\
+ 1 & 00001 & 101000100100101 & 101001001000101 & \bad{entry 21} \\
+ 2 & 00010 & 101111001111100 & 001111100111101 & \bad{entry 26} \\
+ 3 & 00011 & 101101101001011 & 110100101101101 & \bad{entry 31} \\
+ 4 & 00100 & 100010111111001 & 100111111010001 & \bad{entry 6} \\
+ 5 & 00101 & 100000011001110 & 011100110000001 & \bad{entry 29} \\
+ 6 & 00110 & 100111110010111 & 111010011111001 & \bad{entry 4} \\
+ 7 & 00111 & 100101010100000 & 000001010101001 & \bad{entry 16} \\
+ 8 & 01000 & 111011111000100 & 001000111110111 & \textit{n/a} \\
+ 9 & 01001 & 111001011110011 & 110011110100111 & \bad{entry 12} \\
+10 & 01010 & 111110110101010 & 010101011011111 & \bad{entry 30} \\
+11 & 01011 & 111100010011101 & 101110010001111 & \textit{n/a} \\
+12 & 01100 & 110011000101111 & 111101000110011 & \bad{entry 9} \\
+13 & 01101 & 110001100011000 & 000110001100011 & \bad{entry 18} \\
+14 & 01110 & 110110001000001 & 100000100011011 & \textit{n/a} \\
+15 & 01111 & 110100101110110 & 011011101001011 & \bad{entry 24} \\
+16 & 10000 & 001011010001001 & 100100010110100 & \bad{entry 7} \\
+17 & 10001 & 001001110111110 & 011111011100100 & \textit{n/a} \\
+18 & 10010 & 001110011100111 & 111001110011100 & \bad{entry 13} \\
+19 & 10011 & 001100111010000 & 000010111001100 & \bad{entry 22} \\
+20 & 10100 & 000011101100010 & 010001101110000 & \textit{n/a} \\
+21 & 10101 & 000001001010101 & 101010100100000 & \bad{entry 1} \\
+22 & 10110 & 000110100001100 & 001100001011000 & \bad{entry 19} \\
+23 & 10111 & 000100000111011 & 110111000001000 & \textit{n/a} \\
+24 & 11000 & 011010101011111 & 111110101010110 & \bad{entry 15} \\
+25 & 11001 & 011000001101000 & 000101100000110 & \bad{entry 27} \\
+26 & 11010 & 011111100110001 & 100011001111110 & \bad{entry 2} \\
+27 & 11011 & 011101000000110 & 011000000101110 & \bad{entry 25} \\
+28 & 11100 & 010010010110100 & 001011010010010 & \bad{entry 0} \\
+29 & 11101 & 010000110000011 & 110000011000010 & \bad{entry 5} \\
+30 & 11110 & 010111011011010 & 010110110111010 & \bad{entry 10} \\
+31 & 11111 & 010101111101101 & 101101111101010 & \bad{entry 3} \\
 \hline
 \end{tabular}
-\caption{Partial and total scores for the QR code discussed in Annex~I}
-\label{tab:dmp-selection-annex-example}
+\caption{Format identification bit strings and their reversals. The `unintended match' column indicates matches to a non-reversed format identification bit string, as the reverse bit string has a Hamming distance of 3 with the indicated non-reversed entry.}
+\label{tab:format-information-bit-reversal}
 \end{table}
+\clearpage
+As a specific example of this problem, consider the QR code shown in \standard, Figure~1.
 
-\subsubsection*{Missing tie-breaker rule}
+\begin{figure}[h!]
+\centering
+\includegraphics[width=0.35\textwidth]{images/qrcode_iso18004_2024_MirrorExample_Normal_1Mp6.png}
+\includegraphics[width=0.35\textwidth]{images/qrcode_iso18004_2024_MirrorExample_HorizontallyMirror_1Mp6.png}
+\caption{The `QR Code Symbol' example from \standard~Figure~1, in normal (left) and mirrored (right) form.}
+\label{fig:mirror}
+\end{figure}
 
-A tie-breaker rule should be defined in case two data mask patterns yield an identical score.
+When decoding the right (mirrored) form of this QR code symbol, format information bits are extracted under the
+assumption that it is a non-mirrored QR code symbol that is merely rotated clockwise by 90 degrees.
 
-This would ensure that, for each QR code, there is a fully deterministic and unambiguous way of selecting the
-correct data mask pattern.
-
-\subsubsection*{Specify behavior of decoders when encountering QR codes with sub-optimal data mask pattern}
-
-It is suggested that a statement be added that decoders \emph{should} accept QR codes with a suboptimal data mask
-pattern choice.
-
-\subsubsection*{Two further remarks on the score algorithm}
-
-(1) According to the scoring procedure, the scores are determined with the version and format information areas
-cleared (light modules). This is an unfortunate and suboptimal choice for which there seems to be no good reason.
-It would be better if the standard mandated that both the version and format information were fully filled in when 
-scoring the data mask patterns, taking into account that the format version information changes when assessing
-the eight data mask patterns in turn.
-
-(2) The fourth term in the scoring algorithm penalizes an imbalance between dark and light
-squares in the QR code; but it does so by binning the percentual deviations in `classes' of
-deviation away from the ideal 50\% score:
+If we extract the 15 format information bits (starting at bit 14, and working down to bit 0) under that assumption,
+we will get:
 
 \begin{verbatim}
-score_contribution =
-    10 * floor(abs(dark_count / (dark_count + light_count) * 100 - 50) / 5)
+  111010011111001 (format information bit string extracted from mirrored QR code)
 \end{verbatim}
 
-The reason for applying this discretization is unclear. A more obvious scoring calculation for the
-dark/light imbalance would omit the discretization but follow the same linear penalty relation,
-at two penalty points per percent of deviation:
+If we check this 15-bit sequence against the 32 `sequence after masking' words given in Table~C.1 of the standard, we find that the fifth entry matches:
 
 \begin{verbatim}
-score_contribution_alternative =
-    floor(2 * abs(dark_count / (dark_count + light_count) * 100 - 50))
+  100010111111001 (format information data bits 00100, sequence after masking) 
 \end{verbatim}
+
+This is a match since the Hamming distance $d(111010011111001,100010111111001)$ equals 3, which is acceptable as per Clause~12~part~(j).
+
+Following the standard-prescribed procedure, we should proceed decoding of the symbol as a non-mirrored QR code symbol, specifically,
+one having error correction level M and data mask pattern 4. This will then fail, since the information area data will not yield a
+correctable Reed-Solomon code word.
+
+\subsection{Proposed solution}
+
+A pragmatic, straightforward solution would be to alter the procedure for dealing with mirrored QR codes, as follows:
+
+\begin{itemize}
+\item Try to decode the QR code symbol in a non-mirrored way. This could fail while interpreting the format information bit,
+      but it could also fail later, while decoding the information contained in the symbol's string payload (because one or
+      more Reed Solomon words cannot be decoded; or even because the encoded data content cannot be parsed).
+\item If any such failure occurs, retry decoding the transposed version of the symbol.
+\end{itemize}
+
+I turns out that several QR code readers (e.g., the default QR code reader on Apple's iPhones) are able to handle
+mirrored QR codes just fine. It is suspected that these applications use a method of processing mirror-image QR
+codes that deviates from the procedure prescribed in the standard as currently written; perhaps using an approach
+such as described above.
+
+\clearpage
+\section{Trivial issues}
+\label{sec:trivial-issues}
+
+The standard contains a number of issues that are easy to fix.
+
+\subsection{\standard, Introduction (page vii)}
+
+In the fourth clause of the enumeration, a word appears to be missing.
+
+\begin{quote}
+\quotestandard{\ddd which enables small to moderate amount of data to be represented \ddd}
+\end{quote}
+
+It is suggested to change this to:
+
+\begin{quote}
+\quotestandard{\ddd which enables \change{a} small to moderate amount of data to be represented \ddd}
+\end{quote}
+
+\subsection{\standard, Section 5.2, Figure 1, caption (page 6)}
+
+The caption claims the QR code example encodes the text ``QR code Symbol''.
+
+In fact, the QR code example encodes the text ``QR Code Symbol'', with the word `Code' capitalized.
+
+In earlier editions of the standard (2006, 2015) the caption was correct. This change should be reverted.
+
+\subsection{\standard, Section 7.4.3.2 (page 22)}
+
+The ECI designator example given is incorrect.
+
+In ISO/IEC~8859-7, the five Greek letters A, B, $\Gamma$, $\Delta$, and E are encoded as byte values \hex{C1} to \hex{C5}.
+The example shown in this section erroneously encodes them as byte values \hex{A1} to \hex{A5}.
+
+This mistake is also present in the 2000, 2006, and 2015 editions of the standard.
 
 \subsection{\standard, Annex A (page 69)}
 
@@ -371,7 +319,7 @@ The definition of the generator polynomials is not correct:
 where n is the degree of the generator polynomial.}
 \end{quote}
 
-This mixes up the primitive root of GF(256), $\alpha$, with its byte representation, the value 2.
+This mixes up the primitive root of GF(256), $\alpha$, with its integer representation, the value 2.
 
 The correct statement is:
 
@@ -380,20 +328,20 @@ The correct statement is:
 where n is the degree of the generator polynomial.}
 \end{quote}
 
-\subsection{\standard, Annex E, Table E.1 (pages 78, 79)}
+\subsection{\standard, Annex B (page 72)}
+\label{sec:dmp-changed-2}
 
-The description of the alignment pattern position algorithm says:
+This subsection contains an incorrect statement caused by a missing superscript:
 
 \begin{quote}
-\quotestandard{They are spaced as evenly as possible between the timing pattern and the opposite side of the symbol, any uneven
-spacing being accommodated between the timing pattern and the first alignment pattern in the symbol interior.}
+\quotestandard{Now, it is found that an error is on the $j$\textsuperscript{th} digit (counting from the 0\textsuperscript{th} digit) for the element $\alpha j$ which makes $\sigma(\alpha) = 0$.}
 \end{quote}
 
-Unfortunately, this doesn't provide enough information on how this accommodation is achieved; it still leaves multiple
-possible solutions for each QR code version where the alignment patterns cannot be distributed evenly.
+This should be changed to:
 
-An explanation  of the choice made in those cases would be welcome. Specifically, this concerns the sixteen QR code versions
-15, 16, 18, 19, 22, 24, 26, 28, 30, 31, 32, 33, 36, 37, 39, and 40.
+\begin{quote}
+\quotestandard{Now, it is found that an error is on the $j$\textsuperscript{th} digit (counting from the 0\textsuperscript{th} digit) for the element \change{$\alpha^j$} which makes $\sigma(\alpha) = 0$.}
+\end{quote}
 
 \subsection{\standard, Annex I.2.6 (page 90)}
 \label{sec:dmp-changed-2}
@@ -414,33 +362,8 @@ This makes this subsection internally consistent, as the explanation describes t
 
 It seems that this mistake stems from the 2000 edition of the standard, where the same example was worked out;
 except back then, data mask pattern~3 was chosen instead of data mask pattern~2.
-These two alternative code symbols are shown in Figure~\ref{fig:dmp-changed-2}).
 
 When updating this section to reflect that change for the 2006 edition, it appears that this particular reference
 to data mask pattern `011' was left by accident, and this wasn't corrected in the 2015 and 2024 editions.
-
-\begin{figure}[h!]
-\centering
-\includegraphics[width=0.4\textwidth]{images/qrcode_iso18004_2000_AnnexG_1Mp3.png}
-\includegraphics[width=0.4\textwidth]{images/qrcode_iso18004_2006_2015_2024_AnnexI_1Mp2.png}
-\caption{The text ``01234567'' represented as a 1-M QR code using two different data mask patterns.
-         The left version, as found in the 2000 edition of the standard, uses data mask pattern~3.
-         The right version, as found in the 2006, 2015, and 2024 editions of the standard, uses data mask pattern~2.}
-\label{fig:dmp-changed-2}
-\end{figure}
-
-It would be useful to explicitly acknowledge this change, and explain which one is the correct choice.
-
-See also Sections~\ref{sec:dmp-changed-1} and \ref{sec:dmp-scoring}.
-
-\subsection{General recommendations}
-
-Once the issues with the data mask pattern scoring are fixed, it would be useful to include more concrete examples
-of QR code symbols in the standard, perhaps as an Annex. These could serve as a `gold standard' for implementers of both
-encoders and decoders.
-
-For some of the more esoteric parts of the standard (in particular, the codes used for the format information and version areas,
-the Reed-Solomon codes used for the information area, and the data mask pattern scoring) it would be very helpful if pseudocode
-(or even code in a mainstream programming language, like Python) would be provided, perhaps as an Annex.
 
 \end{document}
