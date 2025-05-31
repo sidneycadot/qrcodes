@@ -1,4 +1,14 @@
 \documentclass[a4paper,twoside]{article}
+
+% Work in progress:
+% This is an older version of our feedback document.
+% In the end I decided to only report a subset of the problems mentioned here: data mask pattern selection, a few non-controversial mistakes, and remarks about the impossibility
+%   of doing mirroring.
+% TODO:
+% - remove the earlier reported issues from this document.
+% - add new issues, specifically:
+%   - The standard says that byte mode is limited to one byte per character (section 7.3.5: "In byte mode, data is encoded at 8 bits per character."). This is probably not intentional; it excludes UTF encodings.
+
 \usepackage[utf8]{inputenc}
 \usepackage{url}
 \usepackage{color}
@@ -74,20 +84,6 @@ In the third clause of the enumeration, it is unclear what the sentence fragment
 
 It is suggested to reword this for clarity.
 
-\subsection{\standard, Introduction (page vii)}
-
-In the fourth clause of the enumeration, a word appears to be missing.
-
-\begin{quote}
-\quotestandard{\ddd which enables small to moderate amount of data to be represented \ddd}
-\end{quote}
-
-It is suggested to change this to:
-
-\begin{quote}
-\quotestandard{\ddd which enables \change{a} small to moderate amount of data to be represented \ddd}
-\end{quote}
-
 \subsection{\standard, Section 5.1, clause b.3 (page 4)}
 
 The default character set for byte data in the absence of an explicit ECI designator is defined here as ISO/IEC~8859-1.
@@ -134,14 +130,6 @@ see also Sections~\ref{sec:dmp-scoring} and \ref{sec:dmp-changed-2}.
 \label{fig:dmp-changed-1}
 \end{figure}
 
-\subsection{\standard, Section 5.2, Figure 1, caption (page 6)}
-
-The caption claims the QR code example encodes the text ``QR code Symbol''.
-
-In fact, the QR code example encodes the text ``QR Code Symbol'', with the word `Code' capitalized.
-
-In earlier editions of the standard (2006, 2015) the caption was correct. This change should be reverted.
-
 \subsection{\standard, Section 7.3.1 (page 18)}
 
 It is unclear what this section is saying, precisely.
@@ -149,27 +137,6 @@ It is unclear what this section is saying, precisely.
 \subsection{\standard, Section 7.3.6 (page 18)}
 
 It is unclear what this section is saying, precisely.
-
-\subsection{\standard, Section 7.4.3.2 (page 22)}
-
-The ECI designator example given is incorrect.
-
-In ISO/IEC~8859-7, the five Greek letters A, B, $\Gamma$, $\Delta$, and E are encoded as byte values \hex{C1} to \hex{C5}.
-The example shown in this section erroneously encodes them as byte values \hex{A1} to \hex{A5}.
-
-This mistake is also present in the 2000, 2006, and 2015 editions of the standard.
-
-It would also be useful if an example QR code symbol that contains the encoded data is included in the standard (Figure~\ref{fig:greek-encoding}).
-
-\begin{figure}[h]
-\centering
-\includegraphics[width=0.4\textwidth]{images/qrcode_iso18004_2024_QRCodeSymbol_1Mp6.png}
-\caption{The text ``AB$\mathit{\Gamma\Delta}$E'' represented as a 1-H QR code using data mask pattern 6.
-         The five bytes values \hex{C1} to \hex{C5} are preceded by an ECI designator that changes the character
-         interpretation to the value 000009, indicating that the bytes that follow should be interpreted using
-         the ISO/IEC~8859-7 byte-to-character mapping.}
-\label{fig:greek-encoding}
-\end{figure}
 
 \subsection{\standard, Section 7.4.6, Note 3, 4 (page 26)}
 
@@ -211,7 +178,7 @@ can be changed to:
 can be changed to:
 
 \begin{quote}
-\quotestandard{In certain \change{QR code symbol versions} \ddd}
+\quotestandard{In certain {symbol versions} \ddd}
 \end{quote}
 
 \subsection{\standard, Section 7.5.1 (page 33)}
@@ -253,84 +220,6 @@ editions of the standard is much clearer because of that.
 \subsection{\standard, Section 7.8.3.1 (pages 49, 50)}
 \label{sec:dmp-scoring}
 
-This section is quite unclear; it would be advisable to re-write it. it is very
-hard to ascertain the intended score calculation from this description alone. 
-
-One of the more confusing sentences in this section is this:
-
-\begin{quote}
-\quotestandard{\ddd the variables N1 to N4 represent weighted penalty scores for the undesirable features \ddd}
-\end{quote}
-
-However, N1 to N4 are not variables, but \emph{constants}; and they don't represent weighted penalty
-scores; rather, they are merely constants used in the calculation of the four terms that make up
-the final penalty score for a given symbol.
-
-\subsubsection*{Inconsistency between the scoring algorithm and the data mask pattern choices in the example QR codes found in \standard}
-
-More importantly, the score calculation described in this section does not lead to the data mask
-pattern choices made for the seven QR code symbol examples given in the standard itself (Figure~1,
-Figure~29 with five examples, and Figure~I.2).
-
-Table~\ref{tab:dmp-selections} shows the scores calculated according to the scoring method described, for each of the seven QR codes
-found in the standard, and for each of the eight data mask pattern choices. Also listed is the optimal data mask
-pattern choice (with the  lowest score) and the data mask pattern actually used in the QR code symbol shown in the standard.
-
-These two data mask pattern choices should match, but for four out of seven cases, they do not.
-
-\begin{table}[h!]
-\centering
-\tiny
-\begin{tabular}{|c|c|c|c|c|c|}
-\hline
-QR code example & Description & Symbol & Pattern scores P0 to P7 (best score underlined) & Optimal pattern & Pattern used in standard \\
-\hline
-Figure 1              & ``QR Code Symbol''                       & 1-M & 1219,1195,1189,1182,1142,\best{1107},1116,1198 & Pattern 5 & \bad{Pattern 6}  \\
-Figure 29, top        & Structured Append Mode example, combined & 4-M & 1672,1684,1568,\best{1402},1416,1690,1598,1624 & Pattern 3 & \bad{Pattern 4}  \\
-Figure 29, second row & Structured Append Mode example, 1 of 4   & 1-M & \best{1097},1146,1208,1174,1136,1164,1184,1128 & Pattern 0 & \good{Pattern 0} \\
-Figure 29, second row & Structured Append Mode example, 2 of 4   & 1-M & \best{1095},1192,1203,1167,1133,1178,1171,1103 & Pattern 0 & \bad{Pattern 7}  \\
-Figure 29, second row & Structured Append Mode example, 3 of 4   & 1-M & 1119,1125,1191,1134,1196,1137,1123,\best{1090} & Pattern 7 & \good{Pattern 7} \\
-Figure 29, second row & Structured Append Mode example, 4 of 4   & 1-M & 1245,1173,1207,\best{1128},1148,1155,1172,1136 & Pattern 3 & \good{Pattern 3} \\
-Figure I.2            & ``01234567''                             & 1-M & 1153,1250,1160,\best{1128},1214,1243,1153,1133 & Pattern 3 & \bad{Pattern 2} \\
-\hline
-\end{tabular}
-\caption{Overview of QR codes found in \standard}
-\label{tab:dmp-selections}
-\end{table}
-
-The clarity of this section could be greatly improved if one or two worked-out examples were added that show the four score
-contribution terms and final scores for each of the eight data mask patterns. For example, for the QR code example discussed
-in Annex~I, a table such as Table~\ref{tab:dmp-selection-annex-example} lists the four score terms and the total score for each
-data mask pattern choice:
-
-\begin{table}[h!]
-\centering
-\tiny
-\begin{tabular}{|c|c|c|c|c|c|}
-\hline
-Data mask pattern & First score term & Second score term & Third score term & Fourth score term & Total score (best score underlined) \\
-\hline
-Pattern 0            & 182              & 171               & 800              &  0                & 1153        \\
-Pattern 1            & 216              & 234               & 800              &  0                & 1250        \\
-Pattern 2            & 235              & 195               & 720              & 10                & 1160        \\
-Pattern 3            & 216              & 192               & 720              &  0                & \best{1128} \\
-Pattern 4            & 217              & 237               & 760              &  0                & 1214        \\
-Pattern 5            & 245              & 228               & 760              & 10                & 1243        \\
-Pattern 6            & 207              & 186               & 760              &  0                & 1153        \\
-Pattern 7            & 203              & 210               & 720              &  0                & 1133        \\
-\hline
-\end{tabular}
-\caption{Partial and total scores for the QR code discussed in Annex~I}
-\label{tab:dmp-selection-annex-example}
-\end{table}
-
-\subsubsection*{Missing tie-breaker rule}
-
-A tie-breaker rule should be defined in case two data mask patterns yield an identical score.
-
-This would ensure that, for each QR code, there is a fully deterministic and unambiguous way of selecting the
-correct data mask pattern.
-
 \subsubsection*{Specify behavior of decoders when encountering QR codes with sub-optimal data mask pattern}
 
 It is suggested that a statement be added that decoders \emph{should} accept QR codes with a suboptimal data mask
@@ -362,24 +251,6 @@ score_contribution_alternative =
     floor(2 * abs(dark_count / (dark_count + light_count) * 100 - 50))
 \end{verbatim}
 
-\subsection{\standard, Annex A (page 69)}
-
-The definition of the generator polynomials is not correct:
-
-\begin{quote}
-\quotestandard{Each generator polynomial is the product of first degree polynomials: $x - 2^0$, $x - 2^1$, \dots, $x - 2^{n-1}$,
-where n is the degree of the generator polynomial.}
-\end{quote}
-
-This mixes up the primitive root of GF(256), $\alpha$, with its byte representation, the value 2.
-
-The correct statement is:
-
-\begin{quote}
-\quotestandard{Each generator polynomial is the product of first degree polynomials: \change{$x - \alpha^0$}, \change{$x - \alpha^1$}, \dots, \change{$x - \alpha^{n-1}$},
-where n is the degree of the generator polynomial.}
-\end{quote}
-
 \subsection{\standard, Annex E, Table E.1 (pages 78, 79)}
 
 The description of the alignment pattern position algorithm says:
@@ -394,44 +265,6 @@ possible solutions for each QR code version where the alignment patterns cannot 
 
 An explanation  of the choice made in those cases would be welcome. Specifically, this concerns the sixteen QR code versions
 15, 16, 18, 19, 22, 24, 26, 28, 30, 31, 32, 33, 36, 37, 39, and 40.
-
-\subsection{\standard, Annex I.2.6 (page 90)}
-\label{sec:dmp-changed-2}
-
-This subsection contains an incorrect statement:
-
-\begin{quote}
-\quotestandard{\ddd the data mask pattern is 011.}
-\end{quote}
-
-This should be changed to:
-
-\begin{quote}
-\quotestandard{\ddd the data mask pattern is \change{010}.}
-\end{quote}
-
-This makes this subsection internally consistent, as the explanation describes that data mask pattern~2 is selected.
-
-It seems that this mistake stems from the 2000 edition of the standard, where the same example was worked out;
-except back then, data mask pattern~3 was chosen instead of data mask pattern~2.
-These two alternative code symbols are shown in Figure~\ref{fig:dmp-changed-2}.
-
-When updating this section to reflect that change for the 2006 edition, it appears that this particular reference
-to data mask pattern `011' was left by accident, and this wasn't corrected in the 2015 and 2024 editions.
-
-\begin{figure}[h!]
-\centering
-\includegraphics[width=0.4\textwidth]{images/qrcode_iso18004_2000_AnnexG_1Mp3.png}
-\includegraphics[width=0.4\textwidth]{images/qrcode_iso18004_2006_2015_2024_AnnexI_1Mp2.png}
-\caption{The text ``01234567'' represented as a 1-M QR code using two different data mask patterns.
-         The left version, as found in the 2000 edition of the standard, uses data mask pattern~3.
-         The right version, as found in the 2006, 2015, and 2024 editions of the standard, uses data mask pattern~2.}
-\label{fig:dmp-changed-2}
-\end{figure}
-
-It would be useful to explicitly acknowledge this change, and explain which one is the correct choice.
-
-See also Sections~\ref{sec:dmp-changed-1} and \ref{sec:dmp-scoring}.
 
 \subsection{General recommendations}
 
