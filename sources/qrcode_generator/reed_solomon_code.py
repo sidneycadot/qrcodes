@@ -1,10 +1,10 @@
 """Implement Reed-Solomon codes as used in QR codes."""
 
 
-def make_gf8_multiplication_tables():
+def make_gf256_multiplication_tables():
 
-    exponents_table = 255 * [0]
-    logarithm_table = 255 * [0]
+    exponents_table = 255 * [None]
+    logarithm_table = 255 * [None]
 
     element = 1
     exponent = 0
@@ -17,10 +17,13 @@ def make_gf8_multiplication_tables():
             element ^= 0b100011101
         exponent += 1
 
+    assert all(x is not None for x in exponents_table)
+    assert all(x is not None for x in logarithm_table)
+
     return exponents_table, logarithm_table
 
 
-class GF8:
+class GF256:
     """
     The GF(8) polynomial is: x^8 + x^4 + x^3 + x^2 + 1.
 
@@ -31,17 +34,17 @@ class GF8:
     Multiplication is implemented by the 'multiply_elements' method.
     """
 
-    exponents_table, logarithm_table = make_gf8_multiplication_tables()
+    exponents_table, logarithm_table = make_gf256_multiplication_tables()
 
     @staticmethod
     def multiply_elements(a, b):
         if (a == 0) or (b == 0):
             return 0
-        log_a = GF8.logarithm_table[a - 1]
-        log_b = GF8.logarithm_table[b - 1]
+        log_a = GF256.logarithm_table[a - 1]
+        log_b = GF256.logarithm_table[b - 1]
         log_ab = (log_a + log_b) % 255
 
-        return GF8.exponents_table[log_ab]
+        return GF256.exponents_table[log_ab]
 
     @staticmethod
     def divide_elements(a, b):
@@ -50,21 +53,21 @@ class GF8:
         if a == 0:
             return 0
 
-        log_a = GF8.logarithm_table[a - 1]
-        log_b = GF8.logarithm_table[b - 1]
+        log_a = GF256.logarithm_table[a - 1]
+        log_b = GF256.logarithm_table[b - 1]
         log_ab = (log_a - log_b) % 255
 
-        return GF8.exponents_table[log_ab]
+        return GF256.exponents_table[log_ab]
 
     @staticmethod
     def power(a, k):
         assert a != 0
         assert k >= 0
 
-        log_a = GF8.logarithm_table[a - 1]
+        log_a = GF256.logarithm_table[a - 1]
         log_ak = (log_a * k) % 255
 
-        return GF8.exponents_table[log_ak]
+        return GF256.exponents_table[log_ak]
 
 
 def evaluate_polynomial(poly: list[int], x: int) -> int:
@@ -73,8 +76,8 @@ def evaluate_polynomial(poly: list[int], x: int) -> int:
 
     r = 0
     for coefficient in poly:
-        r ^= GF8.multiply_elements(coefficient, x_power)
-        x_power = GF8.multiply_elements(x_power, x)
+        r ^= GF256.multiply_elements(coefficient, x_power)
+        x_power = GF256.multiply_elements(x_power, x)
 
     return r
 
@@ -89,7 +92,7 @@ def multiply_polynomial(pa: list[int], pb: list[int]) -> list[int]:
 
     for ia in range(na):
         for ib in range(nb):
-            z[ia + ib] ^= GF8.multiply_elements(pa[ia], pb[ib])
+            z[ia + ib] ^= GF256.multiply_elements(pa[ia], pb[ib])
 
     # Pop leading zeroes.
     while z and z[0] == 0:
@@ -134,7 +137,7 @@ def reed_solomon_code_remainder(data: list[int], poly: list[int]) -> list[int]:
         residual.append(0)
 
         for k, element in enumerate(poly):
-            residual[k] ^= GF8.multiply_elements(m, element)
+            residual[k] ^= GF256.multiply_elements(m, element)
 
     return residual
 
@@ -151,7 +154,7 @@ def poly_string(poly: list[int], prepend_prefix_term: bool) -> str:
 
     for (k, c) in enumerate(poly):
         if c != 0:
-            term = (GF8.logarithm_table[c - 1], n - k - 1)
+            term = (GF256.logarithm_table[c - 1], n - k - 1)
             terms.append(term)
 
     term_strings = []
