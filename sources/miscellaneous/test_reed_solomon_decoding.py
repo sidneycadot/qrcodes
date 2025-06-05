@@ -2,7 +2,7 @@
 
 import random
 
-from qrcode_generator.reed_solomon_code import calculate_reed_solomon_polynomial, reed_solomon_code_remainder, GF8, evaluate_polynomial
+from qrcode_generator.reed_solomon_code import calculate_reed_solomon_polynomial, reed_solomon_code_remainder, GF256, evaluate_polynomial
 
 
 def solve_linear_system(lhs, rhs):
@@ -54,9 +54,9 @@ def solve_linear_system(lhs, rhs):
         assert lhs[col][col] != 0
 
         # Normalize the current row so the on-diagonal entry becomes 1.
-        multiplier = GF8.divide_elements(1, lhs[col][col])
-        lhs[col] = [GF8.multiply_elements(multiplier, e) for e in lhs[col]]
-        rhs[col] = GF8.multiply_elements(multiplier, rhs[col])
+        multiplier = GF256.divide_elements(1, lhs[col][col])
+        lhs[col] = [GF256.multiply_elements(multiplier, e) for e in lhs[col]]
+        rhs[col] = GF256.multiply_elements(multiplier, rhs[col])
 
         # Use pivot to zero the elements below it.
 
@@ -65,8 +65,8 @@ def solve_linear_system(lhs, rhs):
             # The multiplier is given by lhs[k][col].
             multiplier = lhs[k][col]
 
-            lhs[k] = [e1 ^ GF8.multiply_elements(multiplier, e2) for (e1, e2) in zip(lhs[k], lhs[col])]
-            rhs[k] ^= GF8.multiply_elements(multiplier, rhs[col])
+            lhs[k] = [e1 ^ GF256.multiply_elements(multiplier, e2) for (e1, e2) in zip(lhs[k], lhs[col])]
+            rhs[k] ^= GF256.multiply_elements(multiplier, rhs[col])
 
         # print("system after pivot use:")
         # print()
@@ -84,7 +84,7 @@ def solve_linear_system(lhs, rhs):
         assert pivot_value == 1
 
         for k in range(col - 1 , -1, -1):
-            rhs[k] ^= GF8.multiply_elements(lhs[k][col], rhs[col])
+            rhs[k] ^= GF256.multiply_elements(lhs[k][col], rhs[col])
             lhs[k][col] = 0
 
         # print("system after backsubstitution step:")
@@ -124,7 +124,7 @@ def find_error_locations(syndromes, v: int):
     for k in range(v):
         r = 0
         for kk in range(v):
-            r ^= GF8.multiply_elements(lhs[k][kk], solution[kk])
+            r ^= GF256.multiply_elements(lhs[k][kk], solution[kk])
         assert r == rhs[k]
 
     error_locator_polynomial = [1] + solution
@@ -136,11 +136,9 @@ def find_error_locations(syndromes, v: int):
     for try_root in range(256):
         value = evaluate_polynomial(error_locator_polynomial, try_root)
         if value == 0:
-            inv_root = GF8.divide_elements(1, try_root)
-            assert GF8.multiply_elements(try_root, inv_root) == 1
-            # print("FOUND ROOT:", try_root, GF8.logarithm_table[try_root - 1], "INV", inv_root, GF8.logarithm_table[inv_root - 1])
-            error_locations.append(GF8.logarithm_table[inv_root - 1])
-    # print()
+            inv_root = GF256.divide_elements(1, try_root)
+            assert GF256.multiply_elements(try_root, inv_root) == 1
+            error_locations.append(GF256.logarithm_table[inv_root - 1])
 
     return error_locations
 
@@ -152,7 +150,7 @@ def find_error_magnitudes(syndromes, error_locations):
     v = len(error_locations)
 
     for k in range(1, v + 1):
-        lhs.append([GF8.power(2, error_locations[kk] * k) for kk in range(v)])
+        lhs.append([GF256.power(2, error_locations[kk] * k) for kk in range(v)])
         rhs.append(syndromes[k])
 
     solution = solve_linear_system(lhs, rhs)
@@ -163,7 +161,7 @@ def find_error_magnitudes(syndromes, error_locations):
     for k in range(v):
         r = 0
         for kk in range(v):
-            r ^= GF8.multiply_elements(lhs[k][kk], solution[kk])
+            r ^= GF256.multiply_elements(lhs[k][kk], solution[kk])
         assert r == rhs[k]
 
     print("syndromes:", syndromes)
@@ -183,10 +181,10 @@ def test_syndrome_decoding(num_errors: int):
     # code_k =   9  # Number of data keywords
     # code_r =   8  # Error correction capacity
 
-    code_p =   2    # How many codewords are used for error detection, rather than correction.
-    code_c =  26    # Total number of codewords (traditionally this is called 'n' in most sources).
-    code_k =  16    # Number of data keywords
-    code_r =   4    # Error correction capacity (the number of errors that we *want* to correct with this code).
+    code_p =   0    # How many codewords are used for error detection, rather than correction.
+    code_c = 149    # Total number of codewords (traditionally this is called 'n' in most sources).
+    code_k = 119    # Number of data keywords
+    code_r =  15    # Error correction capacity (the number of errors that we *want* to correct with this code).
 
     assert code_c - code_k == 2 * code_r + code_p
 
@@ -228,12 +226,11 @@ def test_syndrome_decoding(num_errors: int):
         syndrome = 0
         inner_alpha_power = 1
         for coefficient in reversed(de_block_received):
-            syndrome ^= GF8.multiply_elements(coefficient, inner_alpha_power)
-            inner_alpha_power = GF8.multiply_elements(inner_alpha_power, alpha_power)
-        alpha_power = GF8.multiply_elements(alpha_power, 2) # Multiply alpha_power by alpha.
+            syndrome ^= GF256.multiply_elements(coefficient, inner_alpha_power)
+            inner_alpha_power = GF256.multiply_elements(inner_alpha_power, alpha_power)
+        alpha_power = GF256.multiply_elements(alpha_power, 2) # Multiply alpha_power by alpha.
         syndromes.append(syndrome)
 
-    # The syndromes calculation is correct -- for zero errors, we get all-zero syndromes.
     print("syndromes:", syndromes)
     print()
 
@@ -259,8 +256,8 @@ def test_syndrome_decoding(num_errors: int):
 
 def main():
     random.seed(123)
-    for trial in range(10000):
-        num_errors = random.randint(0, 5)
+    for trial in range(100):
+        num_errors = random.randint(0, 15)
         test_syndrome_decoding(num_errors)
     print("bye!")
 

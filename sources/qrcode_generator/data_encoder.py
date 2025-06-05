@@ -296,7 +296,7 @@ class DataEncoder:
 
         version_specification = version_specification_table[(version, level)]
 
-        # Convert data to the version-specific number of GF8 codewords.
+        # Convert data to the version-specific number of GF256 codewords.
         # If the data doesn't fit, return None.
 
         number_of_data_codewords = version_specification.number_of_data_codewords()
