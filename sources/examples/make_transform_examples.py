@@ -28,7 +28,7 @@ from typing import Optional
 
 from qrcode_generator.data_encoder import DataEncoder
 from qrcode_generator.enum_types import ErrorCorrectionLevel, EncodingVariant, DataMaskPattern
-from qrcode_generator.qr_code import make_qr_code
+from qrcode_generator.qr_code import make_qr_code, QRCodeCanvasTransform
 from qrcode_generator.render.utilities import write_optimal_qrcode, save_qrcode_as_png_file
 
 from examples.utilities.render_html_examples import RenderHtmlExample
@@ -42,7 +42,7 @@ def remove_stale_files() -> None:
         os.remove(filename)
 
 
-def render_mirroring_examples(
+def render_transform_examples(
         *,
         include_quiet_zone: bool,
         colormap: Optional[str | dict],
@@ -72,33 +72,89 @@ def render_mirroring_examples(
 
     write_optimal_qrcode(
         payload=payload,
-        png_filename="qrcode_iso18004_2024_MirrorExample_Normal_{VERSION}{LEVEL}p{PATTERN}.png",
+        png_filename="qrcode_iso18004_2024_TransformExample_None_{VERSION}{LEVEL}p{PATTERN}.png",
         include_quiet_zone=include_quiet_zone,
         pattern=DataMaskPattern.PATTERN6,
         version_preference_list=[(1, ErrorCorrectionLevel.M)],
         colormap=colormap,
+        transform=QRCodeCanvasTransform.NONE,
         optimize_png=optimize_png
     )
 
     write_optimal_qrcode(
         payload=payload,
-        png_filename="qrcode_iso18004_2024_MirrorExample_HorizontallyMirror_{VERSION}{LEVEL}p{PATTERN}.png",
+        png_filename="qrcode_iso18004_2024_TransformExample_RotateClockwise_90Deg_{VERSION}{LEVEL}p{PATTERN}.png",
         include_quiet_zone=include_quiet_zone,
         pattern=DataMaskPattern.PATTERN6,
         version_preference_list=[(1, ErrorCorrectionLevel.M)],
         colormap=colormap,
-        transform="mirror-horizontal",
+        transform=QRCodeCanvasTransform.ROTATE_CW_90_DEG,
         optimize_png=optimize_png
     )
 
     write_optimal_qrcode(
         payload=payload,
-        png_filename="qrcode_iso18004_2024_MirrorExample_Transposed_{VERSION}{LEVEL}p{PATTERN}.png",
+        png_filename="qrcode_iso18004_2024_TransformExample_RotateCounterClockWise_90Deg_{VERSION}{LEVEL}p{PATTERN}.png",
         include_quiet_zone=include_quiet_zone,
         pattern=DataMaskPattern.PATTERN6,
         version_preference_list=[(1, ErrorCorrectionLevel.M)],
         colormap=colormap,
-        transform="transpose",
+        transform=QRCodeCanvasTransform.ROTATE_CCW_90_DEG,
+        optimize_png=optimize_png
+    )
+
+    write_optimal_qrcode(
+        payload=payload,
+        png_filename="qrcode_iso18004_2024_TransformExample_180Deg_{VERSION}{LEVEL}p{PATTERN}.png",
+        include_quiet_zone=include_quiet_zone,
+        pattern=DataMaskPattern.PATTERN6,
+        version_preference_list=[(1, ErrorCorrectionLevel.M)],
+        colormap=colormap,
+        transform=QRCodeCanvasTransform.ROTATE_180_DEG,
+        optimize_png=optimize_png
+    )
+
+    write_optimal_qrcode(
+        payload=payload,
+        png_filename="qrcode_iso18004_2024_TransformExample_FlipLeftRight_{VERSION}{LEVEL}p{PATTERN}.png",
+        include_quiet_zone=include_quiet_zone,
+        pattern=DataMaskPattern.PATTERN6,
+        version_preference_list=[(1, ErrorCorrectionLevel.M)],
+        colormap=colormap,
+        transform=QRCodeCanvasTransform.FLIP_LEFT_RIGHT,
+        optimize_png=optimize_png
+    )
+
+    write_optimal_qrcode(
+        payload=payload,
+        png_filename="qrcode_iso18004_2024_TransformExample_FlipTopBottom_{VERSION}{LEVEL}p{PATTERN}.png",
+        include_quiet_zone=include_quiet_zone,
+        pattern=DataMaskPattern.PATTERN6,
+        version_preference_list=[(1, ErrorCorrectionLevel.M)],
+        colormap=colormap,
+        transform=QRCodeCanvasTransform.FLIP_TOP_BOTTOM,
+        optimize_png=optimize_png
+    )
+
+    write_optimal_qrcode(
+        payload=payload,
+        png_filename="qrcode_iso18004_2024_TransformExample_Transpose_{VERSION}{LEVEL}p{PATTERN}.png",
+        include_quiet_zone=include_quiet_zone,
+        pattern=DataMaskPattern.PATTERN6,
+        version_preference_list=[(1, ErrorCorrectionLevel.M)],
+        colormap=colormap,
+        transform=QRCodeCanvasTransform.TRANSPOSE,
+        optimize_png=optimize_png
+    )
+
+    write_optimal_qrcode(
+        payload=payload,
+        png_filename="qrcode_iso18004_2024_TransformExample_Transverse_{VERSION}{LEVEL}p{PATTERN}.png",
+        include_quiet_zone=include_quiet_zone,
+        pattern=DataMaskPattern.PATTERN6,
+        version_preference_list=[(1, ErrorCorrectionLevel.M)],
+        colormap=colormap,
+        transform=QRCodeCanvasTransform.TRANSVERSE,
         optimize_png=optimize_png
     )
 
@@ -113,7 +169,7 @@ def main():
 
     remove_stale_files()
 
-    render_mirroring_examples(
+    render_transform_examples(
         include_quiet_zone = include_quiet_zone,
         colormap = colormap,
         optimize_png = optimize_png

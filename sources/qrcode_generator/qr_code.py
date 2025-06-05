@@ -1,6 +1,6 @@
 """QR code canvas and canvas drawing functionality."""
 
-from enum import IntEnum
+from enum import IntEnum, Enum
 from typing import Optional
 
 from .auxiliary import calculate_qrcode_capacity, enumerate_bits
@@ -53,6 +53,17 @@ class ModuleValue(IntEnum):
     DATA_ERRC_INDETERMINATE           = 0x8e  # Placeholder, to be filled in later. Defaults to 0 (light).
 
 
+class QRCodeCanvasTransform(Enum):
+    NONE = 0
+    ROTATE_CW_90_DEG = 1
+    ROTATE_CCW_90_DEG = 2
+    ROTATE_180_DEG = 3
+    TRANSPOSE = 4
+    FLIP_LEFT_RIGHT = 5
+    FLIP_TOP_BOTTOM = 6
+    TRANSVERSE = 7
+
+
 class QRCodeCanvas:
     """A QRCodeCanvas defines a rectangular array of modules (pixels).
 
@@ -76,11 +87,35 @@ class QRCodeCanvas:
         index = i * self.width + j
         self.modules[index] = value
 
-    def get_module_value(self, i: int, j: int) -> ModuleValue:
+    def get_module_value(self, i: int, j: int, transform: Optional[QRCodeCanvasTransform] = None) -> ModuleValue:
+
         if not ((0 <= i < self.height) and (0 <= j < self.width)):
             raise ValueError(f"Bad module coordinate (i={i}, j={j}).")
-        index = i * self.width + j
-        return ModuleValue(self.modules[index])
+
+        if transform is None or transform == QRCodeCanvasTransform.NONE:
+            index = i * self.width + j
+            return ModuleValue(self.modules[index])
+
+        if transform == QRCodeCanvasTransform.ROTATE_CW_90_DEG:
+            return self.get_module_value(self.width - 1 - j, i)
+
+        if transform == QRCodeCanvasTransform.ROTATE_CCW_90_DEG:
+            return self.get_module_value(j, self.height - 1 - i)
+
+        if transform == QRCodeCanvasTransform.ROTATE_180_DEG:
+            return self.get_module_value(self.height - 1 - i, self.width - 1 - j)
+
+        if transform == QRCodeCanvasTransform.FLIP_LEFT_RIGHT:
+            return self.get_module_value(i, self.width - 1 - j)
+
+        if transform == QRCodeCanvasTransform.FLIP_TOP_BOTTOM:
+            return self.get_module_value(self.height - 1 - i, j)
+
+        if transform == QRCodeCanvasTransform.TRANSPOSE:
+            return self.get_module_value(j, i)
+
+        if transform == QRCodeCanvasTransform.TRANSVERSE:
+            return self.get_module_value(self.width - 1 - j, self.height - 1 - i)
 
 
 class QRCodeDrawer:
