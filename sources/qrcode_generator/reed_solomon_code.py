@@ -43,6 +43,40 @@ class GF8:
 
         return GF8.exponents_table[log_ab]
 
+    @staticmethod
+    def divide_elements(a, b):
+        if b == 0:
+            raise ZeroDivisionError()
+        if a == 0:
+            return 0
+
+        log_a = GF8.logarithm_table[a - 1]
+        log_b = GF8.logarithm_table[b - 1]
+        log_ab = (log_a - log_b) % 255
+
+        return GF8.exponents_table[log_ab]
+
+    @staticmethod
+    def power(a, k):
+        assert a != 0
+        assert k >= 0
+
+        log_a = GF8.logarithm_table[a - 1]
+        log_ak = (log_a * k) % 255
+
+        return GF8.exponents_table[log_ak]
+
+
+def evaluate_polynomial(poly: list[int], x: int) -> int:
+
+    x_power = 1
+
+    r = 0
+    for coefficient in poly:
+        r ^= GF8.multiply_elements(coefficient, x_power)
+        x_power = GF8.multiply_elements(x_power, x)
+
+    return r
 
 def multiply_polynomial(pa: list[int], pb: list[int]) -> list[int]:
 
