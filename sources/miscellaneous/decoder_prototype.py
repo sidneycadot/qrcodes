@@ -5,8 +5,9 @@ from qrcode_generator.enum_types import EncodingVariant, CharacterEncodingType
 from qrcode_generator.lookup_tables import error_correction_level_encoding, data_masking_pattern_encoding, data_mask_pattern_function_table, \
     version_specification_table, count_bits_table
 from qrcode_generator.qr_code import QRCodeDrawer
-from qrcode_generator.reed_solomon_code import calculate_reed_solomon_polynomial
-from qrcode_generator.reed_solomon_decoder import correct_reed_solomon_codeword
+from qrcode_generator.reed_solomon.gf256 import GF256
+from qrcode_generator.reed_solomon.reed_solomon_code import calculate_reed_solomon_polynomial
+from qrcode_generator.reed_solomon.reed_solomon_decoder import correct_reed_solomon_codeword
 
 
 def weight(value: int) -> int:
@@ -285,7 +286,7 @@ def decode_pixels(pixels):
     k = 0
     while sum(map(len, d_blocks)) != num_data_words:
         if len(d_blocks[k]) < block_data_length[k]:
-            d_blocks[k].append(octets[idx])
+            d_blocks[k].append(GF256(octets[idx]))
             idx += 1
         k = (k + 1) % num_blocks
 
@@ -296,7 +297,7 @@ def decode_pixels(pixels):
     k = 0
     while sum(map(len, e_blocks)) != num_error_correction_words:
         if len(e_blocks[k]) < block_error_length[k]:
-            e_blocks[k].append(octets[idx])
+            e_blocks[k].append(GF256(octets[idx]))
             idx += 1
         k = (k + 1) % num_blocks
 
@@ -329,6 +330,8 @@ def decode_pixels(pixels):
     data = []
     for d_block in d_blocks:
         data.extend(d_block)
+
+    data = [x.value for x in data]
 
     print("number of data octets:", len(data))
 
@@ -384,8 +387,8 @@ def decode_pixels(pixels):
 
 
 def main():
-    pixels = make_testcase_oralb()
-    #pixels = make_testcase_lego()
+    #pixels = make_testcase_oralb()
+    pixels = make_testcase_lego()
 
     decode_pixels(pixels)
 

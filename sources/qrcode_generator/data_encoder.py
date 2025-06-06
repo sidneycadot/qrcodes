@@ -18,11 +18,11 @@ The message is ended by a terminator of four zero bits, if the QR code symbol ha
 from typing import Optional, Self
 
 from .enum_types import EncodingVariant, ErrorCorrectionLevel, CharacterEncodingType
-from .gf256 import GF256
+from .reed_solomon.gf256 import GF256
 from .kanji_encode import kanji_character_value
 from .lookup_tables import version_specification_table, count_bits_table
 from .auxiliary import enumerate_bits, calculate_qrcode_capacity
-from .reed_solomon_code import calculate_reed_solomon_polynomial, reed_solomon_code_remainder
+from .reed_solomon.reed_solomon_code import calculate_reed_solomon_polynomial, reed_solomon_code_remainder
 
 
 # Map of numeric characters to their integer representation.

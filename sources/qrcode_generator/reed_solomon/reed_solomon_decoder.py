@@ -32,9 +32,9 @@ Decoding a (possibly garbled) Reed-Solomon codeword is a five-step process:
 
 from typing import Optional
 
-from qrcode_generator.gf256 import GF256
-from qrcode_generator.gf256_polynomial import GF256Polynomial
-from qrcode_generator.reed_solomon_code import evaluate_polynomial
+from qrcode_generator.reed_solomon.gf256 import GF256
+from qrcode_generator.reed_solomon.gf256_polynomial import GF256Polynomial
+from qrcode_generator.reed_solomon.reed_solomon_code import evaluate_polynomial
 
 
 def solve_linear_system(lhs, rhs):
