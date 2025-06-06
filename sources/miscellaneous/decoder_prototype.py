@@ -113,6 +113,37 @@ def make_testcase_lego():
 
     return pixels
 
+def make_transposed_qrcode():
+    transposed = """
+        #######.##.#..#######
+        #.....#...###.#.....#
+        #.###.#.....#.#.###.#
+        #.###.#.#.###.#.###.#
+        #.###.#.##.##.#.###.#
+        #.....#.#..##.#.....#
+        #######.#.#.#.#######
+        ........#.#.#........
+        ###.#.#.##.#######..#
+        ..#....###..#.#..##..
+        ...#..#..#..#..#.#...
+        ##..##..#.....#.##.##
+        ###.####..#...#.#.##.
+        ........#..#.#.##...#
+        #######..##.####.####
+        #.....#...##.......#.
+        #.###.#.#..#####..##.
+        #.###.#...###..###.#.
+        #.###.#.##.#.#####.#.
+        #.....#.#####...#.##.
+        #######.###.##....##.
+    """
+
+    transposed = [line.replace("|", "") for line in textwrap.dedent(transposed).strip().splitlines()]
+
+    pixels = [ [(c == '#') for c in line] for line in transposed]
+
+    return pixels
+
 
 class BitstreamDecoder:
     def __init__(self):
@@ -133,6 +164,8 @@ class BitstreamDecoder:
             value = value * 2 + bit
             numbits -= 1
         return value
+
+
 
 def decode_pixels(pixels):
     height = len(pixels)
@@ -156,17 +189,6 @@ def decode_pixels(pixels):
 
     # Get format bits.
 
-    #level_encoding = error_correction_level_encoding[level]
-    #pattern_encoding = data_masking_pattern_encoding[pattern]
-
-    #format_data_bits = (level_encoding << 3) | pattern_encoding
-
-    ## Extend the 5-bit formation information with 10 bits of error-correction data.
-    #format_bits = (format_data_bits << 10) | format_information_code_remainder(format_data_bits)
-
-    ## XOR the result with a fixed pattern.
-    #format_bits ^= 0b101010000010010
-
     # Get the single fixed "dark module" above and to the right of the bottom-left finder pattern (7.9.1).
     fixed_format_module = pixels[height - 8][8]
     print("fixed_format_module", fixed_format_module)
@@ -179,8 +201,14 @@ def decode_pixels(pixels):
         fa = 2 * fa + pixels[fai][faj]
         fb = 2 * fb + pixels[fbi][fbj]
 
+    print(f"fa before XOR: 0b{fa:015b}")
+    print(f"fb before XOR: 0b{fb:015b}")
+
     fa ^= 0b101010000010010
     fb ^= 0b101010000010010
+
+    print(f"fa after XOR: 0b{fa:015b}")
+    print(f"fb after XOR: 0b{fb:015b}")
 
     distances = []
     for k in range(32):
@@ -188,6 +216,7 @@ def decode_pixels(pixels):
 
         fa_dist = hamming_distance(fa, nominal)
         fb_dist = hamming_distance(fb, nominal)
+        print(fa_dist, fb_dist)
 
         distances.append(fa_dist + fb_dist)
 
@@ -200,6 +229,8 @@ def decode_pixels(pixels):
         raise RuntimeError()
 
     format_information = best[0]
+
+    print(f"format information: {format_information}")
 
     error_correction_level_decoding_map = dict(map(reversed, error_correction_level_encoding.items()))
     data_masking_pattern_decoding_map = dict(map(reversed, data_masking_pattern_encoding.items()))
@@ -273,7 +304,7 @@ def decode_pixels(pixels):
             index += 1
         octets.append(octet)
 
-    print(octets)
+    print("octets:", octets)
 
     version_specification = version_specification_table[(version, level)]
 
@@ -388,7 +419,8 @@ def decode_pixels(pixels):
 def main():
     #pixels = make_testcase_oralb()
     #pixels = make_testcase()
-    pixels = make_testcase_lego()
+    #pixels = make_testcase_lego()
+    pixels = make_transposed_qrcode()
 
     decode_pixels(pixels)
 
