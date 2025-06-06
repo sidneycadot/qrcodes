@@ -12,7 +12,7 @@
 \section{Introduction}
 %
 This document provides background information on Reed-Solomon codes.
-The aim is to explain the encoding and decoding algorithms used in QR code symbols.
+The aim is to explain the encoding and decoding algorithms used in the information area of QR code symbols.
 
 This document refers extensively to the standard ISO/IEC~18004:2024(en), which is the
 most recent edition of the standard that describes QR code symbols.
@@ -40,7 +40,31 @@ non-zero elements of GF($2^8$). In particular, $\alpha^0=1$.
 The 256 elements of $GF^8$ can thus be denoted as $\{ 0, \alpha^0, \alpha^1, \ldots, \alpha^{254} \}$.
 Expanding the sequence of powers of $\alpha$ further repeats the non-zero values, i.e., $\alpha^{255}=\alpha^0=1$, $\alpha^{256}=\alpha^2$, and so on.
 
+There is essentially (`up to isomorphism') only one field with precisely 256 elements, which is GF($2^8$).
+
+%It can be constructed (meaning, by assuming a property
+%of $\alpha$, specifically, that it is a root of a specific polynomial over the to-be-constructed 
+%The primitive root $\alpha$
+
 \section{Generator polynomials used in QR codes}
+
+\begin{displaymath}
+G_L(x) = \prod_{i=0}^{L-1}(x-\alpha^i)
+\end{displaymath}
+
 \section{Encoding}
+
+Property we're looking for:
+
+\begin{displaymath}
+D(x) \cdot x^L + C(x) \equiv 0 \pmod{G_L(x)}
+\end{displaymath}
+
+Calculating $C(x)$:
+
+\begin{displaymath}
+C(x) \equiv -(D(x) \cdot x^L) \equiv D(x) \cdot x^L \pmod{G_L(x)}
+\end{displaymath}
+
 \section{Decoding and error correction}
 \end{document}
