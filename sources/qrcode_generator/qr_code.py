@@ -117,6 +117,8 @@ class QRCodeCanvas:
         if transform == QRCodeCanvasTransform.TRANSVERSE:
             return self.get_module_value(self.width - 1 - j, self.height - 1 - i)
 
+        raise RuntimeError("Bad transform.")
+
 
 class QRCodeDrawer:
     """A QRCodeDrawer knows how to draw the different areas in a QR code."""
