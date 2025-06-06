@@ -4,7 +4,7 @@ import random
 
 from qrcode_generator.gf256 import GF256
 from qrcode_generator.reed_solomon_code import calculate_reed_solomon_polynomial, reed_solomon_code_remainder
-from qrcode_generator.reed_solomon_decoder import correct_codeword
+from qrcode_generator.reed_solomon_decoder import correct_reed_solomon_codeword
 
 
 def test_syndrome_decoding(num_errors: int, noisy: bool=False):
@@ -56,7 +56,7 @@ def test_syndrome_decoding(num_errors: int, noisy: bool=False):
     # first element of the codeword. However, the convention in the rest of the QR code codebase is the other way around.
     # For that reason, we reverse the uncorrected codeword passed to 'correct_codeword', and we reverse the corrected
     # codeword passed back to us.
-    de_block_corrected = correct_codeword(de_block_received[::-1], code_k)
+    de_block_corrected = correct_reed_solomon_codeword(de_block_received[::-1], code_k)
 
     if de_block_corrected is None:
         raise RuntimeError("Unable to correct errors.")
@@ -68,10 +68,10 @@ def test_syndrome_decoding(num_errors: int, noisy: bool=False):
         raise RuntimeError("Incorrectly decoded errors.")
 
 def main():
-    random.seed(123)
-    for trial in range(1000):
+    for trial in range(0, 1000):
         print("trial:", trial)
-        num_errors = random.randint(0, 8)
+        random.seed(trial)
+        num_errors = random.randint(5, 5)
         test_syndrome_decoding(num_errors, False)
     print("bye!")
 

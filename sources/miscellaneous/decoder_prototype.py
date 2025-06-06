@@ -6,7 +6,7 @@ from qrcode_generator.lookup_tables import error_correction_level_encoding, data
     version_specification_table, count_bits_table
 from qrcode_generator.qr_code import QRCodeDrawer
 from qrcode_generator.reed_solomon_code import calculate_reed_solomon_polynomial
-from qrcode_generator.reed_solomon_decoder import correct_codeword
+from qrcode_generator.reed_solomon_decoder import correct_reed_solomon_codeword
 
 
 def weight(value: int) -> int:
@@ -310,7 +310,7 @@ def decode_pixels(pixels):
         for k in range(count):
             de_block = d_blocks[idx] + e_blocks[idx]
 
-            de_block_corrected = correct_codeword(de_block[::-1], code_k)
+            de_block_corrected = correct_reed_solomon_codeword(de_block[::-1], code_k)
             de_block_corrected = de_block_corrected[::-1]
 
             if de_block == de_block_corrected:

@@ -26,11 +26,13 @@ def make_gf256_multiplication_tables():
 
 class GF256:
     """
-    The GF(256) field.
+    The Galois Field of order 256.
 
     It is constructed using the polynomial p(x) that is irreducible over Z(2):
 
        p(x) = x^8 + x^4 + x^3 + x^2 + 1.
+
+    The root of this polynomial is denoted as alpha.
 
     Elements are represented as integers between 0 and 255 (inclusive).
 
@@ -38,6 +40,10 @@ class GF256:
 
     Multiplication is implemented by the 'multiply_elements' method.
     """
+
+    ZERO  = None  # Will be redefined after the class definition.
+    ONE   = None  # Will be redefined after the class definition.
+    ALPHA = None  # Will be redefined after the class definition.
 
     exponents_table, logarithm_table = make_gf256_multiplication_tables()
 
@@ -62,7 +68,7 @@ class GF256:
 
     def __mul__(self, other: GF256) -> GF256:
         assert isinstance(other, GF256)
-        if (self.value == 0) or (other.value == 0):
+        if (self == GF256.ZERO) or (other == GF256.ZERO):
             return GF256.ZERO
         return GF256.exp(GF256.log(self) + GF256.log(other))
 
@@ -70,15 +76,13 @@ class GF256:
         assert isinstance(other, GF256)
         if other == GF256.ZERO:
             raise ZeroDivisionError()
-        if self == GF256.ZERO:
-            return GF256.ZERO
-        return GF256.exp(GF256.log(self) - GF256.log(other))
+        multiplicative_inverse = other ** (-1)
+        return self * multiplicative_inverse
 
     def __pow__(self, k: int) -> GF256:
         assert isinstance(k, int)
-        assert self != GF256.ZERO
-        assert k >= 0
-
+        if self == GF256.ZERO:
+            return GF256.ZERO
         return GF256.exp(GF256.log(self) * k)
 
     @staticmethod

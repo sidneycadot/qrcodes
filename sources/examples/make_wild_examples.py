@@ -4,7 +4,7 @@
 
 from qrcode_generator.data_encoder import DataEncoder
 from qrcode_generator.enum_types import ErrorCorrectionLevel, EncodingVariant, DataMaskPattern
-from qrcode_generator.qr_code import make_qr_code
+from qrcode_generator.qr_code import make_qr_code, QRCodeCanvasTransform
 from qrcode_generator.render.utilities import save_qrcode_as_png_file
 
 
@@ -76,7 +76,7 @@ def render_oralb_package_code(colormap: str) -> None:
         canvas=canvas,
         mode=mode,
         colormap=colormap,
-        transform="rotate-clockwise",
+        transform=QRCodeCanvasTransform.ROTATE_CW_90_DEG,
         optimize_png=optimize_png
     )
 
@@ -150,7 +150,7 @@ def render_lego_bouwplaats_code(colormap: str) -> None:
         canvas=canvas,
         mode=mode,
         colormap=colormap,
-        transform="rotate-180",
+        transform=QRCodeCanvasTransform.ROTATE_180_DEG,
         optimize_png=optimize_png
     )
 
@@ -159,10 +159,10 @@ def main():
 
     colormap = 'color'
 
-    #render_iso_standard_customer_feedback_code(colormap)
-    #render_oralb_package_code(colormap)
+    render_iso_standard_customer_feedback_code(colormap)
+    render_oralb_package_code(colormap)
     render_ferrero_rocher_code(colormap)
-    #render_lego_bouwplaats_code(colormap)
+    render_lego_bouwplaats_code(colormap)
 
 
 if __name__ == "__main__":

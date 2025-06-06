@@ -28,7 +28,7 @@ def multiply_polynomial(pa: list[GF256], pb: list[GF256]) -> list[GF256]:
             z[ia + ib] += pa[ia] * pb[ib]
 
     # Pop leading zeroes.
-    while z and z[0] == GF256(0):
+    while z and z[0] == GF256.ZERO:
         z.pop(0)
 
     return z
@@ -39,20 +39,20 @@ def calculate_reed_solomon_polynomial(n: int, *, strip: bool) -> list[int]:
 
     This function reproduces the polynomials given in Annex A of ISO/IEC 18004:2024(en).
     """
-    element = GF256(1)
-    poly = [GF256(1)]
+    element = GF256.ONE
+    poly = [GF256.ONE]
     for k in range(n):
-        factor_poly = [GF256(1), element]
+        factor_poly = [GF256.ONE, element]
         poly = multiply_polynomial(poly, factor_poly)
-        element *= GF256(2)
+        element *= GF256.ALPHA
 
     if strip:
         # Strip the first high-order coefficient from the polynomial.
         # The algorithm we use for the remainder calculation assumes that
         # the highest power coefficient is not present.
         popped_coefficient = poly.pop(0)
-        if popped_coefficient != GF256(1):
-            raise RuntimeError(f"Expected to pop value GF256(1), but popped {popped_coefficient}.")
+        if popped_coefficient != GF256.ONE:
+            raise RuntimeError(f"Expected to pop value GF256.ONE, but popped {popped_coefficient} instead.")
 
     return poly
 

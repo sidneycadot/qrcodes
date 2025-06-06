@@ -1,8 +1,39 @@
-"""Reed-Solomon decoder."""
+"""Reed-Solomon decoder.
+
+Decoding a (possibly garbled) Reed-Solomon codeword is a five-step process:
+
+(1) Calculate the syndrome values S[j] for 0 <= k < (n - k).
+
+    If the Syndromes are all zero, the word is accepted as-is.
+    No error occurred during transmission.
+
+(2) Find the location of the error(s).
+
+    Several methods exist; we implement the simplest one here, that expresses the error locator
+    values X[j] as roots of a so-called 'error locator polynomial', which is called σ(x).
+
+    (2a) The coefficients of σ(x) are determined by solving a linear system of equations.
+    (2b) The roots of σ(x) are found by trying each possible value of x in succession.
+
+    Alternative algorithms:
+    - Berlekamp-Massey.
+    - Euclidean GCD
+
+(3) Find the magnitude of the error(s).
+
+    Several methods exist; we implement the simplest one here, that finds the error magnitudes
+    as solutions of a linear system of equations.
+
+    Alternative algorithms:
+    - Fossey
+
+(4) Correct the error.
+"""
 
 from typing import Optional
 
 from qrcode_generator.gf256 import GF256
+from qrcode_generator.gf256_polynomial import GF256Polynomial
 from qrcode_generator.reed_solomon_code import evaluate_polynomial
 
 
@@ -42,10 +73,10 @@ def solve_linear_system(lhs, rhs):
             lhs[col], lhs[k] = lhs[k], lhs[col]
             rhs[col], rhs[k] = rhs[k], rhs[col]
 
-        assert lhs[col][col] != GF256(0)
+        assert lhs[col][col] != GF256.ZERO
 
         # Normalize the current row so the on-diagonal entry becomes 1.
-        multiplier = GF256(1) / lhs[col][col]
+        multiplier = GF256.ONE / lhs[col][col]
         lhs[col] = [(multiplier * e) for e in lhs[col]]
         rhs[col] = multiplier * rhs[col]
 
@@ -90,7 +121,7 @@ def find_error_locations_inverse(syndromes: list[GF256], v: int):
         return None
 
     # The error locator polynomial can now be made.
-    error_locator_polynomial = [GF256(1)] + solution
+    error_locator_polynomial = [GF256.ONE] + solution
     #print("error_locator_polynomial Λ(x)", error_locator_polynomial)
 
     # The error locations are the inverse of the roots of the error locator polynomial.
@@ -114,7 +145,7 @@ def find_error_locations_direct(syndromes: list[GF256], v: int):
     lhs = []
     rhs = []
     for k in range(v):
-        lhs.append([syndromes[k +kk] for kk in range(v)])
+        lhs.append([syndromes[k + kk] for kk in range(v)])
         rhs.append(syndromes[v + k])
 
     # Solve the error locator polynomial coefficients.
@@ -124,16 +155,15 @@ def find_error_locations_direct(syndromes: list[GF256], v: int):
         return None
 
     # The error locator polynomial can now be made.
-    error_locator_polynomial = solution + [GF256(1)]
+    error_locator_polynomial = GF256Polynomial(solution + [GF256.ONE])
     #print("error_locator_polynomial σ(x)", error_locator_polynomial)
 
-    # The error locations are the roots of the error locator polynomial.
     error_locations = []
-    for root_value in range(256):
-        try_root = GF256(root_value)
-        value = evaluate_polynomial(error_locator_polynomial, try_root)
+    for location in range(255):
+        xloc = GF256.exp(location)
+        value = error_locator_polynomial.evaluate(xloc)
         if value == GF256.ZERO:
-            error_locations.append(GF256.logarithm_table[try_root.value - 1])
+            error_locations.append(location)
 
     #assert len(error_locations) == v
 
@@ -148,7 +178,7 @@ def find_error_magnitudes(syndromes, error_locations):
     v = len(error_locations)
 
     for k in range(1, v + 1):
-        lhs.append([GF256.ALPHA ** (error_locations[kk] * k) for kk in range(v)])
+        lhs.append([GF256.exp(error_locations[kk] * k) for kk in range(v)])
         rhs.append(syndromes[k])
 
     solution = solve_linear_system(lhs, rhs)
@@ -158,7 +188,7 @@ def find_error_magnitudes(syndromes, error_locations):
     return solution
 
 
-def correct_codeword(uncorrected_codeword: list[GF256], k: int) -> Optional[list[GF256]]:
+def correct_reed_solomon_codeword(uncorrected_codeword: list[GF256], k: int) -> Optional[list[GF256]]:
     """Correct a received reed-solomon codeword."""
     n = len(uncorrected_codeword)
 
@@ -175,13 +205,14 @@ def correct_codeword(uncorrected_codeword: list[GF256], k: int) -> Optional[list
         alpha_power *= GF256.ALPHA
         syndromes.append(syndrome)
 
-    if all(syndrome == GF256(0) for syndrome in syndromes):
+    if all(syndrome == GF256.ZERO for syndrome in syndromes):
+        # The codeword does not contain errors.
         return uncorrected_codeword
 
     error_locations = None
     v = num_syndromes // 2
     while v != 0:
-        error_locations = find_error_locations_inverse(syndromes, v)
+        error_locations = find_error_locations_direct(syndromes, v)
         if error_locations is not None:
             break
         v -= 1
