@@ -33,9 +33,6 @@ def write_eci_data_test(
     else:
         raise RuntimeError("Cannot encode the string with an ECI designator prefix (too big).")
 
-    #version_specification = version_specification_table[(version, level)]
-    #print("@@@", version, level, "payload bits", len(payload) *  8, "codewords", 8 * version_specification.number_of_data_codewords())
-
     de = DataEncoder(EncodingVariant.from_version(version))
     # de.append_eci_designator(899)
     de.append_byte_mode_segment(payload)

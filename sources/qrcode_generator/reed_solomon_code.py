@@ -2,32 +2,33 @@
 
 from .gf256 import GF256
 
-def evaluate_polynomial(poly: list[int], x: int) -> int:
+def evaluate_polynomial(poly: list[GF256], x: GF256) -> int:
 
-    x_power = 1
+    x_power = GF256.ONE
 
-    r = 0
+    r = GF256.ZERO
     for coefficient in poly:
-        r ^= GF256.multiply_elements(coefficient, x_power)
-        x_power = GF256.multiply_elements(x_power, x)
+        r += (coefficient * x_power)
+        x_power *= x
 
     return r
 
-def multiply_polynomial(pa: list[int], pb: list[int]) -> list[int]:
+def multiply_polynomial(pa: list[GF256], pb: list[GF256]) -> list[GF256]:
 
     na = len(pa)
     nb = len(pb)
 
     nz = na + nb - 1
 
-    z = [0] * nz
+    z = [GF256.ZERO] * nz
 
     for ia in range(na):
         for ib in range(nb):
-            z[ia + ib] ^= GF256.multiply_elements(pa[ia], pb[ib])
+            m = pa[ia] * pb[ib]
+            z[ia + ib] += pa[ia] * pb[ib]
 
     # Pop leading zeroes.
-    while z and z[0] == 0:
+    while z and z[0] == GF256(0):
         z.pop(0)
 
     return z
@@ -38,38 +39,36 @@ def calculate_reed_solomon_polynomial(n: int, *, strip: bool) -> list[int]:
 
     This function reproduces the polynomials given in Annex A of ISO/IEC 18004:2024(en).
     """
-    element = 1
-    poly = [1]
+    element = GF256(1)
+    poly = [GF256(1)]
     for k in range(n):
-        factor_poly = [1, element]
+        factor_poly = [GF256(1), element]
         poly = multiply_polynomial(poly, factor_poly)
-        element <<= 1
-        if element & 0b100000000:
-            element ^= 0b100011101
+        element *= GF256(2)
 
     if strip:
         # Strip the first high-order coefficient from the polynomial.
         # The algorithm we use for the remainder calculation assumes that
         # the highest power coefficient is not present.
         popped_coefficient = poly.pop(0)
-        if popped_coefficient != 1:
-            raise RuntimeError()
+        if popped_coefficient != GF256(1):
+            raise RuntimeError(f"Expected to pop value GF256(1), but popped {popped_coefficient}.")
 
     return poly
 
 
-def reed_solomon_code_remainder(data: list[int], poly: list[int]) -> list[int]:
+def reed_solomon_code_remainder(data: list[GF256], poly: list[GF256]) -> list[GF256]:
     """Determine remainder of data(x) ** x^n + poly(x)."""
 
-    residual = [0] * len(poly)
+    residual = [GF256.ZERO] * len(poly)
 
     for d in data:
 
-        m = residual.pop(0) ^ d
-        residual.append(0)
+        m = residual.pop(0) + d  # TODO: or minus?
+        residual.append(GF256.ZERO)
 
         for k, element in enumerate(poly):
-            residual[k] ^= GF256.multiply_elements(m, element)
+            residual[k] -= (m *  element)
 
     return residual
 

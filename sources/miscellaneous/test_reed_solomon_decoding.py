@@ -2,16 +2,17 @@
 
 import random
 
+from qrcode_generator.gf256 import GF256
 from qrcode_generator.reed_solomon_code import calculate_reed_solomon_polynomial, reed_solomon_code_remainder
 from qrcode_generator.reed_solomon_decoder import correct_codeword
 
 
-def test_syndrome_decoding(num_errors: int):
+def test_syndrome_decoding(num_errors: int, noisy: bool=False):
 
     # From version 1-H  :  26 symbols, of which 9 are data symbols and 17 are error correction symbols.
     # From version 40-L : 149 symbols, of which 119 are data symbols and 30 are error correction symbols.
 
-    use_big_code = True
+    use_big_code = False
     if use_big_code:
         code_p =   0  # How many codewords are used for error detection, rather than correction.
         code_c = 149  # Total number of codewords (traditionally this is called 'n' in most sources).
@@ -29,21 +30,25 @@ def test_syndrome_decoding(num_errors: int):
 
     poly = calculate_reed_solomon_polynomial(code_c - code_k, strip=True)
 
-    d_block = list(random.randbytes(code_k))
+    d_block = list(map(GF256, random.randbytes(code_k)))
 
     e_block = reed_solomon_code_remainder(d_block, poly)
 
     de_block = d_block + e_block
-    #print("de_block:", de_block)
+    if noisy:
+        print("de_block ................ :", de_block)
 
     error_positions = random.sample(range(len(de_block)), num_errors)
-    #print("error positions:", error_positions)
+    if noisy:
+        print("error positions ......... :", error_positions)
 
-    de_block_errors = [random.randint(1, 255) if k in error_positions else 0 for k in range(len(de_block))]
-    #print("de_block_errors:", de_block_errors)
+    de_block_errors = [GF256(random.randint(1, 255)) if k in error_positions else GF256.ZERO for k in range(len(de_block))]
+    if noisy:
+        print("de_block_errors ......... :", de_block_errors)
 
-    de_block_received = [a ^ b for (a, b) in zip(de_block, de_block_errors)]
-    #print("de_block_received:", de_block_received)
+    de_block_received = [a - b for (a, b) in zip(de_block, de_block_errors)]
+    if noisy:
+        print("de_block_received ....... :", de_block_received)
 
     # Try to decode the received Reed-Solomon codeword.
     #
@@ -52,20 +57,22 @@ def test_syndrome_decoding(num_errors: int):
     # For that reason, we reverse the uncorrected codeword passed to 'correct_codeword', and we reverse the corrected
     # codeword passed back to us.
     de_block_corrected = correct_codeword(de_block_received[::-1], code_k)
+
     if de_block_corrected is None:
         raise RuntimeError("Unable to correct errors.")
 
     de_block_corrected = de_block_corrected[::-1]
+    if noisy:
+        print("de_block_corrected ...... :", de_block_corrected)
     if de_block_corrected != de_block:
         raise RuntimeError("Incorrectly decoded errors.")
-
 
 def main():
     random.seed(123)
     for trial in range(1000):
         print("trial:", trial)
         num_errors = random.randint(0, 8)
-        test_syndrome_decoding(num_errors)
+        test_syndrome_decoding(num_errors, False)
     print("bye!")
 
 

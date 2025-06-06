@@ -1,12 +1,12 @@
 import textwrap
 
 from qrcode_generator.binary_codes import format_information_code_remainder, version_information_code_remainder
-from qrcode_generator.data_encoder import DataEncoder
-from qrcode_generator.enum_types import EncodingVariant, DataMaskPattern, ErrorCorrectionLevel, CharacterEncodingType
+from qrcode_generator.enum_types import EncodingVariant, CharacterEncodingType
 from qrcode_generator.lookup_tables import error_correction_level_encoding, data_masking_pattern_encoding, data_mask_pattern_function_table, \
     version_specification_table, count_bits_table
-from qrcode_generator.qr_code import make_qr_code, QRCodeDrawer
-from qrcode_generator.reed_solomon_code import calculate_reed_solomon_polynomial, reed_solomon_code_remainder
+from qrcode_generator.qr_code import QRCodeDrawer
+from qrcode_generator.reed_solomon_code import calculate_reed_solomon_polynomial
+from qrcode_generator.reed_solomon_decoder import correct_codeword
 
 
 def weight(value: int) -> int:
@@ -21,126 +21,76 @@ def hamming_distance(a: int, b: int) -> int:
     return weight(a ^ b)
 
 
-def make_testcase():
-    version = 7
-    level = ErrorCorrectionLevel.L
-    pattern = DataMaskPattern.PATTERN5
-
-    variant = EncodingVariant.from_version(version)
-    de = DataEncoder(variant)
-
-    de.append_byte_mode_segment(b"hello, world!")
-
-    qr_canvas = make_qr_code(de, version, level, include_quiet_zone=False, pattern=pattern)
-
-    pixels = [[bool(qr_canvas.get_module_value(i, j).value % 2) for j in range(qr_canvas.width)] for i in range(qr_canvas.height)]
-
-    return pixels
-
-
 def make_testcase_oralb():
     oralb = """
-    ####### # # ## ## # # #######|
-    #     # #   # ####  # #     #|
-    # ### # ##  ## ##  ## # ### #|
-    # ### #   ## ##  ## # # ### #|
-    # ### #   # #     #   # ### #|
-    #     # ##  # ##  # # #     #|
-    ####### # #.......# # #######|
-            # #.......###        |
-      ### # # #.......# ####  ###|
-    #   #  ## #.......#  ## #  ##|
-     ## ####   ....... ##     #  |
-       ### ####.......##  #####  |
-    ##   ##    .......# ##  # ## |
-    #      ####....... ## # ##  #|
-     # #  ###  ....... #   #  # #|
-    # # #  # ##.......## #### ###|
-    ## ## ## # .......#  # #     |
-    ####     # .......## ### # # |
-    # # # #  ##.......   #    #  |
-    # #  # ##  ....... ## # ## ##|
-    # ##  #    .......# #####  ##|
-            #  .......###   ##  #|
-    #######   #....... ## # #### |
-    #     #       #   ###   ## ##|
-    # ### # #  ####### ######    |
-    # ### # ######## ## ### ##   |
-    # ### # ## #### ###  #### ## |
-    #     #  #  # #  ##  # # #  #|
-    #######   ##  #  ## # ####   |
+    #######.#.#.##.##.#.#.#######
+    #.....#.#...#.####..#.#.....#
+    #.###.#.##..##.##..##.#.###.#
+    #.###.#...##.##..##.#.#.###.#
+    #.###.#...#.#.....#...#.###.#
+    #.....#.##..#.##..#.#.#.....#
+    #######.#.#eeeeeee#.#.#######
+    ........#.#eeeeeee###........
+    ..###.#.#.#eeeeeee#.####..###
+    #...#..##.#eeeeeee#..##.#..##
+    .##.####...eeeeeee.##.....#..
+    ...###.####eeeeeee##..#####..
+    ##...##....eeeeeee#.##..#.##.
+    #......####eeeeeee.##.#.##..#
+    .#.#..###..eeeeeee.#...#..#.#
+    #.#.#..#.##eeeeeee##.####.###
+    ##.##.##.#.eeeeeee#..#.#.....
+    ####.....#.eeeeeee##.###.#.#.
+    #.#.#.#..##eeeeeee...#....#..
+    #.#..#.##..eeeeeee.##.#.##.##
+    #.##..#....eeeeeee#.#####..##
+    ........#..eeeeeee###...##..#
+    #######...#eeeeeee.##.#.####.
+    #.....#.......#...###...##.##
+    #.###.#.#..#######.######....
+    #.###.#.########.##.###.##...
+    #.###.#.##.####.###..####.##.
+    #.....#..#..#.#..##..#.#.#..#
+    #######...##..#..##.#.####...
     """
 
-    oralb = [line.replace("|", "") for line in textwrap.dedent(oralb).strip().splitlines()]
-
-    pixels = [ [(c == '#') for c in line] for line in oralb]
+    lines = [line.strip() for line in textwrap.dedent(oralb.strip()).splitlines()]
+    pixels = [ [(c == '#') for c in line] for line in lines]
 
     return pixels
 
 
 def make_testcase_lego():
     lego = """
-    ####### # # # # # #######|
-    #     #  #####  # #     #|
-    # ### # ###  ##   # ### #|
-    # ### # ### ##### # ### #|
-    # ### # #  ##  ## # ### #|
-    #     # # ## #    #     #|
-    ####### # # # # #########|
-            # # # ###        |
-    ####  # # ##  ####  ### #|
-    # # #     # ##  #  #   # |
-    ###   #  ###     # ##    |
-    ###    #### ## ## #  ##  |
-     ##   ## ####### ## # ###|
-     # ###   #    #######   #|
-     ###  ### #  #   ###  ###|
-    # ##   # # #  ####   #  #|
-         ##   #  #  #########|
-            ######  #   #   #|
-    #######  #  #   # # #####|
-    #     #  ## #  ##   #   #|
-    # ### #    #  # #####   #|
-    # ### # ## ## ## ## # ###|
-    # ### # #####  # ####### |
-    #     # #### # # ## # #  |
-    ####### ##   ##    ######|
+    #######.#.#.#.#.#.#######
+    #.....#..#####..#.#.....#
+    #.###.#.###..##...#.###.#
+    #.###.#.###.#####.#.###.#
+    #.###.#.#..##..##.#.###.#
+    #.....#.#.##.#....#.....#
+    #######.#.#.#.#.#########
+    ........#.#.#.###........
+    ####..#.#.##..####..###.#
+    #.#.#.....#.##..#..#...#.
+    ###...#..###.....#.##....
+    ###....####.##.##.#..##..
+    .##...##.#######.##.#.###
+    .#.###...#....#######...#
+    .###..###.#..#...###..###
+    #.##...#.#.#..####...#..#
+    .....##...#..#..#########
+    ........######..#...#...#
+    #######..#..#...#.#.#####
+    #.....#..##.#..##...#...#
+    #.###.#....#..#.#####...#
+    #.###.#.##.##.##.##.#.###
+    #.###.#.#####..#.#######.
+    #.....#.####.#.#.##.#.#..
+    #######.##...##....######
     """
 
-    lego = [line.replace("|", "") for line in textwrap.dedent(lego).strip().splitlines()]
-
-    pixels = [ [(c == '#') for c in line] for line in lego]
-
-    return pixels
-
-def make_transposed_qrcode():
-    transposed = """
-        #######.##.#..#######
-        #.....#...###.#.....#
-        #.###.#.....#.#.###.#
-        #.###.#.#.###.#.###.#
-        #.###.#.##.##.#.###.#
-        #.....#.#..##.#.....#
-        #######.#.#.#.#######
-        ........#.#.#........
-        ###.#.#.##.#######..#
-        ..#....###..#.#..##..
-        ...#..#..#..#..#.#...
-        ##..##..#.....#.##.##
-        ###.####..#...#.#.##.
-        ........#..#.#.##...#
-        #######..##.####.####
-        #.....#...##.......#.
-        #.###.#.#..#####..##.
-        #.###.#...###..###.#.
-        #.###.#.##.#.#####.#.
-        #.....#.#####...#.##.
-        #######.###.##....##.
-    """
-
-    transposed = [line.replace("|", "") for line in textwrap.dedent(transposed).strip().splitlines()]
-
-    pixels = [ [(c == '#') for c in line] for line in transposed]
+    lines = [line.strip() for line in textwrap.dedent(lego.strip()).splitlines()]
+    pixels = [ [(c == '#') for c in line] for line in lines]
 
     return pixels
 
@@ -166,22 +116,21 @@ class BitstreamDecoder:
         return value
 
 
-
 def decode_pixels(pixels):
     height = len(pixels)
     print(f"input height {height}")
     if not all(len(line) == height for line in pixels):
-        raise RuntimeError()
+        raise RuntimeError("2D pixel array is not square.")
 
     width = height
     print(f"input width {width}")
 
     if not (width % 4 == 1):
-        raise RuntimeError()
+        raise RuntimeError("Unexpected width.")
 
     version = (width - 17) // 4
     if not (1 <= version <= 40):
-        raise RuntimeError()
+        raise RuntimeError("Unexpected version.")
 
     print(f"version: {version}")
 
@@ -321,8 +270,8 @@ def decode_pixels(pixels):
             block_data_length.append(code_k)
             block_error_length.append(code_c - code_k)
 
-    print("block data expected:", block_data_length)
-    print("block error expected:", block_error_length)
+    print("block data length expected:", block_data_length)
+    print("block error length expected:", block_error_length)
 
     num_data_words = sum(block_data_length)
     num_error_correction_words = sum(block_error_length)
@@ -359,15 +308,23 @@ def decode_pixels(pixels):
     for (count, (code_c, code_k, code_r)) in version_specification.block_specification:
         poly = calculate_reed_solomon_polynomial(code_c - code_k, strip=True)
         for k in range(count):
-            datapoly = d_blocks[idx] + e_blocks[idx]
-            remainder = reed_solomon_code_remainder(datapoly, poly)
-            print("-->", datapoly)
-            print("remainder: ", remainder)
-            print()
+            de_block = d_blocks[idx] + e_blocks[idx]
+
+            de_block_corrected = correct_codeword(de_block[::-1], code_k)
+            de_block_corrected = de_block_corrected[::-1]
+
+            if de_block == de_block_corrected:
+                print("No correction necessary!")
+            else:
+                corr = sum(a != b for (a, b) in zip(de_block, de_block_corrected))
+                print(f"Corrected {corr} error symbols:")
+                print("  Corrected from:", de_block)
+                print("  Corrected to:", de_block_corrected)
+
+            d_blocks[idx] = de_block_corrected[:code_k]
+            e_blocks[idx] = de_block_corrected[code_k:]
 
             idx += 1
-
-    #return
 
     data = []
     for d_block in d_blocks:
@@ -392,6 +349,10 @@ def decode_pixels(pixels):
             print("directive", directive)
             if directive == 0b0000: # Terminator
                 print("found terminator.")
+                while decoder.available() >= 8:
+                    octet = decoder.pop_bits(8)
+                    print(f"post-terminator octet: 0x{octet:02x}")
+                print("bits left:", decoder.bits)
                 break
             elif directive == 0b0100:  # Bytes mode.
                 number_of_count_bits = count_bits_table[variant][CharacterEncodingType.BYTES]
@@ -402,13 +363,19 @@ def decode_pixels(pixels):
                         for k in range(count):
                             octet = decoder.pop_bits(8)
                             octets.append(octet)
-                        print(f"Read {count} bytes: {octets}")
+                        octet_string = bytes(octets).decode('utf_8')
+                        print(f"Read {count} bytes: {octets} {octet_string!r}")
                     else:
                         raise RuntimeError("Not enough bits.")
                 else:
                     raise RuntimeError("Cannot read count.")
+            elif directive == 0b1001:  # FNC1 indicator, second position.
+                b1 = decoder.pop_bits(8)
+                print("FNC1, second position directive:", b1)
             elif directive == 0b0111:  # ECI designator.
-                b1 = ...
+                b1 = decoder.pop_bits(8)
+                assert b1 <= 127
+                print("ECI directive:", b1)
             else:
                 raise RuntimeError(f"Bad directive value {directive}.")
         else:
@@ -417,10 +384,8 @@ def decode_pixels(pixels):
 
 
 def main():
-    #pixels = make_testcase_oralb()
-    #pixels = make_testcase()
+    pixels = make_testcase_oralb()
     #pixels = make_testcase_lego()
-    pixels = make_transposed_qrcode()
 
     decode_pixels(pixels)
 

@@ -18,6 +18,7 @@ The message is ended by a terminator of four zero bits, if the QR code symbol ha
 from typing import Optional, Self
 
 from .enum_types import EncodingVariant, ErrorCorrectionLevel, CharacterEncodingType
+from .gf256 import GF256
 from .kanji_encode import kanji_character_value
 from .lookup_tables import version_specification_table, count_bits_table
 from .auxiliary import enumerate_bits, calculate_qrcode_capacity
@@ -301,9 +302,10 @@ class DataEncoder:
 
         number_of_data_codewords = version_specification.number_of_data_codewords()
         data = self.get_words(number_of_data_codewords)
-
         if data is None:
             return None  # Data does not fit in the requested (version, level) QR code symbol.
+
+        data_gf256 = [GF256(x) for x in data]
 
         # The data will fit, we can proceed.
         # Split up data in data-blocks, and calculate the corresponding error correction blocks.
@@ -317,7 +319,7 @@ class DataEncoder:
             poly = calculate_reed_solomon_polynomial(code_c - code_k, strip=True)
             for k in range(count):
                 # Select data block according to the code specification.
-                d_block = data[idx:idx + code_k]
+                d_block = data_gf256[idx:idx + code_k]
                 d_blocks.append(d_block)
                 # Calculate the corresponding error correction block.
                 e_block = reed_solomon_code_remainder(d_block, poly)
@@ -336,13 +338,13 @@ class DataEncoder:
         k = 0
         while sum(map(len, d_blocks)) != 0:
             if len(d_blocks[k]) != 0:
-                channel_words.append(d_blocks[k].pop(0))
+                channel_words.append(d_blocks[k].pop(0).value)
             k = (k + 1) % len(d_blocks)
 
         k = 0
         while sum(map(len, e_blocks)) != 0:
             if len(e_blocks[k]) != 0:
-                channel_words.append(e_blocks[k].pop(0))
+                channel_words.append(e_blocks[k].pop(0).value)
             k = (k + 1) % len(e_blocks)
 
         # Convert data-words to data-bits.
