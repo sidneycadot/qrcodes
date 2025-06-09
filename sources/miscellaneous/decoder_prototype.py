@@ -96,6 +96,44 @@ def make_testcase_lego():
     return pixels
 
 
+def make_testcase_hello_bye(transpose_flag: bool):
+    hello_bye = """
+    #######.##..###.#.#######
+    #.....#....###.#..#.....#
+    #.###.#....###.##.#.###.#
+    #.###.#..##.##.##.#.###.#
+    #.###.#.#.##...##.#.###.#
+    #.....#.##..#..##.#.....#
+    #######.#.#.#.#.#.#######
+    ........#...##.#.........
+    #...######.#.#...####...#
+    #..#...#..##..#.###.###..
+    ##....#...#.#..#.#...##..
+    ....##.##..##....#.#..#..
+    #.##..#.#.....#..#.#..###
+    ....##.##..####.##...##..
+    ....#.#.###.#.##..#.###..
+    ...#...####.....#.###.##.
+    ..#..###.###.#.######.#..
+    ........####....#...###.#
+    #######.#.##..#.#.#.#....
+    #.....#.#...#..##...###..
+    #.###.#.###.#########..##
+    #.###.#..#.#.###..##.#..#
+    #.###.#..#.####.#.##.#.#.
+    #.....#....#..######..##.
+    #######.##..#######.##.##
+    """
+
+    lines = [line.strip() for line in textwrap.dedent(hello_bye.strip()).splitlines()]
+    pixels = [ [(c == '#') for c in line] for line in lines]
+
+    if transpose_flag:
+        pixels = [ list(line) for line in zip(*pixels)]
+
+    return pixels
+
+
 class BitstreamDecoder:
     def __init__(self):
         self.bits = []
@@ -118,6 +156,7 @@ class BitstreamDecoder:
 
 
 def decode_pixels(pixels):
+
     height = len(pixels)
     print(f"input height {height}")
     if not all(len(line) == height for line in pixels):
@@ -139,10 +178,13 @@ def decode_pixels(pixels):
 
     # Get format bits.
 
-    # Get the single fixed "dark module" above and to the right of the bottom-left finder pattern (7.9.1).
+    # verify the single fixed "dark module" above and to the right of the bottom-left finder pattern (7.9.1).
     fixed_format_module = pixels[height - 8][8]
     print("fixed_format_module", fixed_format_module)
-    assert fixed_format_module == True
+    if fixed_format_module:
+        print("fixed format module is 1 - good!")
+    else:
+        print("fixed format module is 0 - bad!")
 
     # Get the two format information patterns.
     fa = 0
@@ -151,14 +193,14 @@ def decode_pixels(pixels):
         fa = 2 * fa + pixels[fai][faj]
         fb = 2 * fb + pixels[fbi][fbj]
 
-    print(f"fa before XOR: 0b{fa:015b}")
-    print(f"fb before XOR: 0b{fb:015b}")
+    # print(f"fa before XOR: 0b{fa:015b}")
+    # print(f"fb before XOR: 0b{fb:015b}")
 
     fa ^= 0b101010000010010
     fb ^= 0b101010000010010
 
-    print(f"fa after XOR: 0b{fa:015b}")
-    print(f"fb after XOR: 0b{fb:015b}")
+    # print(f"fa after XOR: 0b{fa:015b}")
+    # print(f"fb after XOR: 0b{fb:015b}")
 
     distances = []
     for k in range(32):
@@ -166,7 +208,7 @@ def decode_pixels(pixels):
 
         fa_dist = hamming_distance(fa, nominal)
         fb_dist = hamming_distance(fb, nominal)
-        print(fa_dist, fb_dist)
+        # print(fa_dist, fb_dist)
 
         distances.append(fa_dist + fb_dist)
 
@@ -176,7 +218,7 @@ def decode_pixels(pixels):
 
     best = [k for k in range(32) if distances[k] == min_distance]
     if len(best) != 1:
-        raise RuntimeError()
+        raise RuntimeError("No unique best format info.")
 
     format_information = best[0]
 
@@ -184,14 +226,15 @@ def decode_pixels(pixels):
 
     error_correction_level_decoding_map = dict(map(reversed, error_correction_level_encoding.items()))
     data_masking_pattern_decoding_map = dict(map(reversed, data_masking_pattern_encoding.items()))
+
     level_encoding = format_information >> 3
     pattern_encoding = format_information & 7
 
     level = error_correction_level_decoding_map[level_encoding]
     pattern = data_masking_pattern_decoding_map[pattern_encoding]
 
-    print("Extracted level:", level)
-    print("Extracted pattern:", pattern)
+    print("Format information: level =", level)
+    print("Format information: data mask pattern =", pattern)
 
     if version >= 7:
         # Get the two version information patterns.
@@ -216,14 +259,14 @@ def decode_pixels(pixels):
 
         best = [1 + k for k in range(40) if distances[k] == min_distance]
         if len(best) != 1:
-            raise RuntimeError()
+            raise RuntimeError("No unique best version info.")
 
         version_information = best[0]
 
         print("version information:", version_information)
 
         if version_information != version:
-            raise RuntimeError()
+            raise RuntimeError("Version information mismatch with size.")
 
     # Get the data and error correction bits.
     # Apply the data mask pattern at the same time.
@@ -237,7 +280,7 @@ def decode_pixels(pixels):
     # Chop padding bits.
     num_chop = len(bitstream) % 8
     if num_chop != 0:
-        assert all(bit == 0 for bit in bitstream[-num_chop:])
+        print("Dropping padding bits (normally all zero):", bitstream[-num_chop:])
         bitstream = bitstream[:-num_chop]
 
     assert len(bitstream) % 8 == 0
@@ -257,6 +300,8 @@ def decode_pixels(pixels):
     print("octets:", octets)
 
     version_specification = version_specification_table[(version, level)]
+
+    print("version_specification", version_specification)
 
     assert len(octets) == version_specification.total_number_of_codewords
 
@@ -304,14 +349,17 @@ def decode_pixels(pixels):
     assert idx == len(octets)
     assert len(d_blocks) == len(e_blocks)
 
-    # Verify and/or correct the data polynomials.
+    # Correct the data+error codewords using the correct Reed-Solomon code.
     idx = 0
     for (count, (code_c, code_k, code_r)) in version_specification.block_specification:
-        poly = calculate_reed_solomon_polynomial(code_c - code_k, strip=True)
         for k in range(count):
             de_block = d_blocks[idx] + e_blocks[idx]
 
             de_block_corrected = correct_reed_solomon_codeword(de_block[::-1], code_k)
+            if de_block_corrected is None:
+                print("Unable to correct!")
+                return
+
             de_block_corrected = de_block_corrected[::-1]
 
             if de_block == de_block_corrected:
@@ -335,7 +383,7 @@ def decode_pixels(pixels):
 
     print("number of data octets:", len(data))
 
-    # Turn it into a bit-stream:
+    # Turn the octets into a bit-stream:
     decoder = BitstreamDecoder()
     for octet in data:
         for bit in (7, 6, 5, 4, 3, 2, 1, 0):
@@ -351,12 +399,27 @@ def decode_pixels(pixels):
             directive = decoder.pop_bits(4)
             print("directive", directive)
             if directive == 0b0000: # Terminator
-                print("found terminator.")
+                print("found data terminator (0000).")
                 while decoder.available() >= 8:
                     octet = decoder.pop_bits(8)
                     print(f"post-terminator octet: 0x{octet:02x}")
                 print("bits left:", decoder.bits)
                 break
+            elif directive == 0b0010:  # Alphanumeric mode.
+                number_of_count_bits = count_bits_table[variant][CharacterEncodingType.ALPHANUMERIC]
+                if decoder.available() >= number_of_count_bits:
+                    count = decoder.pop_bits(number_of_count_bits)
+                    print("@@@", count)
+                    return
+                    #if decoder.available() >= count * 8:
+                    #    octets = []
+                    #    for k in range(count):
+                    #        octet = decoder.pop_bits(8)
+                    #        octets.append(octet)
+                    #    octet_string = bytes(octets).decode('utf_8')
+                    #    print(f"Read {count} bytes: {octets} {octet_string!r}")
+                else:
+                    raise RuntimeError("Cannot read count.")
             elif directive == 0b0100:  # Bytes mode.
                 number_of_count_bits = count_bits_table[variant][CharacterEncodingType.BYTES]
                 if decoder.available() >= number_of_count_bits:
@@ -372,9 +435,9 @@ def decode_pixels(pixels):
                         raise RuntimeError("Not enough bits.")
                 else:
                     raise RuntimeError("Cannot read count.")
-            elif directive == 0b1001:  # FNC1 indicator, second position.
-                b1 = decoder.pop_bits(8)
-                print("FNC1, second position directive:", b1)
+            #elif directive == 0b1001:  # FNC1 indicator, second position.
+            #    b1 = decoder.pop_bits(8)
+            #    print("FNC1, second position directive:", b1)
             elif directive == 0b0111:  # ECI designator.
                 b1 = decoder.pop_bits(8)
                 assert b1 <= 127
@@ -388,10 +451,21 @@ def decode_pixels(pixels):
 
 def main():
     #pixels = make_testcase_oralb()
-    pixels = make_testcase_lego()
+    #pixels = make_testcase_lego()
+    pixels = make_testcase_hello_bye(False)
 
     decode_pixels(pixels)
 
 
 if __name__ == "__main__":
     main()
+
+
+# [0, 0, 1, 0
+# 0, 0, 0, 0, 0, 0, 0, 0, 1
+# 0, 0, 1, 0, 1, 1
+# 0, 1, 0, 0
+# 0 ()
+# 0, 0, 0, 0, 0, 1, 0, 0, 1, 1, 1, 1, 0, 0, 1, 0, 1, 1, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 1, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1, 1, 1, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 1, 1, 1, 1, 0, 1, 0, 1, 0, 1, 0, 1, 1, 0, 1, 1, 1, 0, 0, 0, 1, 1, 1, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 1, 1, 1, 0, 0, 0, 0, 1, 0, 0, 1, 1, 0, 1, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 1, 1, 0, 0, 1, 0, 0, 1, 0, 1, 1, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 1, 0, 1, 0, 1, 0, 1, 0, 0, 1, 0, 1, 1, 0, 0, 1, 1, 1, 1, 0, 1]
+#
+# 0010, 9, 11 = "B"
