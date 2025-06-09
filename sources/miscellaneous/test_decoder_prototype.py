@@ -118,11 +118,23 @@ def make_testcase_hello_bye(transpose_flag: bool):
 
 
 def main():
-    #pixels = make_testcase_oralb()
-    pixels = make_testcase_lego()
-    #pixels = make_testcase_hello_bye(True)
+    testcases = {
+        "oralb": make_testcase_oralb(),
+        "lego": make_testcase_lego(),
+        "hello_bye": make_testcase_hello_bye(False),
+        "hello_bye_transposed": make_testcase_hello_bye(True)
+    }
 
-    decode_pixels(pixels)
+    results = []
+    for (name, pixels) in testcases.items():
+        decoded_string = decode_pixels(pixels)
+        results.append((name, decoded_string))
+
+    print()
+    print("Summary of testcases:")
+    print()
+    for (name, decoded_string) in results:
+        print(f"  testcase {name!r} {'.' * (26 - len(name))} : {decoded_string!r}")
 
 
 if __name__ == "__main__":

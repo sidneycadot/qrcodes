@@ -258,6 +258,7 @@ def decode_pixels(pixels: list[list[bool]]) -> str:
     # Correct the data+error codewords using the correct Reed-Solomon code.
     idx = 0
     for (count, (code_c, code_k, code_r)) in version_specification.block_specification:
+
         for k in range(count):
 
             de_block = d_blocks[idx] + e_blocks[idx]
