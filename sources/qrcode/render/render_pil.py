@@ -4,8 +4,8 @@ from __future__ import annotations
 
 from typing import Optional
 
-from qrcode_generator.render.colormaps import colormap_default, colormap_color
-from qrcode_generator.qr_code import QRCodeCanvas, QRCodeCanvasTransform
+from qrcode.render.colormaps import colormap_default, colormap_color
+from qrcode.qr_code import QRCodeCanvas, QRCodeCanvasTransform
 
 pil_imported_successfully = False
 try:

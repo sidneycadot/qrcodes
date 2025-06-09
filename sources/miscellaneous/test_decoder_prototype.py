@@ -1,12 +1,19 @@
-"""A QR code decoder prototype."""
+"""Test the QR code decoder."""
 
 import textwrap
+from typing import NamedTuple
 
-from miscellaneous.decoder_prototype import decode_pixels
+from qrcode.decoder import decode_pixels
 
 
-def make_testcase_oralb():
-    oralb = """
+class DecoderTestCase(NamedTuple):
+    name: str
+    contents: str
+    pixels: list[list[bool]]
+
+
+def make_testcase_oralb() -> DecoderTestCase:
+    pixel_string = """
     #######.#.#.##.##.#.#.#######
     #.....#.#...#.####..#.#.....#
     #.###.#.##..##.##..##.#.###.#
@@ -38,14 +45,18 @@ def make_testcase_oralb():
     #######...##..#..##.#.####...
     """
 
-    lines = [line.strip() for line in textwrap.dedent(oralb.strip()).splitlines()]
+    lines = [line.strip() for line in textwrap.dedent(pixel_string.strip()).splitlines()]
     pixels = [ [(c == '#') for c in line] for line in lines]
 
-    return pixels
+    return DecoderTestCase(
+        name = "oralb",
+        contents = "https://qrco.de/bb8b9t",
+        pixels = pixels
+    )
 
 
 def make_testcase_lego():
-    lego = """
+    pixel_string = """
     #######.#.#.#.#.#.#######
     #.....#..#####..#.#.....#
     #.###.#.###..##...#.###.#
@@ -73,14 +84,18 @@ def make_testcase_lego():
     #######.##...##....######
     """
 
-    lines = [line.strip() for line in textwrap.dedent(lego.strip()).splitlines()]
+    lines = [line.strip() for line in textwrap.dedent(pixel_string.strip()).splitlines()]
     pixels = [ [(c == '#') for c in line] for line in lines]
 
-    return pixels
+    return DecoderTestCase(
+        name = "lego",
+        contents = "http://debontebouwplaats.nl",
+        pixels = pixels
+    )
 
 
 def make_testcase_hello_bye(transpose_flag: bool):
-    hello_bye = """
+    pixel_string = """
     #######.##..###.#.#######
     #.....#....###.#..#.....#
     #.###.#....###.##.#.###.#
@@ -108,35 +123,41 @@ def make_testcase_hello_bye(transpose_flag: bool):
     #######.##..#######.##.##
     """
 
-    lines = [line.strip() for line in textwrap.dedent(hello_bye.strip()).splitlines()]
+    lines = [line.strip() for line in textwrap.dedent(pixel_string.strip()).splitlines()]
     pixels = [ [(c == '#') for c in line] for line in lines]
 
     if transpose_flag:
         pixels = [ list(line) for line in zip(*pixels)]
 
-    return pixels
+    return DecoderTestCase(
+        name = "hello_bye_transposed" if transpose_flag else "hello_bye",
+        contents = "Bye" if transpose_flag else "Hello",
+        pixels = pixels
+    )
 
 
 def main():
-    testcases = {
-        "oralb": make_testcase_oralb(),
-        "lego": make_testcase_lego(),
-        "hello_bye": make_testcase_hello_bye(False),
-        "hello_bye_transposed": make_testcase_hello_bye(True)
-    }
 
-    results = []
-    for (name, pixels) in testcases.items():
-        print(f"Processing testcase: {name!r}")
+    testcases = [
+        make_testcase_oralb(),
+        make_testcase_lego(),
+        make_testcase_hello_bye(False),
+        make_testcase_hello_bye(True)
+    ]
+
+    decoded_strings = []
+    for testcase in testcases:
+        print(f"Processing testcase: {testcase.name!r}")
         print()
-        decoded_string = decode_pixels(pixels)
-        results.append((name, decoded_string))
+        decoded_string = decode_pixels(testcase.pixels)
+        decoded_strings.append(decoded_string)
+        assert decoded_string == testcase.contents
         print()
 
     print("Summary of testcases:")
     print()
-    for (name, decoded_string) in results:
-        print(f"  testcase {name!r} {'.' * (26 - len(name))} : {decoded_string!r}")
+    for (testcase, decoded_string) in zip(testcases, decoded_strings):
+        print(f"  testcase {testcase.name!r} {'.' * (26 - len(testcase.name))} : {decoded_string!r}")
 
 
 if __name__ == "__main__":

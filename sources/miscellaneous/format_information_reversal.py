@@ -1,6 +1,6 @@
 #! /usr/bin/env -S python3 -B
 
-from qrcode_generator.binary_codes import format_information_code_remainder
+from qrcode.binary_codes import format_information_code_remainder
 
 def bit_reverse(value: int, num_bits: int) -> int:
     assert 0 <= value < (1 << num_bits)

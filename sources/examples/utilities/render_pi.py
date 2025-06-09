@@ -1,7 +1,7 @@
 """Utilities to facilitate rendering of pi."""
 
-from qrcode_generator.enum_types import ErrorCorrectionLevel
-from qrcode_generator.lookup_tables import version_specification_table
+from qrcode.enum_types import ErrorCorrectionLevel
+from qrcode.lookup_tables import version_specification_table
 
 first_ten_thousand_characters_of_pi = (
     "3."

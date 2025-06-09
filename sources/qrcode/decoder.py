@@ -1,13 +1,13 @@
-"""A QR code decoder prototype."""
+"""A preliminary version of a QR code decoder."""
 
-from qrcode_generator.binary_codes import format_information_code_remainder, version_information_code_remainder
-from qrcode_generator.data_encoder import alphanumeric_characters
-from qrcode_generator.enum_types import EncodingVariant, CharacterEncodingType
-from qrcode_generator.lookup_tables import error_correction_level_encoding, data_masking_pattern_encoding, data_mask_pattern_function_table, \
+from qrcode.binary_codes import format_information_code_remainder, version_information_code_remainder
+from qrcode.data_encoder import alphanumeric_characters
+from qrcode.enum_types import EncodingVariant, CharacterEncodingType
+from qrcode.lookup_tables import error_correction_level_encoding, data_masking_pattern_encoding, data_mask_pattern_function_table, \
     version_specification_table, count_bits_table
-from qrcode_generator.qr_code import QRCodeDrawer
-from qrcode_generator.reed_solomon.gf256 import GF256
-from qrcode_generator.reed_solomon.reed_solomon_decoder import correct_reed_solomon_codeword
+from qrcode.qr_code import QRCodeDrawer
+from qrcode.reed_solomon.gf256 import GF256
+from qrcode.reed_solomon.reed_solomon_decoder import correct_reed_solomon_codeword
 
 
 def weight(value: int) -> int:

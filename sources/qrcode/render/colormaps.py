@@ -1,6 +1,6 @@
 """Colormaps for rendering QR codes."""
 
-from qrcode_generator.qr_code import ModuleValue
+from qrcode.qr_code import ModuleValue
 
 colormap_default = {
     ModuleValue.QUIET_ZONE_0: '#ffffff',

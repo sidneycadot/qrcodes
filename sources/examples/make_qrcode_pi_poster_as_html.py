@@ -6,9 +6,9 @@ import os
 import base64
 import textwrap
 
-from qrcode_generator.enum_types import ErrorCorrectionLevel
-from qrcode_generator.render.utilities import make_optimal_qrcode, save_qrcode_as_png_file
-from qrcode_generator.render.xml_writer import XmlWriter
+from qrcode.enum_types import ErrorCorrectionLevel
+from qrcode.render.utilities import make_optimal_qrcode, save_qrcode_as_png_file
+from qrcode.render.xml_writer import XmlWriter
 
 from utilities.render_pi import number_of_pi_characters_that_can_be_represented, first_n_characters_of_pi
 

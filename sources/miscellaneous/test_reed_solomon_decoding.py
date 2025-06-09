@@ -2,9 +2,9 @@
 
 import random
 
-from qrcode_generator.reed_solomon.gf256 import GF256
-from qrcode_generator.reed_solomon.reed_solomon_code import calculate_reed_solomon_polynomial, reed_solomon_code_remainder
-from qrcode_generator.reed_solomon.reed_solomon_decoder import correct_reed_solomon_codeword
+from qrcode.reed_solomon.gf256 import GF256
+from qrcode.reed_solomon.reed_solomon_code import calculate_reed_solomon_polynomial, reed_solomon_code_remainder
+from qrcode.reed_solomon.reed_solomon_decoder import correct_reed_solomon_codeword
 
 
 def test_syndrome_decoding(noisy: bool=False):

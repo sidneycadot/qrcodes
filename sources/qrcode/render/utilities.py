@@ -4,10 +4,10 @@ import os
 import subprocess
 from typing import NamedTuple,Optional
 
-from qrcode_generator.enum_types import ErrorCorrectionLevel, DataMaskPattern
-from qrcode_generator.optimal_encoding import make_optimal_qrcode
-from qrcode_generator.qr_code import QRCodeCanvas, QRCodeCanvasTransform
-from qrcode_generator.render.render_pil import render_qrcode_as_pil_image
+from qrcode.enum_types import ErrorCorrectionLevel, DataMaskPattern
+from qrcode.optimal_encoding import make_optimal_qrcode
+from qrcode.qr_code import QRCodeCanvas, QRCodeCanvasTransform
+from qrcode.render.render_pil import render_qrcode_as_pil_image
 
 
 class QRCodePngFileDescriptor(NamedTuple):

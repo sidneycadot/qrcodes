@@ -7,11 +7,11 @@ import itertools
 import os
 from typing import Optional
 
-from qrcode_generator.data_encoder import DataEncoder
-from qrcode_generator.enum_types import ErrorCorrectionLevel, EncodingVariant, CharacterEncodingType
-from qrcode_generator.lookup_tables import version_specification_table, count_bits_table
-from qrcode_generator.qr_code import make_qr_code
-from qrcode_generator.render.utilities import save_qrcode_as_png_file
+from qrcode.data_encoder import DataEncoder
+from qrcode.enum_types import ErrorCorrectionLevel, EncodingVariant, CharacterEncodingType
+from qrcode.lookup_tables import version_specification_table, count_bits_table
+from qrcode.qr_code import make_qr_code
+from qrcode.render.utilities import save_qrcode_as_png_file
 
 from examples.utilities.render_html_examples import RenderHtmlExample
 
@@ -129,7 +129,7 @@ def render(include_quiet_zone: bool, colormap: str, optimize_png: bool) -> list[
             optimize_png=optimize_png
         ),
 
-        # Extended ASCII encodings (ASCII with interpretations given to characters 128 .. 255).
+        # Extended ASCII encodings (ASCII with interpretations given to characters 128 to 255).
         *(
             write_extended_ascii_test(
                 encoding=encoding,

@@ -4,8 +4,8 @@ import base64
 import textwrap
 from typing import NamedTuple
 
-from qrcode_generator.render.utilities import QRCodePngFileDescriptor
-from qrcode_generator.render.xml_writer import XmlWriter
+from qrcode.render.utilities import QRCodePngFileDescriptor
+from qrcode.render.xml_writer import XmlWriter
 
 
 class RenderHtmlExample(NamedTuple):

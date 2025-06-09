@@ -4,10 +4,10 @@
 
 import subprocess
 
-from qrcode_generator.render.render_svg import render_qr_canvas_as_svg_path, render_qr_canvas_as_svg_group
-from qrcode_generator.render.xml_writer import XmlWriter
-from qrcode_generator.enum_types import DataMaskPattern, ErrorCorrectionLevel
-from qrcode_generator.render.utilities import make_optimal_qrcode
+from qrcode.render.render_svg import render_qr_canvas_as_svg_path
+from qrcode.render.xml_writer import XmlWriter
+from qrcode.enum_types import DataMaskPattern, ErrorCorrectionLevel
+from qrcode.render.utilities import make_optimal_qrcode
 
 from utilities.render_pi import number_of_pi_characters_that_can_be_represented, first_n_characters_of_pi
 

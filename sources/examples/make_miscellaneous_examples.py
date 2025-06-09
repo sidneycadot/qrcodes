@@ -6,10 +6,10 @@ import glob
 import os
 from typing import Optional
 
-from qrcode_generator.data_encoder import DataEncoder
-from qrcode_generator.enum_types import ErrorCorrectionLevel, EncodingVariant
-from qrcode_generator.qr_code import make_qr_code
-from qrcode_generator.render.utilities import write_optimal_qrcode, QRCodePngFileDescriptor, save_qrcode_as_png_file
+from qrcode.data_encoder import DataEncoder
+from qrcode.enum_types import ErrorCorrectionLevel, EncodingVariant
+from qrcode.qr_code import make_qr_code
+from qrcode.render.utilities import write_optimal_qrcode, QRCodePngFileDescriptor, save_qrcode_as_png_file
 
 from examples.utilities.render_html_examples import RenderHtmlExample
 
@@ -153,7 +153,7 @@ def write_example_kanji_encodings(
     )
 
 
-def write_bytemode_default_encoding_test(
+def write_byte_mode_default_encoding_test(
         *,
         png_filename: str,
         include_quiet_zone: Optional[bool] = None,
@@ -212,8 +212,8 @@ def render(include_quiet_zone: bool, colormap: str, optimize_png: bool) -> list[
         # A test to determine which interpretation is in effect.
         RenderHtmlExample(
             description="Default byte-mode encoding test",
-            descriptor=write_bytemode_default_encoding_test(
-                png_filename="qrcode_miscellaneous_bytemode_default_encoding_test_{VERSION}{LEVEL}p{PATTERN}.png",
+            descriptor=write_byte_mode_default_encoding_test(
+                png_filename="qrcode_miscellaneous_byte_mode_default_encoding_test_{VERSION}{LEVEL}p{PATTERN}.png",
                 include_quiet_zone=include_quiet_zone,
                 colormap=colormap,
                 optimize_png=optimize_png

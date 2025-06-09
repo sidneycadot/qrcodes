@@ -2,8 +2,8 @@
 
 import matplotlib.pyplot as plt
 
-from qrcode_generator.enum_types import ErrorCorrectionLevel
-from qrcode_generator.lookup_tables import version_specification_table
+from qrcode.enum_types import ErrorCorrectionLevel
+from qrcode.lookup_tables import version_specification_table
 
 data = {}
 for version_specification in version_specification_table.values():
@@ -13,13 +13,13 @@ for version_specification in version_specification_table.values():
     data[version_specification.error_correction_level].append((version_specification.version, number_of_data_codewords))
 
 
-plotspecs = [
+plot_specifications = [
     (311, None),
     (312, 10),
     (313, 4)
 ]
 
-for (subplot_spec, xlim) in plotspecs:
+for (subplot_spec, xlim) in plot_specifications:
 
     plt.subplot(subplot_spec)
 

@@ -4,7 +4,7 @@
 
 import unittest
 
-from qrcode_generator.binary_codes import format_information_code_remainder, version_information_code_remainder
+from qrcode.binary_codes import format_information_code_remainder, version_information_code_remainder
 
 
 class TestBinaryCodes(unittest.TestCase):

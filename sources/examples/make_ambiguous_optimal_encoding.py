@@ -9,7 +9,7 @@ Which types of strings are recognized and handled by different programs
 is not really standardized.
 """
 
-from qrcode_generator.render.utilities import write_optimal_qrcode
+from qrcode.render.utilities import write_optimal_qrcode
 
 
 def main():

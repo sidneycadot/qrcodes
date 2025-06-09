@@ -1,6 +1,6 @@
 """Implement Reed-Solomon codes as used in QR codes."""
 
-from qrcode_generator.reed_solomon.gf256 import GF256
+from qrcode.reed_solomon.gf256 import GF256
 
 
 def multiply_polynomial(pa: list[GF256], pb: list[GF256]) -> list[GF256]:

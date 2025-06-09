@@ -6,11 +6,12 @@ import base64
 import os
 import subprocess
 
-from qrcode_generator.render.render_svg import render_qr_canvas_as_svg_group
-from qrcode_generator.render.xml_writer import XmlWriter
-from qrcode_generator.enum_types import ErrorCorrectionLevel
-from qrcode_generator.lookup_tables import version_specification_table
-from qrcode_generator.render.utilities import make_optimal_qrcode, save_qrcode_as_png_file
+from qrcode.optimal_encoding import make_optimal_qrcode
+from qrcode.render.render_svg import render_qr_canvas_as_svg_group
+from qrcode.render.xml_writer import XmlWriter
+from qrcode.enum_types import ErrorCorrectionLevel
+from qrcode.lookup_tables import version_specification_table
+from qrcode.render.utilities import save_qrcode_as_png_file
 
 from examples.utilities.render_pi import number_of_pi_characters_that_can_be_represented, first_n_characters_of_pi
 

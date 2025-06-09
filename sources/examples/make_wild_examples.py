@@ -2,10 +2,10 @@
 
 """Render codes found in the wild."""
 
-from qrcode_generator.data_encoder import DataEncoder
-from qrcode_generator.enum_types import ErrorCorrectionLevel, EncodingVariant, DataMaskPattern
-from qrcode_generator.qr_code import make_qr_code, QRCodeCanvasTransform
-from qrcode_generator.render.utilities import save_qrcode_as_png_file
+from qrcode.data_encoder import DataEncoder
+from qrcode.enum_types import ErrorCorrectionLevel, EncodingVariant, DataMaskPattern
+from qrcode.qr_code import make_qr_code, QRCodeCanvasTransform
+from qrcode.render.utilities import save_qrcode_as_png_file
 
 
 def render_iso_standard_customer_feedback_code(colormap: str) -> None:

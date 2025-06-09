@@ -11,8 +11,8 @@ import base64
 from PIL import Image
 import subprocess
 
-from qrcode_generator.render.xml_writer import XmlWriter
-from qrcode_generator.render.utilities import optimize_png_file_size
+from qrcode.render.xml_writer import XmlWriter
+from qrcode.render.utilities import optimize_png_file_size
 
 
 def main():

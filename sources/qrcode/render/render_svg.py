@@ -2,9 +2,9 @@
 
 from typing import Optional
 
-from qrcode_generator.qr_code import QRCodeCanvas
-from qrcode_generator.render.colormaps import colormap_default, colormap_color
-from qrcode_generator.render.xml_writer import XmlWriter
+from qrcode.qr_code import QRCodeCanvas
+from qrcode.render.colormaps import colormap_default, colormap_color
+from qrcode.render.xml_writer import XmlWriter
 
 
 def render_qr_canvas_as_svg_path(

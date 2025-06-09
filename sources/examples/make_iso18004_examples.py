@@ -26,10 +26,10 @@ import glob
 import os
 from typing import Optional
 
-from qrcode_generator.data_encoder import DataEncoder
-from qrcode_generator.enum_types import ErrorCorrectionLevel, EncodingVariant, DataMaskPattern
-from qrcode_generator.qr_code import make_qr_code
-from qrcode_generator.render.utilities import write_optimal_qrcode, save_qrcode_as_png_file
+from qrcode.data_encoder import DataEncoder
+from qrcode.enum_types import ErrorCorrectionLevel, EncodingVariant, DataMaskPattern
+from qrcode.qr_code import make_qr_code
+from qrcode.render.utilities import write_optimal_qrcode, save_qrcode_as_png_file
 
 from examples.utilities.render_html_examples import RenderHtmlExample
 

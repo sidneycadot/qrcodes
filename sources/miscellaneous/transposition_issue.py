@@ -2,7 +2,7 @@
 
 from collections import Counter
 
-from qrcode_generator.binary_codes import format_information_code_remainder
+from qrcode.binary_codes import format_information_code_remainder
 
 
 def reverse(n: int, numbits: int) -> int:

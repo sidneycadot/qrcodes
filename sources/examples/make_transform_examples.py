@@ -26,12 +26,9 @@ import glob
 import os
 from typing import Optional
 
-from qrcode_generator.data_encoder import DataEncoder
-from qrcode_generator.enum_types import ErrorCorrectionLevel, EncodingVariant, DataMaskPattern
-from qrcode_generator.qr_code import make_qr_code, QRCodeCanvasTransform
-from qrcode_generator.render.utilities import write_optimal_qrcode, save_qrcode_as_png_file
-
-from examples.utilities.render_html_examples import RenderHtmlExample
+from qrcode.enum_types import ErrorCorrectionLevel, DataMaskPattern
+from qrcode.qr_code import  QRCodeCanvasTransform
+from qrcode.render.utilities import write_optimal_qrcode
 
 
 def remove_stale_files() -> None:
