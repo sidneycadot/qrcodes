@@ -265,16 +265,16 @@ def decode_pixels(pixels: list[list[bool]]) -> str:
 
             de_block_corrected = correct_reed_solomon_codeword(de_block[::-1], code_k)
             if de_block_corrected is None:
-                print("Unable to correct!")
+                print("Unable to correct codeword.")
                 raise DecodingError("Cannot correct a Reed-Solomon codeword.")
 
             de_block_corrected = de_block_corrected[::-1]
 
             if de_block == de_block_corrected:
-                print("No correction necessary!")
+                print("No correction necessary.")
             else:
                 corr = sum(a != b for (a, b) in zip(de_block, de_block_corrected))
-                print(f"Corrected {corr} error symbols:")
+                print(f"Corrected {corr} bad symbols:")
                 print("  Corrected from ...... :", de_block)
                 print("  Corrected to ........ :", de_block_corrected)
 

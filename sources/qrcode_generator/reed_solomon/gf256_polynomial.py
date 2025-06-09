@@ -24,10 +24,11 @@ class GF256Polynomial:
             else:
                 term = f"{c}*x^{k}"
             terms.append(term)
+
         if len(terms) == 0:
-            return "0"
-        else:
-            return "+".join(term for term in reversed(terms))
+            terms.append(f"{GF256.ZERO}")
+
+        return "+".join(term for term in reversed(terms))
 
     def __lshift__(self, numbits: int) -> GF256Polynomial:
         assert numbits >= 0

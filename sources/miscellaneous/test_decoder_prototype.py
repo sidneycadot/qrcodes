@@ -127,10 +127,12 @@ def main():
 
     results = []
     for (name, pixels) in testcases.items():
+        print(f"Processing testcase: {name!r}")
+        print()
         decoded_string = decode_pixels(pixels)
         results.append((name, decoded_string))
+        print()
 
-    print()
     print("Summary of testcases:")
     print()
     for (name, decoded_string) in results:
