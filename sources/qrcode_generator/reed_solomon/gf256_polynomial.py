@@ -11,8 +11,23 @@ class GF256Polynomial:
         while len(self.coefficients) != 0 and self.coefficients[-1] == GF256.ZERO:
             self.coefficients.pop()
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self.coefficients)
+
+    def __str__(self) -> str:
+        terms = []
+        for k, c in enumerate(self.coefficients):
+            if k == 0:
+                term = f"{c}"
+            elif k == 1:
+                term =  f"{c}*x"
+            else:
+                term = f"{c}*x^{k}"
+            terms.append(term)
+        if len(terms) == 0:
+            return "0"
+        else:
+            return "+".join(term for term in reversed(terms))
 
     def __lshift__(self, numbits: int) -> GF256Polynomial:
         assert numbits >= 0
