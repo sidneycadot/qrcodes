@@ -7,12 +7,12 @@ from qrcode_generator.reed_solomon.reed_solomon_code import calculate_reed_solom
 from qrcode_generator.reed_solomon.reed_solomon_decoder import correct_reed_solomon_codeword
 
 
-def test_syndrome_decoding(num_errors: int, noisy: bool=False):
+def test_syndrome_decoding(noisy: bool=False):
 
-    # From version 1-H  :  26 symbols, of which 9 are data symbols and 17 are error correction symbols.
+    # From version 1-H  :  26 symbols, of which   9 are data symbols and 17 are error correction symbols.
     # From version 40-L : 149 symbols, of which 119 are data symbols and 30 are error correction symbols.
 
-    use_big_code = False
+    use_big_code = True
     if use_big_code:
         code_p =   0  # How many codewords are used for error detection, rather than correction.
         code_c = 149  # Total number of codewords (traditionally this is called 'n' in most sources).
@@ -38,6 +38,10 @@ def test_syndrome_decoding(num_errors: int, noisy: bool=False):
     if noisy:
         print("de_block ................ :", de_block)
 
+    num_errors = random.randint(0, code_r)
+    if noisy:
+        print("num_errors .............. :", num_errors)
+
     error_positions = random.sample(range(len(de_block)), num_errors)
     if noisy:
         print("error positions ......... :", error_positions)
@@ -62,17 +66,18 @@ def test_syndrome_decoding(num_errors: int, noisy: bool=False):
         raise RuntimeError("Unable to correct errors.")
 
     de_block_corrected = de_block_corrected[::-1]
+
     if noisy:
         print("de_block_corrected ...... :", de_block_corrected)
     if de_block_corrected != de_block:
         raise RuntimeError("Incorrectly decoded errors.")
 
+
 def main():
-    for trial in range(0, 1000):
+    for trial in range(1000):
         print("trial:", trial)
         random.seed(trial)
-        num_errors = random.randint(5, 5)
-        test_syndrome_decoding(num_errors, False)
+        test_syndrome_decoding(False)
     print("bye!")
 
 
