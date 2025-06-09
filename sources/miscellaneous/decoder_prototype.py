@@ -1,12 +1,12 @@
-import textwrap
+"""A QR code decoder prototype."""
 
 from qrcode_generator.binary_codes import format_information_code_remainder, version_information_code_remainder
+from qrcode_generator.data_encoder import alphanumeric_characters
 from qrcode_generator.enum_types import EncodingVariant, CharacterEncodingType
 from qrcode_generator.lookup_tables import error_correction_level_encoding, data_masking_pattern_encoding, data_mask_pattern_function_table, \
     version_specification_table, count_bits_table
 from qrcode_generator.qr_code import QRCodeDrawer
 from qrcode_generator.reed_solomon.gf256 import GF256
-from qrcode_generator.reed_solomon.reed_solomon_code import calculate_reed_solomon_polynomial
 from qrcode_generator.reed_solomon.reed_solomon_decoder import correct_reed_solomon_codeword
 
 
@@ -20,118 +20,6 @@ def weight(value: int) -> int:
 
 def hamming_distance(a: int, b: int) -> int:
     return weight(a ^ b)
-
-
-def make_testcase_oralb():
-    oralb = """
-    #######.#.#.##.##.#.#.#######
-    #.....#.#...#.####..#.#.....#
-    #.###.#.##..##.##..##.#.###.#
-    #.###.#...##.##..##.#.#.###.#
-    #.###.#...#.#.....#...#.###.#
-    #.....#.##..#.##..#.#.#.....#
-    #######.#.#eeeeeee#.#.#######
-    ........#.#eeeeeee###........
-    ..###.#.#.#eeeeeee#.####..###
-    #...#..##.#eeeeeee#..##.#..##
-    .##.####...eeeeeee.##.....#..
-    ...###.####eeeeeee##..#####..
-    ##...##....eeeeeee#.##..#.##.
-    #......####eeeeeee.##.#.##..#
-    .#.#..###..eeeeeee.#...#..#.#
-    #.#.#..#.##eeeeeee##.####.###
-    ##.##.##.#.eeeeeee#..#.#.....
-    ####.....#.eeeeeee##.###.#.#.
-    #.#.#.#..##eeeeeee...#....#..
-    #.#..#.##..eeeeeee.##.#.##.##
-    #.##..#....eeeeeee#.#####..##
-    ........#..eeeeeee###...##..#
-    #######...#eeeeeee.##.#.####.
-    #.....#.......#...###...##.##
-    #.###.#.#..#######.######....
-    #.###.#.########.##.###.##...
-    #.###.#.##.####.###..####.##.
-    #.....#..#..#.#..##..#.#.#..#
-    #######...##..#..##.#.####...
-    """
-
-    lines = [line.strip() for line in textwrap.dedent(oralb.strip()).splitlines()]
-    pixels = [ [(c == '#') for c in line] for line in lines]
-
-    return pixels
-
-
-def make_testcase_lego():
-    lego = """
-    #######.#.#.#.#.#.#######
-    #.....#..#####..#.#.....#
-    #.###.#.###..##...#.###.#
-    #.###.#.###.#####.#.###.#
-    #.###.#.#..##..##.#.###.#
-    #.....#.#.##.#....#.....#
-    #######.#.#.#.#.#########
-    ........#.#.#.###........
-    ####..#.#.##..####..###.#
-    #.#.#.....#.##..#..#...#.
-    ###...#..###.....#.##....
-    ###....####.##.##.#..##..
-    .##...##.#######.##.#.###
-    .#.###...#....#######...#
-    .###..###.#..#...###..###
-    #.##...#.#.#..####...#..#
-    .....##...#..#..#########
-    ........######..#...#...#
-    #######..#..#...#.#.#####
-    #.....#..##.#..##...#...#
-    #.###.#....#..#.#####...#
-    #.###.#.##.##.##.##.#.###
-    #.###.#.#####..#.#######.
-    #.....#.####.#.#.##.#.#..
-    #######.##...##....######
-    """
-
-    lines = [line.strip() for line in textwrap.dedent(lego.strip()).splitlines()]
-    pixels = [ [(c == '#') for c in line] for line in lines]
-
-    return pixels
-
-
-def make_testcase_hello_bye(transpose_flag: bool):
-    hello_bye = """
-    #######.##..###.#.#######
-    #.....#....###.#..#.....#
-    #.###.#....###.##.#.###.#
-    #.###.#..##.##.##.#.###.#
-    #.###.#.#.##...##.#.###.#
-    #.....#.##..#..##.#.....#
-    #######.#.#.#.#.#.#######
-    ........#...##.#.........
-    #...######.#.#...####...#
-    #..#...#..##..#.###.###..
-    ##....#...#.#..#.#...##..
-    ....##.##..##....#.#..#..
-    #.##..#.#.....#..#.#..###
-    ....##.##..####.##...##..
-    ....#.#.###.#.##..#.###..
-    ...#...####.....#.###.##.
-    ..#..###.###.#.######.#..
-    ........####....#...###.#
-    #######.#.##..#.#.#.#....
-    #.....#.#...#..##...###..
-    #.###.#.###.#########..##
-    #.###.#..#.#.###..##.#..#
-    #.###.#..#.####.#.##.#.#.
-    #.....#....#..######..##.
-    #######.##..#######.##.##
-    """
-
-    lines = [line.strip() for line in textwrap.dedent(hello_bye.strip()).splitlines()]
-    pixels = [ [(c == '#') for c in line] for line in lines]
-
-    if transpose_flag:
-        pixels = [ list(line) for line in zip(*pixels)]
-
-    return pixels
 
 
 class BitstreamDecoder:
@@ -155,52 +43,30 @@ class BitstreamDecoder:
         return value
 
 
-def decode_pixels(pixels):
-
-    height = len(pixels)
-    print(f"input height {height}")
-    if not all(len(line) == height for line in pixels):
-        raise RuntimeError("2D pixel array is not square.")
-
-    width = height
-    print(f"input width {width}")
-
-    if not (width % 4 == 1):
-        raise RuntimeError("Unexpected width.")
-
-    version = (width - 17) // 4
-    if not (1 <= version <= 40):
-        raise RuntimeError("Unexpected version.")
-
-    print(f"version: {version}")
-
-    qr = QRCodeDrawer(version, include_quiet_zone=False)
-
-    # Get format bits.
-
-    # verify the single fixed "dark module" above and to the right of the bottom-left finder pattern (7.9.1).
-    fixed_format_module = pixels[height - 8][8]
-    print("fixed_format_module", fixed_format_module)
+def extract_format_information(pixels, qr):
+    # First, verify the single fixed "dark module" above and to the right of the bottom-left finder pattern (7.9.1).
+    fixed_format_module = pixels[qr.height - 8][8]
     if fixed_format_module:
-        print("fixed format module is 1 - good!")
+        print("Fixed format module is 1 - good!")
     else:
-        print("fixed format module is 0 - bad!")
+        print("Fixed format module is 0 - bad!")
 
-    # Get the two format information patterns.
+    # Get the two format information patterns:
+    # 'fa' comes from the top-left corner.
+    # 'fb' comes from the secondary copy in the bottom-left and top-right corner.
+
     fa = 0
     fb = 0
     for ((fai, faj), (fbi, fbj)) in qr.format_bit_position_lists:
         fa = 2 * fa + pixels[fai][faj]
         fb = 2 * fb + pixels[fbi][fbj]
 
-    # print(f"fa before XOR: 0b{fa:015b}")
-    # print(f"fb before XOR: 0b{fb:015b}")
-
+    # Apply XOR pattern to get the BCH codewords.
     fa ^= 0b101010000010010
     fb ^= 0b101010000010010
 
-    # print(f"fa after XOR: 0b{fa:015b}")
-    # print(f"fb after XOR: 0b{fb:015b}")
+    # Select a format information codeword. Here, we deviate from the standard; we will
+    # take into consideration *all* 30 bits simultaneously.
 
     distances = []
     for k in range(32):
@@ -214,7 +80,7 @@ def decode_pixels(pixels):
 
     min_distance = min(distances)
 
-    print("min distance for format information:", min_distance)
+    print("Minimum distance for format information:", min_distance)
 
     best = [k for k in range(32) if distances[k] == min_distance]
     if len(best) != 1:
@@ -222,7 +88,7 @@ def decode_pixels(pixels):
 
     format_information = best[0]
 
-    print(f"format information: {format_information}")
+    print(f"Format information extracted: {format_information}")
 
     error_correction_level_decoding_map = dict(map(reversed, error_correction_level_encoding.items()))
     data_masking_pattern_decoding_map = dict(map(reversed, data_masking_pattern_encoding.items()))
@@ -233,40 +99,76 @@ def decode_pixels(pixels):
     level = error_correction_level_decoding_map[level_encoding]
     pattern = data_masking_pattern_decoding_map[pattern_encoding]
 
+    return (level, pattern)
+
+
+def extract_version_information(pixels, qr):
+
+    # Get the two version information patterns.
+    va = 0
+    vb = 0
+    for ((vai, vaj), (vbi, vbj)) in qr.version_bit_position_lists:
+        va = 2 * va + pixels[vai][vaj]
+        vb = 2 * vb + pixels[vbi][vbj]
+
+    distances = []
+    for k in range(1, 41):
+        nominal = (k << 12) | version_information_code_remainder(k)
+
+        va_dist = hamming_distance(va, nominal)
+        vb_dist = hamming_distance(vb, nominal)
+
+        distances.append(va_dist + vb_dist)
+
+    min_distance = min(distances)
+
+    print("min distance for version information:", min_distance)
+
+    best = [1 + k for k in range(40) if distances[k] == min_distance]
+    if len(best) != 1:
+        raise RuntimeError("No unique best version info.")
+
+    version_information = best[0]
+
+    return version_information
+
+
+def decode_pixels(pixels: list[list[bool]]):
+    """Decode a square array of pixels as a QR code."""
+
+    height = len(pixels)
+    print(f"Input height: {height}")
+    if not all(len(line) == height for line in pixels):
+        raise RuntimeError("2D pixel array is not square.")
+
+    width = height
+    print(f"Input width: {width}")
+
+    width_ok = (width % 4 == 1) and (21 <= width <= 177)
+    if not width_ok:
+        raise RuntimeError(f"Unsupported pixel array size {width}.")
+
+    version = (width - 1) // 4 - 4
+    assert (1 <= version <= 40)
+
+    print(f"QR code version: {version}")
+
+    # We make a QR code drawer to get access to the pixel positions of several features.
+    qr = QRCodeDrawer(version, include_quiet_zone=False)
+
+    # Extract format information bits.
+    (level, pattern) = extract_format_information(pixels, qr)
+
     print("Format information: level =", level)
     print("Format information: data mask pattern =", pattern)
 
     if version >= 7:
-        # Get the two version information patterns.
-        va = 0
-        vb = 0
-        for ((vai, vaj), (vbi, vbj)) in qr.version_bit_position_lists:
-            va = 2 * va + pixels[vai][vaj]
-            vb = 2 * vb + pixels[vbi][vbj]
 
-        distances = []
-        for k in range(1, 41):
-            nominal = (k << 12) | version_information_code_remainder(k)
+        version_information_extracted = extract_version_information()
+        print("Version information extracted from pixels:", version_information_extracted)
 
-            va_dist = hamming_distance(va, nominal)
-            vb_dist = hamming_distance(vb, nominal)
-
-            distances.append(va_dist + vb_dist)
-
-        min_distance = min(distances)
-
-        print("min distance for version information:", min_distance)
-
-        best = [1 + k for k in range(40) if distances[k] == min_distance]
-        if len(best) != 1:
-            raise RuntimeError("No unique best version info.")
-
-        version_information = best[0]
-
-        print("version information:", version_information)
-
-        if version_information != version:
-            raise RuntimeError("Version information mismatch with size.")
+        if version_information_extracted != version:
+            print(f"WARNING: version mismatch (pixel size: {version} version area: {version_information_extracted}")
 
     # Get the data and error correction bits.
     # Apply the data mask pattern at the same time.
@@ -285,7 +187,7 @@ def decode_pixels(pixels):
 
     assert len(bitstream) % 8 == 0
 
-    # Bits to bytes.
+    # Convert bits to bytes.
     num_octets = len(bitstream) // 8
     octets = []
     index = 0
@@ -297,17 +199,16 @@ def decode_pixels(pixels):
             index += 1
         octets.append(octet)
 
-    print("octets:", octets)
+    print("Extracted octets before error correction: ", ", ".join("0x{:02x}".format(octet) for octet in octets))
 
     version_specification = version_specification_table[(version, level)]
-
-    print("version_specification", version_specification)
+    print("Version_specification", version_specification)
 
     assert len(octets) == version_specification.total_number_of_codewords
 
     num_blocks = sum(count for (count, (code_c, code_k, code_r)) in version_specification.block_specification)
 
-    print("number of code blocks:", num_blocks)
+    print("Number of Reed-Solomon codewords to process:", num_blocks)
 
     block_data_length = []
     block_error_length = []
@@ -316,8 +217,8 @@ def decode_pixels(pixels):
             block_data_length.append(code_k)
             block_error_length.append(code_c - code_k)
 
-    print("block data length expected:", block_data_length)
-    print("block error length expected:", block_error_length)
+    print("Block data length expected:", block_data_length)
+    print("Block error length expected:", block_error_length)
 
     num_data_words = sum(block_data_length)
     num_error_correction_words = sum(block_error_length)
@@ -353,12 +254,13 @@ def decode_pixels(pixels):
     idx = 0
     for (count, (code_c, code_k, code_r)) in version_specification.block_specification:
         for k in range(count):
+
             de_block = d_blocks[idx] + e_blocks[idx]
 
             de_block_corrected = correct_reed_solomon_codeword(de_block[::-1], code_k)
             if de_block_corrected is None:
                 print("Unable to correct!")
-                return
+                raise RuntimeError("Cannot correct a Reed-Solomon codeword.")
 
             de_block_corrected = de_block_corrected[::-1]
 
@@ -370,10 +272,12 @@ def decode_pixels(pixels):
                 print("  Corrected from:", de_block)
                 print("  Corrected to:", de_block_corrected)
 
-            d_blocks[idx] = de_block_corrected[:code_k]
-            e_blocks[idx] = de_block_corrected[code_k:]
+                d_blocks[idx] = de_block_corrected[:code_k]
+                e_blocks[idx] = de_block_corrected[code_k:]
 
             idx += 1
+
+    # Concatenate the GF256 byte values from the data blocks.
 
     data = []
     for d_block in d_blocks:
@@ -381,9 +285,10 @@ def decode_pixels(pixels):
 
     data = [x.value for x in data]
 
-    print("number of data octets:", len(data))
+    print("Number of data octets after error correction:", len(data))
 
-    # Turn the octets into a bit-stream:
+    # Make a bit-stream from the data bytes.
+
     decoder = BitstreamDecoder()
     for octet in data:
         for bit in (7, 6, 5, 4, 3, 2, 1, 0):
@@ -391,36 +296,47 @@ def decode_pixels(pixels):
 
     variant = EncodingVariant.from_version(version)
 
-    print("bits in decoder:", decoder.available())
-    print(decoder.bits)
+    print("Number of data bits after error correction:", decoder.available())
+
+    # Decode data bits.
+
+    byte_mode_encoding = 'utf_8'
 
     while True:
         if decoder.available() >= 4:
             directive = decoder.pop_bits(4)
-            print("directive", directive)
+            print(f"Found bitstream directive : {directive:04b}")
             if directive == 0b0000: # Terminator
-                print("found data terminator (0000).")
+                print("  Data terminator (0000) found.")
+                octets = []
                 while decoder.available() >= 8:
                     octet = decoder.pop_bits(8)
-                    print(f"post-terminator octet: 0x{octet:02x}")
-                print("bits left:", decoder.bits)
+                    octets.append(octet)
+                print("  Post-terminator octets: ", ", ".join("0x{:02x}".format(octet) for octet in octets))
+                print("  Bits left:", decoder.bits)
                 break
             elif directive == 0b0010:  # Alphanumeric mode.
                 number_of_count_bits = count_bits_table[variant][CharacterEncodingType.ALPHANUMERIC]
                 if decoder.available() >= number_of_count_bits:
                     count = decoder.pop_bits(number_of_count_bits)
-                    print("@@@", count)
-                    return
-                    #if decoder.available() >= count * 8:
-                    #    octets = []
-                    #    for k in range(count):
-                    #        octet = decoder.pop_bits(8)
-                    #        octets.append(octet)
-                    #    octet_string = bytes(octets).decode('utf_8')
-                    #    print(f"Read {count} bytes: {octets} {octet_string!r}")
+                    characters = []
+                    while count >= 2:
+                        bits = decoder.pop_bits(11)
+                        assert 0 <= bits < 45 * 45
+                        characters.append(alphanumeric_characters[bits // 45])
+                        characters.append(alphanumeric_characters[bits % 45])
+                        count -= 2
+                    while count >= 1:
+                        bits = decoder.pop_bits(6)
+                        assert 0 <= bits < 45
+                        characters.append(alphanumeric_characters[bits])
+                        count -= 1
+                    assert count == 0
+                    decoded_string = "".join(characters)
+                    print(f"  Read {len(decoded_string)} alphanumeric characters: {decoded_string!r}")
                 else:
                     raise RuntimeError("Cannot read count.")
-            elif directive == 0b0100:  # Bytes mode.
+            elif directive == 0b0100:  # Byte mode.
                 number_of_count_bits = count_bits_table[variant][CharacterEncodingType.BYTES]
                 if decoder.available() >= number_of_count_bits:
                     count = decoder.pop_bits(number_of_count_bits)
@@ -429,43 +345,19 @@ def decode_pixels(pixels):
                         for k in range(count):
                             octet = decoder.pop_bits(8)
                             octets.append(octet)
-                        octet_string = bytes(octets).decode('utf_8')
-                        print(f"Read {count} bytes: {octets} {octet_string!r}")
+                        octet_string = bytes(octets).decode(byte_mode_encoding)
+                        print(f"  Read {count} octets: ", ", ".join("0x{:02x}".format(octet) for octet in octets))
+                        print(f"  String interpretation ({byte_mode_encoding}): {octet_string!r}")
                     else:
                         raise RuntimeError("Not enough bits.")
                 else:
                     raise RuntimeError("Cannot read count.")
-            #elif directive == 0b1001:  # FNC1 indicator, second position.
-            #    b1 = decoder.pop_bits(8)
-            #    print("FNC1, second position directive:", b1)
             elif directive == 0b0111:  # ECI designator.
                 b1 = decoder.pop_bits(8)
                 assert b1 <= 127
                 print("ECI directive:", b1)
             else:
-                raise RuntimeError(f"Bad directive value {directive}.")
+                raise RuntimeError(f"Bad directive value: 0b{directive:04b}.")
         else:
             print(f"No more decoding blocks, only {decoder.available()} bits available.")
             break
-
-
-def main():
-    #pixels = make_testcase_oralb()
-    #pixels = make_testcase_lego()
-    pixels = make_testcase_hello_bye(False)
-
-    decode_pixels(pixels)
-
-
-if __name__ == "__main__":
-    main()
-
-
-# [0, 0, 1, 0
-# 0, 0, 0, 0, 0, 0, 0, 0, 1
-# 0, 0, 1, 0, 1, 1
-# 0, 1, 0, 0
-# 0 ()
-# 0, 0, 0, 0, 0, 1, 0, 0, 1, 1, 1, 1, 0, 0, 1, 0, 1, 1, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 1, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1, 1, 1, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 1, 1, 1, 1, 0, 1, 0, 1, 0, 1, 0, 1, 1, 0, 1, 1, 1, 0, 0, 0, 1, 1, 1, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 1, 1, 1, 0, 0, 0, 0, 1, 0, 0, 1, 1, 0, 1, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 1, 1, 0, 0, 1, 0, 0, 1, 0, 1, 1, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 1, 0, 1, 0, 1, 0, 1, 0, 0, 1, 0, 1, 1, 0, 0, 1, 1, 1, 1, 0, 1]
-#
-# 0010, 9, 11 = "B"
