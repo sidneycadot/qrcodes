@@ -22,6 +22,10 @@ def hamming_distance(a: int, b: int) -> int:
     return weight(a ^ b)
 
 
+class DecodingError(Exception):
+    pass
+
+
 class BitstreamDecoder:
     def __init__(self):
         self.bits = []
@@ -84,7 +88,7 @@ def extract_format_information(pixels, qr):
 
     best = [k for k in range(32) if distances[k] == min_distance]
     if len(best) != 1:
-        raise RuntimeError("No unique best format info.")
+        raise DecodingError("No unique best format info.")
 
     format_information = best[0]
 
@@ -122,31 +126,31 @@ def extract_version_information(pixels, qr):
 
     min_distance = min(distances)
 
-    print("min distance for version information:", min_distance)
+    print("Minimum distance for version information:", min_distance)
 
     best = [1 + k for k in range(40) if distances[k] == min_distance]
     if len(best) != 1:
-        raise RuntimeError("No unique best version info.")
+        raise DecodingError("No unique best version info.")
 
     version_information = best[0]
 
     return version_information
 
 
-def decode_pixels(pixels: list[list[bool]]):
+def decode_pixels(pixels: list[list[bool]]) -> str:
     """Decode a square array of pixels as a QR code."""
 
     height = len(pixels)
     print(f"Input height: {height}")
     if not all(len(line) == height for line in pixels):
-        raise RuntimeError("2D pixel array is not square.")
+        raise DecodingError("2D pixel array is not square.")
 
     width = height
     print(f"Input width: {width}")
 
     width_ok = (width % 4 == 1) and (21 <= width <= 177)
     if not width_ok:
-        raise RuntimeError(f"Unsupported pixel array size {width}.")
+        raise DecodingError(f"Unsupported pixel array size {width}.")
 
     version = (width - 1) // 4 - 4
     assert (1 <= version <= 40)
@@ -162,8 +166,9 @@ def decode_pixels(pixels: list[list[bool]]):
     print("Format information: level =", level)
     print("Format information: data mask pattern =", pattern)
 
-    if version >= 7:
-
+    if version < 7:
+        print("This QR code version does not have version information areas.")
+    else:
         version_information_extracted = extract_version_information()
         print("Version information extracted from pixels:", version_information_extracted)
 
@@ -260,7 +265,7 @@ def decode_pixels(pixels: list[list[bool]]):
             de_block_corrected = correct_reed_solomon_codeword(de_block[::-1], code_k)
             if de_block_corrected is None:
                 print("Unable to correct!")
-                raise RuntimeError("Cannot correct a Reed-Solomon codeword.")
+                raise DecodingError("Cannot correct a Reed-Solomon codeword.")
 
             de_block_corrected = de_block_corrected[::-1]
 
@@ -269,8 +274,8 @@ def decode_pixels(pixels: list[list[bool]]):
             else:
                 corr = sum(a != b for (a, b) in zip(de_block, de_block_corrected))
                 print(f"Corrected {corr} error symbols:")
-                print("  Corrected from:", de_block)
-                print("  Corrected to:", de_block_corrected)
+                print("  Corrected from ...... :", de_block)
+                print("  Corrected to ........ :", de_block_corrected)
 
                 d_blocks[idx] = de_block_corrected[:code_k]
                 e_blocks[idx] = de_block_corrected[code_k:]
@@ -302,6 +307,7 @@ def decode_pixels(pixels: list[list[bool]]):
 
     byte_mode_encoding = 'utf_8'
 
+    decoded_strings = []
     while True:
         if decoder.available() >= 4:
             directive = decoder.pop_bits(4)
@@ -315,49 +321,90 @@ def decode_pixels(pixels: list[list[bool]]):
                 print("  Post-terminator octets: ", ", ".join("0x{:02x}".format(octet) for octet in octets))
                 print("  Bits left:", decoder.bits)
                 break
-            elif directive == 0b0010:  # Alphanumeric mode.
+            elif directive == 0b0010:  # Alphanumeric mode segment.
                 number_of_count_bits = count_bits_table[variant][CharacterEncodingType.ALPHANUMERIC]
-                if decoder.available() >= number_of_count_bits:
-                    count = decoder.pop_bits(number_of_count_bits)
-                    characters = []
-                    while count >= 2:
-                        bits = decoder.pop_bits(11)
-                        assert 0 <= bits < 45 * 45
-                        characters.append(alphanumeric_characters[bits // 45])
-                        characters.append(alphanumeric_characters[bits % 45])
-                        count -= 2
-                    while count >= 1:
-                        bits = decoder.pop_bits(6)
-                        assert 0 <= bits < 45
-                        characters.append(alphanumeric_characters[bits])
-                        count -= 1
-                    assert count == 0
-                    decoded_string = "".join(characters)
-                    print(f"  Read {len(decoded_string)} alphanumeric characters: {decoded_string!r}")
-                else:
-                    raise RuntimeError("Cannot read count.")
+                if decoder.available() < number_of_count_bits:
+                    raise DecodingError("Cannot read count for alphanumeric-mode segment.")
+
+                count = decoder.pop_bits(number_of_count_bits)
+
+                needed_bits = (count // 2) * 11 + (count % 2) * 6
+                if decoder.available() < needed_bits:
+                    raise DecodingError("Not enough bits available to read alphanumeric-mode segment.")
+
+                characters = []
+                while count >= 2:
+                    bits = decoder.pop_bits(11)
+                    assert 0 <= bits < 45 * 45
+                    characters.append(alphanumeric_characters[bits // 45])
+                    characters.append(alphanumeric_characters[bits % 45])
+                    count -= 2
+                while count >= 1:
+                    bits = decoder.pop_bits(6)
+                    assert 0 <= bits < 45
+                    characters.append(alphanumeric_characters[bits])
+                    count -= 1
+                decoded_string = "".join(characters)
+                print(f"  Read {len(decoded_string)} alphanumeric characters: {decoded_string!r}")
+                decoded_strings.append(decoded_string)
+
             elif directive == 0b0100:  # Byte mode.
                 number_of_count_bits = count_bits_table[variant][CharacterEncodingType.BYTES]
-                if decoder.available() >= number_of_count_bits:
-                    count = decoder.pop_bits(number_of_count_bits)
-                    if decoder.available() >= count * 8:
-                        octets = []
-                        for k in range(count):
-                            octet = decoder.pop_bits(8)
-                            octets.append(octet)
-                        octet_string = bytes(octets).decode(byte_mode_encoding)
-                        print(f"  Read {count} octets: ", ", ".join("0x{:02x}".format(octet) for octet in octets))
-                        print(f"  String interpretation ({byte_mode_encoding}): {octet_string!r}")
-                    else:
-                        raise RuntimeError("Not enough bits.")
-                else:
-                    raise RuntimeError("Cannot read count.")
+                if decoder.available() < number_of_count_bits:
+                    raise DecodingError("Cannot read count for byte-mode segment.")
+
+                count = decoder.pop_bits(number_of_count_bits)
+                needed_bits = count * 8
+                if decoder.available() < needed_bits:
+                    raise DecodingError("Not enough bits available to read byte-mode segment.")
+
+                octets = []
+                for k in range(count):
+                    octet = decoder.pop_bits(8)
+                    octets.append(octet)
+                decoded_string = bytes(octets).decode(byte_mode_encoding)
+                print(f"  Read {count} octets: ", ", ".join("0x{:02x}".format(octet) for octet in octets))
+                print(f"  String interpretation ({byte_mode_encoding}): {decoded_string!r}")
+                decoded_strings.append(decoded_string)
+
             elif directive == 0b0111:  # ECI designator.
                 b1 = decoder.pop_bits(8)
-                assert b1 <= 127
-                print("ECI directive:", b1)
+                if b1 & 0x10000000 == 0b00000000:
+                    # The most significant bit is 0.
+                    # Values 000000 to 000127 can be represented using a single byte.
+                    eci = b1
+                elif b1 & 0b11000000 == 0b10000000:
+                    # The two most significant bits are 10.
+                    # Values 000000 to 016383 can be represented using two bytes.
+                    b1 &= 0b00111111
+                    b2 = decoder.pop_bits(8)
+                    eci = b1 * 256 + b2
+                elif b1 & 0b11100000 == 0b11000000:
+                    # The three most significant bits are 110.
+                    # Values 000000 to 999999 can be represented using three bytes.
+                    b1 &= 0b00011111
+                    b2 = decoder.pop_bits(8)
+                    b3 = decoder.pop_bits(8)
+                    eci = b1 * 65536 + b2 * 256 + b3
+                else:
+                    raise DecodingError("Bad ECI field format.")
+
+                if not (0 <= eci <= 999999):
+                    raise DecodingError(f"Bad ECI field value: {eci}.")
+
+                if eci == 26:
+                    print(f"  ECI value {eci} -- switching to UTF-8 for byte-mode segment decoding.")
+                    byte_mode_encoding = 'utf_8'
+                else:
+                    print(f"  ECI value {eci} -- currently ignored.")
+
             else:
-                raise RuntimeError(f"Bad directive value: 0b{directive:04b}.")
+                raise NotImplementedError(f"Bitstream directive not implemented: 0b{directive:04b}.")
         else:
             print(f"No more decoding blocks, only {decoder.available()} bits available.")
             break
+
+    decoded_string = "".join(decoded_strings)
+    print(f"Decoding done. Decoded string: {decoded_string!r}")
+
+    return decoded_string

@@ -52,7 +52,7 @@ class GF256:
         self.value = value
 
     def __repr__(self) -> str:
-        return f"g{self.value}"
+        return f"⟨{self.value:02x}⟩"
 
     def __eq__(self, other: GF256) -> bool:
         assert isinstance(other, GF256)

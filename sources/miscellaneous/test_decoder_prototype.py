@@ -119,8 +119,8 @@ def make_testcase_hello_bye(transpose_flag: bool):
 
 def main():
     #pixels = make_testcase_oralb()
-    #pixels = make_testcase_lego()
-    pixels = make_testcase_hello_bye(True)
+    pixels = make_testcase_lego()
+    #pixels = make_testcase_hello_bye(True)
 
     decode_pixels(pixels)
 
