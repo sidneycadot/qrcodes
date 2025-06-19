@@ -155,14 +155,52 @@ def render_lego_bouwplaats_code(colormap: str) -> None:
     )
 
 
+def render_folding_error_code(colormap: str) -> None:
+    """Render QR code from https://erikdemaine.org/curved/QR/."""
+
+    version = 2
+    pattern = DataMaskPattern.PATTERN2
+    level = ErrorCorrectionLevel.H
+
+    include_quiet_zone = True
+
+    mode = 'RGB'
+    optimize_png = True
+
+    png_filename = "qrcode_wild_FoldingError_{VERSION}{LEVEL}p{PATTERN}.png"
+
+    payload = "FOLDING ERROR"
+
+    de = DataEncoder(EncodingVariant.from_version(version))
+    de.append_alphanumeric_mode_segment(payload)
+
+    canvas = make_qr_code(
+        de,
+        version=version,
+        level=level,
+        include_quiet_zone=include_quiet_zone,
+        pattern=pattern
+    )
+
+    save_qrcode_as_png_file(
+        png_filename=png_filename,
+        canvas=canvas,
+        mode=mode,
+        colormap=colormap,
+        transform=QRCodeCanvasTransform.NONE,
+        optimize_png=optimize_png
+    )
+
+
 def main():
 
-    colormap = 'color'
+    colormap = 'default'
 
     render_iso_standard_customer_feedback_code(colormap)
     render_oralb_package_code(colormap)
     render_ferrero_rocher_code(colormap)
     render_lego_bouwplaats_code(colormap)
+    render_folding_error_code(colormap)
 
 
 if __name__ == "__main__":
