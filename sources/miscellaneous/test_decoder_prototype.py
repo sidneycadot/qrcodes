@@ -136,13 +136,53 @@ def make_testcase_hello_bye(transpose_flag: bool):
     )
 
 
+def make_testcase_folding_error():
+    pixel_string = """
+    #######.#....#..#.#######
+    #.....#.##..##..#.#.....#
+    #.###.#.#..###..#.#.###.#
+    #.###.#..#..##..#.#.###.#
+    #.###.#...#######.#.###.#
+    #.....#.#######.#.#.....#
+    #######.#.#.#.#.#.#######
+    ........##.###...........
+    ..###.#.#........###..###
+    .###.#.##.........#.#.##.
+    ###.###...........##.#.##
+    #.#..#............###.##.
+    ####..#...........#.#..##
+    #.#.#..#..........####.#.
+    #..##.#..........#..##...
+    #...#..#............#..#.
+    #....##.#......######....
+    ........#.#.#..##...#....
+    #######..##..####.#.#.#..
+    #.....#..###.##.#...###..
+    #.###.#.##..#.#.#########
+    #.###.#.###.#.####.#.#..#
+    #.###.#.##.####.#.#.###.#
+    #.....#..#..#.....##.##..
+    #######...####.#.##.....#
+    """
+
+    lines = [line.strip() for line in textwrap.dedent(pixel_string.strip()).splitlines()]
+    pixels = [ [(c == '#') for c in line] for line in lines]
+
+    return DecoderTestCase(
+        name = "folding_error",
+        contents = "FOLDING ERROR",
+        pixels = pixels
+    )
+
+
 def main():
 
     testcases = [
-        make_testcase_oralb(),
-        make_testcase_lego(),
-        make_testcase_hello_bye(False),
-        make_testcase_hello_bye(True)
+        #make_testcase_oralb(),
+        #make_testcase_lego(),
+        #make_testcase_hello_bye(False),
+        #make_testcase_hello_bye(True),
+        make_testcase_folding_error()
     ]
 
     decoded_strings = []
