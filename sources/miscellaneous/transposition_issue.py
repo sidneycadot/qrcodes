@@ -3,6 +3,7 @@
 from collections import Counter
 
 from qrcode.binary_codes import format_information_code_remainder
+from qrcode.lookup_tables import error_correction_level_encoding, data_masking_pattern_encoding
 
 
 def reverse(n: int, numbits: int) -> int:
@@ -52,41 +53,34 @@ def find_best(bits: int):
 
 
 def main():
-    counter = Counter()
+    solutions = {}
     for bits in range(32768):
-        rbits = reverse(bits, 15)
-        (bw, bs) = find_best(bits)
-        (rbw, rbs) = find_best(rbits)
+        if bits != reverse(bits, 15):
+            continue
+        if bits & 0b000000010000000 == 0:
+            continue
+        bw, bs = find_best(bits)
+        if len(bs) != 1:
+            continue
+        bs = bs[0]
+        if bs not in solutions:
+            solutions[bs] = []
+        solutions[bs].append((bw, bits))
 
-        if bw <= 3 and rbw == 0 and len(rbs) == 1:
-            print(bits, bw, bs, "***", rbits, rbw, rbs)
-        counter[(bw, len(bs), rbw, len(rbs))] += 1
-    print(counter)
+    error_correction_level_decoding_map = dict(map(reversed, error_correction_level_encoding.items()))
+    data_masking_pattern_decoding_map = dict(map(reversed, data_masking_pattern_encoding.items()))
 
+    for format_information in sorted(solutions.keys()):
+        level_encoding = format_information >> 3
+        pattern_encoding = format_information & 7
+
+        level = error_correction_level_decoding_map[level_encoding]
+        pattern = data_masking_pattern_decoding_map[pattern_encoding]
+
+        print(f"# {format_information}: {level} {pattern}")
+
+        for option in solutions[format_information]:
+            print(f"#     {option[0]} --> {option[1]:015b}")
 
 if __name__ == "__main__":
     main()
-
-# 9237 3 [28] *** 21522 0 [0]
-#
-# 0: 101010000010010
-#
-# mirror:
-#
-#  010010000010101
-#  010010010110100
-# ----------------
-#  000000010100001
-
-
-#
-# (3, 1, 3, 1): 6132,  Ambiguous
-# (3, 1, 2, 1): 1656,  Ambiguous
-# (2, 1, 3, 1): 1656,  Ambiguous
-# (2, 1, 2, 1): 252,   Ambiguous
-# (1, 1, 3, 1): 168,   Ambiguous
-# (3, 1, 1, 1): 168,   Ambiguous
-# (1, 1, 2, 1): 78,    Ambiguous
-# (2, 1, 1, 1): 78,    Ambiguous
-# (0, 1, 3, 1): 26,    Ambiguous
-# (3, 1, 0, 1): 26,    Ambiguous
