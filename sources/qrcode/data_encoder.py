@@ -305,10 +305,10 @@ class DataEncoder:
         if data is None:
             return None  # Data does not fit in the requested (version, level) QR code symbol.
 
-        data_gf256 = [GF256(x) for x in data]
-
         # The data will fit, we can proceed.
         # Split up data in data-blocks, and calculate the corresponding error correction blocks.
+
+        data_gf256 = [GF256(x) for x in data]
 
         d_blocks = []
         e_blocks = []
