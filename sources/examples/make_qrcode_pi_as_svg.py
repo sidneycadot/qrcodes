@@ -34,7 +34,7 @@ def write_qrcode_pi_as_svg(version: int, level: ErrorCorrectionLevel, pattern: D
     with XmlWriter(filename_svg) as svg:
 
         with svg.write_container_tag("svg", {"viewBox": f"0 0 {canvas.width} {canvas.height}", "xmlns": "http://www.w3.org/2000/svg"}):
-            render_qr_canvas_as_svg_path(svg, canvas=canvas, light_color="yellow", dark_color="blue")
+            render_qr_canvas_as_svg_path(svg, canvas=canvas, light_color="white", dark_color="black")
             #render_qr_canvas_as_svg_group(svg, canvas=canvas, colormap='color')
 
     # Try to write a PDF file. If rsvg-convert is not available, this is a no-op.
@@ -48,8 +48,8 @@ def main():
 
     include_quiet_zone = False
 
-    write_qrcode_pi_as_svg(1, ErrorCorrectionLevel.H, DataMaskPattern.PATTERN0, include_quiet_zone)
-    write_qrcode_pi_as_svg(1, ErrorCorrectionLevel.L, DataMaskPattern.PATTERN0, include_quiet_zone)
+    write_qrcode_pi_as_svg(7, ErrorCorrectionLevel.H, DataMaskPattern.PATTERN0, include_quiet_zone)
+    write_qrcode_pi_as_svg(7, ErrorCorrectionLevel.L, DataMaskPattern.PATTERN0, include_quiet_zone)
     #write_qrcode_pi_as_svg(40, ErrorCorrectionLevel.H, DataMaskingPattern.PATTERN0, include_quiet_zone)
     #write_qrcode_pi_as_svg(40, ErrorCorrectionLevel.L, DataMaskingPattern.PATTERN0, include_quiet_zone)
 
